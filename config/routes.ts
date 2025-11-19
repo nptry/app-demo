@@ -34,27 +34,27 @@ export default [
       {
         path: '/user-management/permission',
         name: 'permission',
-        component: './Welcome',
+        component: './UserManagement/Permission',
       },
       {
         path: '/user-management/role',
         name: 'role',
-        component: './Welcome',
+        component: './UserManagement/Role',
       },
       {
         path: '/user-management/account',
         name: 'account',
-        component: './Welcome',
+        component: './UserManagement/Account',
       },
       {
         path: '/user-management/operation-log',
         name: 'operation-log',
-        component: './Welcome',
+        component: './UserManagement/OperationLog',
       },
       {
         path: '/user-management/key-personnel',
         name: 'key-personnel',
-        component: './Welcome',
+        component: './UserManagement/KeyPersonnel',
       },
     ],
   },

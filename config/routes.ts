@@ -70,17 +70,17 @@ export default [
       {
         path: '/device-management/basic-info',
         name: 'basic-info',
-        component: './Welcome',
+        component: './DeviceManagement/BasicInfo',
       },
       {
         path: '/device-management/config-info',
         name: 'config-info',
-        component: './Welcome',
+        component: './DeviceManagement/ConfigInfo',
       },
       {
         path: '/device-management/status-monitoring',
         name: 'status-monitoring',
-        component: './Welcome',
+        component: './DeviceManagement/StatusMonitoring',
       },
     ],
   },

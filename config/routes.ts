@@ -127,27 +127,27 @@ export default [
       {
         path: '/key-area-management/site-info',
         name: 'site-info',
-        component: './Welcome',
+        component: './KeyAreaManagement/SiteInfo',
       },
       {
         path: '/key-area-management/device-deployment',
         name: 'device-deployment',
-        component: './Welcome',
+        component: './KeyAreaManagement/DeviceDeployment',
       },
       {
         path: '/key-area-management/density-monitoring',
         name: 'density-monitoring',
-        component: './Welcome',
+        component: './KeyAreaManagement/DensityMonitoring',
       },
       {
         path: '/key-area-management/pedestrian-flow',
         name: 'pedestrian-flow',
-        component: './Welcome',
+        component: './KeyAreaManagement/PedestrianFlow',
       },
       {
         path: '/key-area-management/target-monitoring',
         name: 'target-monitoring',
-        component: './Welcome',
+        component: './KeyAreaManagement/TargetMonitoring',
       },
     ],
   },

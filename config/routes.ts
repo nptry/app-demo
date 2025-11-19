@@ -23,37 +23,224 @@ export default [
     ],
   },
   {
-    path: '/welcome',
-    name: 'welcome',
-    icon: 'smile',
-    component: './Welcome',
-  },
-  {
-    path: '/admin',
-    name: 'admin',
-    icon: 'crown',
-    access: 'canAdmin',
+    path: '/user-management',
+    name: 'user-management',
+    icon: 'user',
     routes: [
       {
-        path: '/admin',
-        redirect: '/admin/sub-page',
+        path: '/user-management',
+        redirect: '/user-management/permission',
       },
       {
-        path: '/admin/sub-page',
-        name: 'sub-page',
-        component: './Admin',
+        path: '/user-management/permission',
+        name: 'permission',
+        component: './Welcome',
+      },
+      {
+        path: '/user-management/role',
+        name: 'role',
+        component: './Welcome',
+      },
+      {
+        path: '/user-management/account',
+        name: 'account',
+        component: './Welcome',
+      },
+      {
+        path: '/user-management/operation-log',
+        name: 'operation-log',
+        component: './Welcome',
+      },
+      {
+        path: '/user-management/key-personnel',
+        name: 'key-personnel',
+        component: './Welcome',
       },
     ],
   },
   {
-    name: 'list.table-list',
-    icon: 'table',
-    path: '/list',
-    component: './table-list',
+    path: '/device-management',
+    name: 'device-management',
+    icon: 'appstore',
+    routes: [
+      {
+        path: '/device-management',
+        redirect: '/device-management/basic-info',
+      },
+      {
+        path: '/device-management/basic-info',
+        name: 'basic-info',
+        component: './Welcome',
+      },
+      {
+        path: '/device-management/config-info',
+        name: 'config-info',
+        component: './Welcome',
+      },
+      {
+        path: '/device-management/status-monitoring',
+        name: 'status-monitoring',
+        component: './Welcome',
+      },
+    ],
+  },
+  {
+    path: '/operations-management',
+    name: 'operations-management',
+    icon: 'tool',
+    routes: [
+      {
+        path: '/operations-management',
+        redirect: '/operations-management/infrastructure',
+      },
+      {
+        path: '/operations-management/infrastructure',
+        name: 'infrastructure',
+        component: './Welcome',
+      },
+      {
+        path: '/operations-management/resources',
+        name: 'resources',
+        component: './Welcome',
+      },
+      {
+        path: '/operations-management/fault',
+        name: 'fault',
+        component: './Welcome',
+      },
+      {
+        path: '/operations-management/statistics',
+        name: 'statistics',
+        component: './Welcome',
+      },
+    ],
+  },
+  {
+    path: '/key-area-management',
+    name: 'key-area-management',
+    icon: 'cluster',
+    routes: [
+      {
+        path: '/key-area-management',
+        redirect: '/key-area-management/site-info',
+      },
+      {
+        path: '/key-area-management/site-info',
+        name: 'site-info',
+        component: './Welcome',
+      },
+      {
+        path: '/key-area-management/device-deployment',
+        name: 'device-deployment',
+        component: './Welcome',
+      },
+      {
+        path: '/key-area-management/density-monitoring',
+        name: 'density-monitoring',
+        component: './Welcome',
+      },
+      {
+        path: '/key-area-management/pedestrian-flow',
+        name: 'pedestrian-flow',
+        component: './Welcome',
+      },
+      {
+        path: '/key-area-management/target-monitoring',
+        name: 'target-monitoring',
+        component: './Welcome',
+      },
+    ],
+  },
+  {
+    path: '/traffic-checkpoint-management',
+    name: 'traffic-checkpoint-management',
+    icon: 'car',
+    routes: [
+      {
+        path: '/traffic-checkpoint-management',
+        redirect: '/traffic-checkpoint-management/checkpoint-info',
+      },
+      {
+        path: '/traffic-checkpoint-management/checkpoint-info',
+        name: 'checkpoint-info',
+        component: './Welcome',
+      },
+      {
+        path: '/traffic-checkpoint-management/device-deployment',
+        name: 'device-deployment',
+        component: './Welcome',
+      },
+      {
+        path: '/traffic-checkpoint-management/license-records',
+        name: 'license-records',
+        component: './Welcome',
+      },
+      {
+        path: '/traffic-checkpoint-management/traffic-monitoring',
+        name: 'traffic-monitoring',
+        component: './Welcome',
+      },
+      {
+        path: '/traffic-checkpoint-management/red-light-monitoring',
+        name: 'red-light-monitoring',
+        component: './Welcome',
+      },
+      {
+        path: '/traffic-checkpoint-management/retrograde-monitoring',
+        name: 'retrograde-monitoring',
+        component: './Welcome',
+      },
+      {
+        path: '/traffic-checkpoint-management/parking-violation',
+        name: 'parking-violation',
+        component: './Welcome',
+      },
+    ],
+  },
+  {
+    path: '/pedestrian-channel-management',
+    name: 'pedestrian-channel-management',
+    icon: 'branches',
+    routes: [
+      {
+        path: '/pedestrian-channel-management',
+        redirect: '/pedestrian-channel-management/channel-info',
+      },
+      {
+        path: '/pedestrian-channel-management/channel-info',
+        name: 'channel-info',
+        component: './Welcome',
+      },
+      {
+        path: '/pedestrian-channel-management/device-deployment',
+        name: 'device-deployment',
+        component: './Welcome',
+      },
+      {
+        path: '/pedestrian-channel-management/key-personnel-monitoring',
+        name: 'key-personnel-monitoring',
+        component: './Welcome',
+      },
+      {
+        path: '/pedestrian-channel-management/trajectory-tracking',
+        name: 'trajectory-tracking',
+        component: './Welcome',
+      },
+      {
+        path: '/pedestrian-channel-management/stranger-monitoring',
+        name: 'stranger-monitoring',
+        component: './Welcome',
+      },
+      {
+        path: '/pedestrian-channel-management/access-records',
+        name: 'access-records',
+        component: './Welcome',
+      },
+    ],
   },
   {
     path: '/',
-    redirect: '/welcome',
+    redirect: '/user-management/permission',
   },
   {
     path: '*',

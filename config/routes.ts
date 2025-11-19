@@ -96,22 +96,22 @@ export default [
       {
         path: '/operations-management/infrastructure',
         name: 'infrastructure',
-        component: './Welcome',
+        component: './OperationsManagement/Infrastructure',
       },
       {
         path: '/operations-management/resources',
         name: 'resources',
-        component: './Welcome',
+        component: './OperationsManagement/Resources',
       },
       {
         path: '/operations-management/fault',
         name: 'fault',
-        component: './Welcome',
+        component: './OperationsManagement/Fault',
       },
       {
         path: '/operations-management/statistics',
         name: 'statistics',
-        component: './Welcome',
+        component: './OperationsManagement/Statistics',
       },
     ],
   },

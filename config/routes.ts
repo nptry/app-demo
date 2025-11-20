@@ -22,42 +22,7 @@ export default [
       },
     ],
   },
-  {
-    path: '/user-management',
-    name: 'user-management',
-    icon: 'user',
-    routes: [
-      {
-        path: '/user-management',
-        redirect: '/user-management/permission',
-      },
-      {
-        path: '/user-management/permission',
-        name: 'permission',
-        component: './UserManagement/Permission',
-      },
-      {
-        path: '/user-management/role',
-        name: 'role',
-        component: './UserManagement/Role',
-      },
-      {
-        path: '/user-management/account',
-        name: 'account',
-        component: './UserManagement/Account',
-      },
-      {
-        path: '/user-management/operation-log',
-        name: 'operation-log',
-        component: './UserManagement/OperationLog',
-      },
-      {
-        path: '/user-management/key-personnel',
-        name: 'key-personnel',
-        component: './UserManagement/KeyPersonnel',
-      },
-    ],
-  },
+  
   {
     path: '/device-management',
     name: 'device-management',
@@ -236,6 +201,42 @@ export default [
         name: 'access-records',
         component: './PedestrianChannelManagement/AccessRecords',
       },
+    ],
+  },
+  {
+    path: '/user-management',
+    name: 'user-management',
+    icon: 'user',
+    routes: [
+      {
+        path: '/user-management',
+        redirect: '/user-management/permission',
+      },
+      {
+        path: '/user-management/permission',
+        name: 'permission',
+        component: './UserManagement/Permission',
+      },
+      {
+        path: '/user-management/role',
+        name: 'role',
+        component: './UserManagement/Role',
+      },
+      {
+        path: '/user-management/account',
+        name: 'account',
+        component: './UserManagement/Account',
+      },
+      {
+        path: '/user-management/operation-log',
+        name: 'operation-log',
+        component: './UserManagement/OperationLog',
+      },
+      // {
+      //   path: '/user-management/key-personnel',
+      //   name: 'key-personnel',
+      //   component: './UserManagement/KeyPersonnel',
+      // },
     ],
   },
   {

@@ -241,7 +241,7 @@ export default [
   },
   {
     path: '/',
-    redirect: '/user-management/permission',
+    redirect: '/device-management',
   },
   {
     path: '*',

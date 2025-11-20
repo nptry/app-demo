@@ -185,7 +185,7 @@ const Infrastructure: React.FC = () => {
         render: (value: FacilityItem['status']) => <Badge status={statusColor[value]} text={value} />,
       },
       { title: '建成时间', dataIndex: 'buildDate', width: 140 },
-      { title: '备注', dataIndex: 'remark' },
+      // { title: '备注', dataIndex: 'remark' },
       {
         title: '操作',
         dataIndex: 'action',

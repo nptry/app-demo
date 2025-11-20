@@ -279,7 +279,7 @@ const Fault: React.FC = () => {
           columns={columns}
           dataSource={filteredOrders}
           pagination={{ pageSize: 6, showSizeChanger: false }}
-          scroll={{ x: 1700 }}
+          scroll={{ x: 1600 }}
         />
       </Card>
 

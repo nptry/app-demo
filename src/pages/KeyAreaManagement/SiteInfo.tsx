@@ -230,7 +230,6 @@ const SiteInfo: React.FC = () => {
         <Col xs={24} sm={12} md={8}>
           <Card bordered={false}>
             <Statistic title="覆盖面积" value={(summary.totalAreaSqm / 1000).toFixed(1)} suffix="千㎡" />
-            <div style={{ marginTop: 12, color: 'rgba(0,0,0,0.45)' }}>折算约 {summary.totalAreaSqm.toLocaleString()} ㎡</div>
           </Card>
         </Col>
       </Row>

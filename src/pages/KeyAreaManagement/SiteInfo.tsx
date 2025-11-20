@@ -20,6 +20,7 @@ import {
   Tag,
   message,
 } from 'antd';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import type { KeyAreaSiteItem, KeyAreaSiteResponse } from '@/services/keyArea';
 import { getKeyAreaSites } from '@/services/keyArea';
 
@@ -199,13 +200,14 @@ const SiteInfo: React.FC = () => {
         fixed: 'right',
         render: (_, record) => (
           <Space size="small">
-            <Button type="link" onClick={() => handleEdit(record)}>
-              编辑
-            </Button>
+            <Button
+              type="text"
+              icon={<EditOutlined style={{ color: '#1890ff' }} />}
+              onClick={() => handleEdit(record)}
+              title="编辑"
+            />
             <Popconfirm title="确认删除该场所？" okText="确认" cancelText="取消" onConfirm={() => handleDelete(record.id)}>
-              <Button type="link" danger>
-                删除
-              </Button>
+              <Button type="text" danger icon={<DeleteOutlined />} title="删除" />
             </Popconfirm>
           </Space>
         ),

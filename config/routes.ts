@@ -232,11 +232,11 @@ export default [
         name: 'operation-log',
         component: './UserManagement/OperationLog',
       },
-      // {
-      //   path: '/user-management/key-personnel',
-      //   name: 'key-personnel',
-      //   component: './UserManagement/KeyPersonnel',
-      // },
+      {
+        path: '/user-management/key-personnel',
+        name: 'key-personnel',
+        component: './UserManagement/KeyPersonnel',
+      },
     ],
   },
   {

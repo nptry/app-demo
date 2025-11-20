@@ -1,167 +1,111 @@
 import { request } from '@umijs/max';
 
-export type InfrastructureSummary = {
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+};
+
+export type FacilitySummary = {
   regions: number;
   checkpoints: number;
-  pedestrianZones: number;
+  pedestrianPoints: number;
   lampPoles: number;
-  aiNodes: number;
-  gateways: number;
 };
 
-export type InfrastructureFacilityItem = {
-  lampPoles: number;
-  cameras: number;
-  aiNodes: number;
-  gateways: number;
-};
-
-export type InfrastructureItem = {
+export type FacilityItem = {
   id: string;
-  area: string;
-  type: '重点区域' | '交通卡口' | '行人通道';
-  location: string;
-  facilities: InfrastructureFacilityItem;
-  networkStatus: '正常' | '关注' | '中断';
-  lastInspection: string;
-  responsible: string;
-};
-
-export type NetworkLinkItem = {
-  id: string;
+  type: '监测区域' | '交通卡口' | '行人通道点位' | '智慧灯杆';
   name: string;
-  status: '正常' | '预警' | '中断';
-  latency: string;
-  availability: string;
+  region: string;
+  address: string;
+  coordinates: string;
+  owner: string;
+  phone: string;
+  status: '正常运行' | '待维护' | '停用';
+  buildDate: string;
+  remark?: string;
 };
 
 export type InfrastructureResponse = {
-  summary: InfrastructureSummary;
-  infrastructures: InfrastructureItem[];
-  networkLinks: NetworkLinkItem[];
+  summary: FacilitySummary;
+  facilities: FacilityItem[];
 };
 
 export type ResourceSummary = {
-  teams: number;
-  engineers: number;
   vehicles: number;
+  engineers: number;
   spareParts: number;
 };
 
-export type EngineerItem = {
+export type ResourceItem = {
   id: string;
+  resourceType: '运维车辆' | '运维人员' | '设备配件';
   name: string;
-  team: string;
-  specialty: string;
-  shift: string;
+  status: string;
+  department: string;
+  contact: string;
   phone: string;
-  status: '执行任务' | '待命' | '休整';
-};
-
-export type ResourceAssetItem = {
-  id: string;
-  type: '车辆' | '备件' | '工器具';
-  name: string;
-  quantity: number;
-  location: string;
-  availability: string;
-};
-
-export type DispatchPlanItem = {
-  id: string;
-  target: string;
-  window: string;
-  scope: string;
-  leader: string;
-  status: '待命' | '执行中' | '已完成';
+  detail: string;
+  lastDispatch?: string;
 };
 
 export type ResourceResponse = {
   summary: ResourceSummary;
-  engineers: EngineerItem[];
-  assets: ResourceAssetItem[];
-  dispatchPlans: DispatchPlanItem[];
-};
-
-export type FaultOverview = {
-  todayAlarms: number;
-  openOrders: number;
-  avgResponseMins: number;
-  avgRecoveryHours: number;
+  resources: ResourceItem[];
 };
 
 export type FaultOrderItem = {
   id: string;
-  title: string;
-  device: string;
-  location: string;
-  faultType: string;
-  level: '低' | '中' | '高';
+  deviceId: string;
+  deviceName: string;
   reportedAt: string;
-  channel: '远程' | '现场';
-  status: '待处理' | '处理中' | '已恢复';
-  assignedTo: string;
-};
-
-export type RemoteActionItem = {
-  id: string;
-  device: string;
-  action: string;
-  detail: string;
-  time: string;
-  result: string;
-};
-
-export type FaultDistributionItem = {
-  category: string;
-  count: number;
-  proportion: number;
+  faultType: string;
+  description: string;
+  level: '紧急（1 小时）' | '重要（4 小时）' | '一般（24 小时）';
+  dispatchTime: string;
+  owner: string;
+  status: '待派单' | '待处理' | '处理中' | '已解决' | '无法解决（需升级）';
+  solution?: string;
+  finishTime?: string;
+  result?: '完全解决' | '部分解决' | '未解决（需换硬件）';
+  remark?: string;
 };
 
 export type FaultResponse = {
-  overview: FaultOverview;
+  stats: {
+    todayFaults: number;
+    inProgress: number;
+    waiting: number;
+  };
   orders: FaultOrderItem[];
-  remoteActions: RemoteActionItem[];
-  distribution: FaultDistributionItem[];
 };
 
-export type OperationsKpi = {
-  availability: number;
-  faultRate: number;
-  mttr: number;
-  responseWithin15: number;
+export type FaultTypeDistribution = {
+  type: string;
+  value: number;
 };
 
-export type StatisticsTrendItem = {
-  month: string;
-  incidents: number;
-  avgResponse: number;
-  remoteRate: number;
+export type TopDeviceItem = {
+  deviceName: string;
+  count: number;
 };
 
-export type ResourceUsageItem = {
-  resource: string;
-  utilization: number;
-  workload: string;
-};
-
-export type NetworkHealthItem = {
-  node: string;
-  latency: string;
-  packetLoss: string;
-  status: '正常' | '关注' | '中断';
+export type TopEngineerItem = {
+  engineer: string;
+  handled: number;
+  rate: number;
 };
 
 export type OperationsStatisticsResponse = {
-  kpis: OperationsKpi;
-  trend: StatisticsTrendItem[];
-  resourceUsage: ResourceUsageItem[];
-  networkHealth: NetworkHealthItem[];
-};
-
-type ApiResponse<T> = {
-  success: boolean;
-  data: T;
+  period: string;
+  totalFaults: number;
+  resolved: number;
+  resolveRate: number;
+  avgHandleDuration: string;
+  typeDistribution: FaultTypeDistribution[];
+  topDevices: TopDeviceItem[];
+  topEngineers: TopEngineerItem[];
+  generatedAt: string;
 };
 
 export async function getInfrastructureOverview(options?: Record<string, any>) {

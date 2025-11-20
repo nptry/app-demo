@@ -1,15 +1,21 @@
 import { request } from '@umijs/max';
 
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+};
+
 export type DeviceBasicInfoItem = {
   id: string;
   name: string;
-  type: string;
+  type: 'AI 边缘计算设备' | '4G 无线网关设备';
   model: string;
   vendor: string;
-  application: string;
-  location: string;
-  coordinates: string;
-  status: 'online' | 'maintenance' | 'offline';
+  serialNumber: string;
+  installDate: string;
+  warrantyDate: string;
+  status: '在线' | '离线' | '故障' | '维护中';
+  remark?: string;
 };
 
 export type DeviceBasicInfoResponse = {
@@ -22,88 +28,70 @@ export type DeviceBasicInfoResponse = {
   devices: DeviceBasicInfoItem[];
 };
 
-export type DeviceConfigSummary = {
+export type DeviceApplicationSummary = {
   type: string;
   count: number;
   coverage: string;
   aiModels: string[];
 };
 
-export type DeviceDeploymentItem = {
-  id: string;
+export type DeviceApplicationItem = {
+  deviceId: string;
   deviceName: string;
-  applicationType: string;
-  deploymentArea: string;
-  poleCode: string;
-  location: string;
+  applicationType: '重点区域监测' | '交通卡口监测' | '行人通道监测';
+  region: string;
+  address: string;
   coordinates: string;
-  network: string;
-  edgeApps: string[];
+  lampId: string;
+  description?: string;
+  deployDate: string;
 };
 
 export type DeviceConfigResponse = {
-  applicationSummary: DeviceConfigSummary[];
-  deployments: DeviceDeploymentItem[];
+  summary: DeviceApplicationSummary[];
+  applications: DeviceApplicationItem[];
+};
+
+export type DeviceStatusMetrics = {
+  onlineRate: number;
+  offlineDevices: number;
+  faultDevices: number;
+  lastSync: string;
 };
 
 export type DeviceStatusItem = {
-  id: string;
+  deviceId: string;
   deviceName: string;
-  type: string;
-  status: 'online' | 'warning' | 'offline';
+  type: 'AI 边缘计算设备' | '4G 无线网关设备';
+  realtimeStatus: '在线' | '离线' | '故障' | '维护中';
+  cpuUsage?: number;
+  memoryUsage?: number;
+  signalStrength?: string;
+  uploadRate: string;
   lastHeartbeat: string;
-  healthScore: number;
-  temperature: number;
-  powerLoad: string;
-  networkLatency: number;
-};
-
-export type DeviceAlertItem = {
-  id: string;
-  deviceName: string;
-  issue: string;
-  triggeredAt: string;
-  handler: string;
-  status: '处理中' | '已关闭';
+  exception?: string;
 };
 
 export type DeviceStatusResponse = {
-  metrics: {
-    uptime: number;
-    offlineDevices: number;
-    warnings: number;
-    lastSync: string;
-  };
+  metrics: DeviceStatusMetrics;
   statuses: DeviceStatusItem[];
-  alerts: DeviceAlertItem[];
-  trend: {
-    time: string;
-    online: number;
-    warnings: number;
-    offline: number;
-  }[];
 };
 
-type ApiResponse<T> = {
-  success: boolean;
-  data: T;
-};
-
-export async function getDeviceBasicInfo(options?: { [key: string]: any }) {
+export async function getDeviceBasicInfo(options?: Record<string, any>) {
   return request<ApiResponse<DeviceBasicInfoResponse>>('/api/device/basic-info', {
     method: 'GET',
     ...(options || {}),
   });
 }
 
-export async function getDeviceConfigInfo(options?: { [key: string]: any }) {
+export async function getDeviceConfigInfo(options?: Record<string, any>) {
   return request<ApiResponse<DeviceConfigResponse>>('/api/device/config-info', {
     method: 'GET',
     ...(options || {}),
   });
 }
 
-export async function getDeviceStatus(options?: { [key: string]: any }) {
+export async function getDeviceStatus(options?: Record<string, any>) {
   return request<ApiResponse<DeviceStatusResponse>>('/api/device/status', {
     method: 'GET',
     ...(options || {}),

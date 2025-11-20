@@ -2,27 +2,15 @@ import React, { useMemo } from 'react';
 import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
 import type { ColumnsType } from 'antd/es/table';
-import {
-  Badge,
-  Card,
-  Col,
-  Progress,
-  Row,
-  Statistic,
-  Table,
-  Timeline,
-} from 'antd';
-import type {
-  DeviceAlertItem,
-  DeviceStatusItem,
-  DeviceStatusResponse,
-} from '@/services/device';
+import { Badge, Card, Col, Row, Statistic, Table } from 'antd';
+import type { DeviceStatusItem, DeviceStatusResponse } from '@/services/device';
 import { getDeviceStatus } from '@/services/device';
 
-const statusBadge: Record<DeviceStatusItem['status'], { text: string; status: 'success' | 'processing' | 'error' | 'warning' | 'default' }> = {
-  online: { text: '在线', status: 'success' },
-  warning: { text: '预警', status: 'warning' },
-  offline: { text: '离线', status: 'error' },
+const statusColor: Record<DeviceStatusItem['realtimeStatus'], 'success' | 'warning' | 'error' | 'default'> = {
+  在线: 'success',
+  维护中: 'warning',
+  故障: 'error',
+  离线: 'default',
 };
 
 const StatusMonitoring: React.FC = () => {
@@ -32,103 +20,62 @@ const StatusMonitoring: React.FC = () => {
   });
 
   const metrics = data?.metrics ?? {
-    uptime: 0,
+    onlineRate: 0,
     offlineDevices: 0,
-    warnings: 0,
+    faultDevices: 0,
     lastSync: '--',
   };
   const statuses = data?.statuses ?? [];
-  const alerts = data?.alerts ?? [];
-  const trend = (data?.trend ?? []) as DeviceStatusResponse['trend'];
 
   const columns: ColumnsType<DeviceStatusItem> = useMemo(
     () => [
       {
         title: '设备名称',
         dataIndex: 'deviceName',
-        width: 240,
+        width: 220,
         render: (value: string, record) => (
           <div>
-            <strong>{value}</strong>
+            <div style={{ fontWeight: 600 }}>{value}</div>
             <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.type}</div>
           </div>
         ),
       },
       {
-        title: '运行状态',
-        dataIndex: 'status',
+        title: '实时状态',
+        dataIndex: 'realtimeStatus',
         width: 140,
-        render: (value: DeviceStatusItem['status']) => {
-          const badge = statusBadge[value];
-          return <Badge status={badge.status} text={badge.text} />;
-        },
-      },
-      {
-        title: '健康评分',
-        dataIndex: 'healthScore',
-        width: 180,
-        render: (value: number) => (
-          <Progress
-            percent={value}
-            size="small"
-            strokeColor={value >= 80 ? '#52c41a' : value >= 60 ? '#faad14' : '#ff4d4f'}
-          />
+        render: (value: DeviceStatusItem['realtimeStatus']) => (
+          <Badge status={statusColor[value]} text={value} />
         ),
       },
       {
-        title: '最近心跳',
-        dataIndex: 'lastHeartbeat',
+        title: 'CPU / 内存占用',
+        dataIndex: 'cpuUsage',
         width: 180,
+        render: (value: number | undefined, record) =>
+          value !== undefined && record.memoryUsage !== undefined
+            ? `${value}% / ${record.memoryUsage}%`
+            : '—',
       },
       {
-        title: '设备温度',
-        dataIndex: 'temperature',
-        width: 140,
-        render: (value: number) => `${value} ℃`,
-      },
-      {
-        title: '功耗/负载',
-        dataIndex: 'powerLoad',
+        title: '网络信号强度',
+        dataIndex: 'signalStrength',
         width: 160,
+        render: (value: string | undefined) => value ?? '—',
       },
-      {
-        title: '网络时延',
-        dataIndex: 'networkLatency',
-        width: 140,
-        render: (value: number) => `${value} ms`,
-      },
+      { title: '数据上传速率', dataIndex: 'uploadRate', width: 160 },
+      { title: '最后心跳时间', dataIndex: 'lastHeartbeat', width: 200 },
+      { title: '异常提示', dataIndex: 'exception' },
     ],
     [],
   );
-
-  const trendColumns: ColumnsType<DeviceStatusResponse['trend'][number]> = [
-    {
-      title: '时间段',
-      dataIndex: 'time',
-    },
-    {
-      title: '在线设备',
-      dataIndex: 'online',
-      align: 'center',
-    },
-    {
-      title: '预警设备',
-      dataIndex: 'warnings',
-      align: 'center',
-    },
-    {
-      title: '离线设备',
-      dataIndex: 'offline',
-      align: 'center',
-    },
-  ];
 
   return (
     <PageContainer header={{ title: '设备状态监测' }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="近24小时在线率" value={metrics.uptime} precision={2} suffix="%" />
+            <Statistic title="在线率" value={metrics.onlineRate} precision={1} suffix="%" />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
@@ -138,61 +85,26 @@ const StatusMonitoring: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="告警/预警" value={metrics.warnings} suffix="条" />
+            <Statistic title="故障设备" value={metrics.faultDevices} suffix="台" valueStyle={{ color: '#f5222d' }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="状态同步" value={metrics.lastSync} />
+            <Statistic title="状态同步时间" value={metrics.lastSync} />
           </Card>
         </Col>
       </Row>
 
       <Card title="实时设备状态" style={{ marginTop: 24 }} bodyStyle={{ paddingTop: 8 }}>
         <Table<DeviceStatusItem>
-          rowKey="id"
+          rowKey={(record) => record.deviceId}
           columns={columns}
           dataSource={statuses}
           loading={loading}
-          pagination={{ pageSize: 7, showSizeChanger: false }}
+          pagination={{ pageSize: 8, showSizeChanger: false }}
           scroll={{ x: 1200 }}
         />
       </Card>
-
-      <Row gutter={16} style={{ marginTop: 24 }}>
-        <Col xs={24} md={12}>
-          <Card title="在线趋势" bodyStyle={{ paddingTop: 8 }}>
-            <Table<DeviceStatusResponse['trend'][number]>
-              rowKey={(record) => record.time}
-              size="small"
-              pagination={false}
-              columns={trendColumns}
-              dataSource={trend}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} md={12}>
-          <Card title="最新告警" bodyStyle={{ paddingTop: 16 }}>
-            <Timeline
-              items={alerts.map((alert: DeviceAlertItem) => ({
-                color: alert.status === '已关闭' ? 'green' : 'red',
-                children: (
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{alert.deviceName}</div>
-                    <div style={{ color: 'rgba(0,0,0,0.65)' }}>{alert.issue}</div>
-                    <div style={{ fontSize: 12, marginTop: 4 }}>
-                      触发时间：{alert.triggeredAt}
-                    </div>
-                    <div style={{ fontSize: 12 }}>
-                      责任人：{alert.handler} · 状态：{alert.status}
-                    </div>
-                  </div>
-                ),
-              }))}
-            />
-          </Card>
-        </Col>
-      </Row>
     </PageContainer>
   );
 };

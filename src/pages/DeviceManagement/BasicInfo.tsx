@@ -2,24 +2,24 @@ import React, { useMemo } from 'react';
 import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
 import type { ColumnsType } from 'antd/es/table';
-import { Badge, Card, Col, Row, Statistic, Table, Tag } from 'antd';
+import { Badge, Card, Col, Row, Statistic, Table } from 'antd';
 import type { DeviceBasicInfoItem, DeviceBasicInfoResponse } from '@/services/device';
 import { getDeviceBasicInfo } from '@/services/device';
 
-const statusMap: Record<DeviceBasicInfoItem['status'], { text: string; status: 'success' | 'default' | 'warning' | 'error' }> = {
-  online: { text: '在线', status: 'success' },
-  maintenance: { text: '维护中', status: 'warning' },
-  offline: { text: '离线', status: 'error' },
+const statusBadge: Record<DeviceBasicInfoItem['status'], 'success' | 'processing' | 'error' | 'warning'> = {
+  在线: 'success',
+  维护中: 'warning',
+  故障: 'error',
+  离线: 'error',
 };
 
 const BasicInfo: React.FC = () => {
   const { data, loading } = useRequest(getDeviceBasicInfo, {
-    formatResult: (res: DeviceBasicInfoResponse | { data: DeviceBasicInfoResponse }) => {
-      return (res as { data?: DeviceBasicInfoResponse })?.data ?? (res as DeviceBasicInfoResponse);
-    },
+    formatResult: (res: DeviceBasicInfoResponse | { data: DeviceBasicInfoResponse }) =>
+      (res as { data?: DeviceBasicInfoResponse })?.data ?? (res as DeviceBasicInfoResponse),
   });
 
-  const summary: DeviceBasicInfoResponse['summary'] = data?.summary ?? {
+  const summary = data?.summary ?? {
     total: 0,
     aiEdge: 0,
     gateways: 0,
@@ -30,57 +30,37 @@ const BasicInfo: React.FC = () => {
 
   const columns: ColumnsType<DeviceBasicInfoItem> = useMemo(
     () => [
-      {
-        title: '设备编号',
-        dataIndex: 'id',
-        width: 120,
-      },
+      { title: '设备 ID', dataIndex: 'id', width: 150 },
       {
         title: '设备名称',
         dataIndex: 'name',
-        render: (value) => <strong>{value}</strong>,
-        width: 200,
-      },
-      {
-        title: '设备类型',
-        dataIndex: 'type',
-        width: 140,
-      },
-      {
-        title: '规格/型号',
-        dataIndex: 'model',
-        width: 140,
-      },
-      {
-        title: '供应商',
-        dataIndex: 'vendor',
-        width: 160,
-      },
-      {
-        title: '应用类型',
-        dataIndex: 'application',
-        width: 160,
-        render: (value: string) => <Tag color="blue">{value}</Tag>,
-      },
-      {
-        title: '安装位置',
-        dataIndex: 'location',
         width: 220,
+        render: (value: string) => <strong>{value}</strong>,
       },
       {
-        title: '坐标',
-        dataIndex: 'coordinates',
-        width: 160,
+        title: '设备类型 / 型号',
+        dataIndex: 'type',
+        width: 220,
+        render: (value: DeviceBasicInfoItem['type'], record) => (
+          <div>
+            <div>{value}</div>
+            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.model}</div>
+          </div>
+        ),
       },
+      { title: '供应商', dataIndex: 'vendor', width: 160 },
+      { title: '设备序列号', dataIndex: 'serialNumber', width: 200 },
+      { title: '安装时间', dataIndex: 'installDate', width: 140 },
+      { title: '质保期限', dataIndex: 'warrantyDate', width: 140 },
       {
-        title: '状态',
+        title: '设备状态',
         dataIndex: 'status',
-        width: 120,
-        render: (value: DeviceBasicInfoItem['status']) => {
-          const badge = statusMap[value];
-          return <Badge status={badge.status} text={badge.text} />;
-        },
+        width: 140,
+        render: (value: DeviceBasicInfoItem['status']) => (
+          <Badge status={statusBadge[value]} text={value} />
+        ),
       },
+      { title: '备注', dataIndex: 'remark' },
     ],
     [],
   );
@@ -117,7 +97,7 @@ const BasicInfo: React.FC = () => {
           columns={columns}
           dataSource={devices}
           pagination={{ pageSize: 8, showSizeChanger: false }}
-          scroll={{ x: 1200 }}
+          scroll={{ x: 1400 }}
         />
       </Card>
     </PageContainer>

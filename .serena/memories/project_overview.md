@@ -1,0 +1,3 @@
+- Purpose: Ant Design Pro-based admin web app built with Umi/Max that leverages Ant Design v5 and @ant-design/pro-components for enterprise dashboards, with mocks and PRD docs (`prd.md`, `prd-detail.md`).
+- Tech stack: React 19 + TypeScript, Umi Max 4, Ant Design 5, dayjs, classnames; testing via Jest and Testing Library; build/serve handled through `max` CLI.
+- Repo layout: `src/` holds application code (pages, components, models, locales); `config/` contains Umi routing and build config; `mock/` defines API mocks; `public/` static assets; `tests/` for unit/e2e; `types/` for shared typings; `dist/` build output. Includes Husky hooks and lint-staged setup.

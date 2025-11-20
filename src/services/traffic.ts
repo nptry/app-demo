@@ -5,39 +5,29 @@ type ApiResponse<T> = {
   data: T;
 };
 
-export type CheckpointSummary = {
-  total: number;
-  monitored: number;
-  aiNodes: number;
-  warnings24h: number;
-};
-
 export type CheckpointInfoItem = {
   id: string;
   name: string;
-  district: string;
-  location: string;
+  checkpointTypes: string[];
+  region: string;
+  address: string;
   coordinates: string;
-  coverageRoads: string;
-  types: string[];
+  laneCount: number;
+  laneDescription: string;
+  speedLimit: number;
   manager: string;
-  contact: string;
-  status: '正常' | '关注' | '中断';
-  description: string;
-};
-
-export type CheckpointTaskItem = {
-  id: string;
-  title: string;
-  detail: string;
-  window: string;
-  owner: string;
+  phone: string;
+  mapFile: string;
+  status: '启用' | '禁用';
 };
 
 export type TrafficCheckpointResponse = {
-  summary: CheckpointSummary;
+  summary: {
+    total: number;
+    enabled: number;
+    laneCount: number;
+  };
   checkpoints: CheckpointInfoItem[];
-  tasks: CheckpointTaskItem[];
 };
 
 export async function getTrafficCheckpoints(options?: Record<string, any>) {
@@ -47,38 +37,24 @@ export async function getTrafficCheckpoints(options?: Record<string, any>) {
   });
 }
 
-export type TrafficDeploymentSummary = {
-  type: string;
-  cameras: number;
-  aiNodes: number;
-  gateways: number;
-};
-
 export type TrafficDeploymentItem = {
   id: string;
-  checkpoint: string;
+  checkpointId: string;
+  checkpointName: string;
+  deviceType: '高清数字摄像机' | 'AI 边缘计算设备' | '4G 无线网关';
+  deviceId: string;
   deviceName: string;
-  deviceType: string;
-  poleCode: string;
-  installation: string;
-  network: string;
-  status: '在线' | '维护' | '离线';
-  aiModels: string[];
-};
-
-export type TrafficMaintenanceItem = {
-  id: string;
-  checkpoint: string;
-  action: string;
-  schedule: string;
+  lane: string;
+  position: string;
+  lensFocal?: string;
+  installDate: string;
   owner: string;
-  status: '待执行' | '执行中' | '完成';
+  status: '正常运行' | '待调试' | '已拆除';
+  result?: string;
 };
 
 export type TrafficDeploymentResponse = {
-  summary: TrafficDeploymentSummary[];
   deployments: TrafficDeploymentItem[];
-  maintenance: TrafficMaintenanceItem[];
 };
 
 export async function getTrafficDeployments(options?: Record<string, any>) {
@@ -88,27 +64,24 @@ export async function getTrafficDeployments(options?: Record<string, any>) {
   });
 }
 
-export type LicenseMetrics = {
-  totalToday: number;
-  validPlates: number;
-  blacklistHits: number;
-  lastSync: string;
-};
-
 export type LicenseRecordItem = {
   id: string;
-  checkpoint: string;
-  plate: string;
-  vehicleType: string;
-  color: string;
+  checkpointName: string;
+  lane: string;
   captureTime: string;
-  direction: string;
-  status: '正常' | '黑名单' | '异常';
-  snapshot: string;
+  plateNumber: string;
+  plateColor: string;
+  vehicleColor: string;
+  vehicleType: string;
+  speed: number;
+  photos: string[];
+  accuracy: number;
+  abnormal: boolean;
+  reason?: string;
+  deviceId: string;
 };
 
 export type LicenseRecordResponse = {
-  metrics: LicenseMetrics;
   records: LicenseRecordItem[];
 };
 
@@ -119,32 +92,25 @@ export async function getLicenseRecords(options?: Record<string, any>) {
   });
 }
 
-export type TrafficFlowMetrics = {
-  totalVehicles: number;
-  avgSpeed: number;
-  incidents: number;
-  peakHour: string;
-};
-
-export type TrafficTrendItem = {
-  time: string;
-  inbound: number;
-  outbound: number;
-};
-
-export type TrafficIncidentItem = {
+export type TrafficMonitoringRecord = {
   id: string;
-  checkpoint: string;
-  type: string;
-  description: string;
-  status: '已恢复' | '处理中';
-  time: string;
+  checkpointName: string;
+  lane: string;
+  period: string;
+  range: string;
+  totalVehicles: number;
+  threshold: number;
+  congestion: boolean;
+  duration?: string;
+  suggestion?: string;
+  avgSpeed: number;
+  maxSpeed: number;
+  deviceId: string;
+  accuracy: number;
 };
 
 export type TrafficMonitoringResponse = {
-  metrics: TrafficFlowMetrics;
-  trend: TrafficTrendItem[];
-  incidents: TrafficIncidentItem[];
+  records: TrafficMonitoringRecord[];
 };
 
 export async function getTrafficMonitoring(options?: Record<string, any>) {
@@ -154,46 +120,82 @@ export async function getTrafficMonitoring(options?: Record<string, any>) {
   });
 }
 
-export type ViolationMetrics = {
-  today: number;
-  handled: number;
-  pending: number;
-  avgHandleMins: number;
-};
-
-export type ViolationRecordItem = {
+export type RedLightRecord = {
   id: string;
-  checkpoint: string;
-  plate: string;
+  checkpointName: string;
+  lane: string;
   violationTime: string;
-  evidence: string;
-  level: '一般' | '严重';
-  handler: string;
-  status: '待处置' | '处理中' | '已完成';
-  description: string;
+  lightOnTime: string;
+  plateNumber: string;
+  vehicleType: string;
+  photos: string[];
+  video: string;
+  position: string;
+  speed: number;
+  alarm: {
+    triggered: boolean;
+    receiver?: string;
+    status?: '未处理' | '处理中（录入执法系统）' | '已处理（生成罚单）' | '误报';
+    remark?: string;
+  };
+  deviceId: string;
+  accuracy: number;
 };
 
-export type ViolationResponse = {
-  metrics: ViolationMetrics;
-  records: ViolationRecordItem[];
+export type RetrogradeRecord = {
+  id: string;
+  checkpointName: string;
+  lane: string;
+  directionRule: string;
+  violationTime: string;
+  plateNumber: string;
+  vehicleType: string;
+  photos: string[];
+  video: string;
+  distance: number;
+  speed: number;
+  alarmStatus: string;
+  remark?: string;
+  deviceId: string;
+  accuracy: number;
+};
+
+export type ParkingViolationRecord = {
+  id: string;
+  checkpointName: string;
+  area: string;
+  rule: string;
+  startTime: string;
+  duration: string;
+  threshold: number;
+  plateNumber: string;
+  vehicleType: string;
+  photos: string[];
+  video: string;
+  specialVehicle: boolean;
+  specialReason?: string;
+  alarmStatus: string;
+  remark?: string;
+  deviceId: string;
+  accuracy: number;
 };
 
 export async function getRedLightViolations(options?: Record<string, any>) {
-  return request<ApiResponse<ViolationResponse>>('/api/traffic/red-light', {
+  return request<ApiResponse<RedLightRecord[]>>('/api/traffic/red-light', {
     method: 'GET',
     ...(options || {}),
   });
 }
 
 export async function getRetrogradeViolations(options?: Record<string, any>) {
-  return request<ApiResponse<ViolationResponse>>('/api/traffic/retrograde', {
+  return request<ApiResponse<RetrogradeRecord[]>>('/api/traffic/retrograde', {
     method: 'GET',
     ...(options || {}),
   });
 }
 
 export async function getParkingViolations(options?: Record<string, any>) {
-  return request<ApiResponse<ViolationResponse>>('/api/traffic/parking', {
+  return request<ApiResponse<ParkingViolationRecord[]>>('/api/traffic/parking', {
     method: 'GET',
     ...(options || {}),
   });

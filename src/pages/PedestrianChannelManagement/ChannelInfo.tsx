@@ -2,14 +2,13 @@ import React, { useMemo } from 'react';
 import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
 import type { ColumnsType } from 'antd/es/table';
-import { Badge, Card, Col, List, Row, Statistic, Table } from 'antd';
-import type { ChannelInfoItem, ChannelInfoResponse, ChannelMeasureItem } from '@/services/pedestrian';
+import { Badge, Card, Col, Row, Statistic, Table } from 'antd';
+import type { ChannelInfoItem, ChannelInfoResponse } from '@/services/pedestrian';
 import { getChannelInfo } from '@/services/pedestrian';
 
-const statusColor: Record<ChannelInfoItem['status'], 'success' | 'warning' | 'processing'> = {
-  正常: 'success',
-  关注: 'warning',
-  维护: 'processing',
+const statusColor: Record<ChannelInfoItem['status'], 'success' | 'default'> = {
+  启用: 'success',
+  禁用: 'default',
 };
 
 const ChannelInfo: React.FC = () => {
@@ -19,16 +18,15 @@ const ChannelInfo: React.FC = () => {
   });
 
   const summary = data?.summary ?? {
-    totalChannels: 0,
-    coveredDistricts: 0,
-    aiNodes: 0,
-    warningsToday: 0,
+    total: 0,
+    enabled: 0,
+    widthMeters: 0,
   };
   const channels = data?.channels ?? [];
-  const measures = data?.measures ?? [];
 
   const columns: ColumnsType<ChannelInfoItem> = useMemo(
     () => [
+      { title: '通道 ID', dataIndex: 'id', width: 140 },
       {
         title: '通道名称',
         dataIndex: 'name',
@@ -36,43 +34,27 @@ const ChannelInfo: React.FC = () => {
         render: (value: string, record) => (
           <div>
             <strong>{value}</strong>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.location}</div>
+            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.address}</div>
           </div>
         ),
       },
-      {
-        title: '区域',
-        dataIndex: 'district',
-        width: 160,
-      },
-      {
-        title: '类型',
-        dataIndex: 'type',
-        width: 140,
-      },
+      { title: '通道类型', dataIndex: 'channelType', width: 160 },
+      { title: '所属区域', dataIndex: 'region', width: 200 },
+      { title: '宽度 (m)', dataIndex: 'width', width: 120 },
+      { title: '经纬度', dataIndex: 'coordinates', width: 200 },
       {
         title: '负责人',
         dataIndex: 'manager',
-        width: 160,
+        width: 180,
         render: (value: string, record) => (
           <div>
             <div>{value}</div>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.contact}</div>
+            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.phone}</div>
           </div>
         ),
       },
-      {
-        title: '状态',
-        dataIndex: 'status',
-        width: 120,
-        render: (value: ChannelInfoItem['status']) => (
-          <Badge status={statusColor[value]} text={value} />
-        ),
-      },
-      {
-        title: '描述',
-        dataIndex: 'description',
-      },
+      { title: '通道状态', dataIndex: 'status', width: 140, render: (value: ChannelInfoItem['status']) => <Badge status={statusColor[value]} text={value} /> },
+      { title: '电子地图', dataIndex: 'mapFile', width: 200 },
     ],
     [],
   );
@@ -80,24 +62,19 @@ const ChannelInfo: React.FC = () => {
   return (
     <PageContainer header={{ title: '通道定位基础信息' }}>
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={4}>
           <Card bordered={false}>
-            <Statistic title="纳管理通道" value={summary.totalChannels} suffix="处" />
+            <Statistic title="纳管理通道" value={summary.total} suffix="处" />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={4}>
           <Card bordered={false}>
-            <Statistic title="覆盖区县" value={summary.coveredDistricts} suffix="个" />
+            <Statistic title="启用通道" value={summary.enabled} suffix="处" />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={4}>
           <Card bordered={false}>
-            <Statistic title="AI 节点" value={summary.aiNodes} suffix="台" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="今日告警" value={summary.warningsToday} suffix="条" />
+            <Statistic title="通道宽度合计" value={summary.widthMeters} suffix="m" />
           </Card>
         </Col>
       </Row>
@@ -109,24 +86,8 @@ const ChannelInfo: React.FC = () => {
           columns={columns}
           dataSource={channels}
           pagination={{ pageSize: 5, showSizeChanger: false }}
-          scroll={{ x: 1100 }}
+          scroll={{ x: 1500 }}
         />
-      </Card>
-
-      <Card title="管控措施" style={{ marginTop: 24 }}>
-        <List
-          dataSource={measures}
-          renderItem={(item: ChannelMeasureItem) => (
-            <List.Item key={item.id}>
-              <List.Item.Meta
-                title={item.title}
-                description={`负责人：${item.owner} · 时段：${item.window}`}
-              />
-              <div>{item.detail}</div>
-            </List.Item>
-          )}
-        />
-        {!measures.length && <div style={{ textAlign: 'center', padding: 16 }}>暂无管控措施</div>}
       </Card>
     </PageContainer>
   );

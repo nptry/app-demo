@@ -6,37 +6,28 @@ type ApiResponse<T> = {
 };
 
 export type ChannelSummary = {
-  totalChannels: number;
-  coveredDistricts: number;
-  aiNodes: number;
-  warningsToday: number;
+  total: number;
+  enabled: number;
+  widthMeters: number;
 };
 
 export type ChannelInfoItem = {
   id: string;
   name: string;
-  district: string;
-  location: string;
+  region: string;
+  address: string;
   coordinates: string;
-  type: string;
+  channelType: '商场入口' | '地铁站出口' | '步行街通道' | '政府入口';
+  width: number;
   manager: string;
-  contact: string;
-  status: '正常' | '关注' | '维护';
-  description: string;
-};
-
-export type ChannelMeasureItem = {
-  id: string;
-  title: string;
-  owner: string;
-  window: string;
-  detail: string;
+  phone: string;
+  mapFile: string;
+  status: '启用' | '禁用';
 };
 
 export type ChannelInfoResponse = {
   summary: ChannelSummary;
   channels: ChannelInfoItem[];
-  measures: ChannelMeasureItem[];
 };
 
 export async function getChannelInfo(options?: Record<string, any>) {
@@ -48,14 +39,18 @@ export async function getChannelInfo(options?: Record<string, any>) {
 
 export type ChannelDeploymentItem = {
   id: string;
+  channelId: string;
   channelName: string;
+  deviceType: '高清数字摄像机' | 'AI 边缘计算设备' | '4G 无线网关';
+  deviceId: string;
   deviceName: string;
-  deviceType: string;
-  installation: string;
-  poleCode: string;
-  aiModels: string[];
-  network: string;
-  status: '在线' | '维护' | '离线';
+  position: string;
+  installHeight?: number;
+  lensAngle?: string;
+  installDate: string;
+  owner: string;
+  status: '正常运行' | '待调试' | '已拆除';
+  testResult?: string;
 };
 
 export type ChannelDeploymentResponse = {
@@ -69,57 +64,60 @@ export async function getChannelDeployments(options?: Record<string, any>) {
   });
 }
 
-export type ChannelWatchMetrics = {
-  watchlist: number;
-  hitsToday: number;
-  onlineTasks: number;
-  lastPush: string;
-};
-
-export type ChannelFocusItem = {
+export type KeyPersonRecord = {
   id: string;
-  personName: string;
-  gender: '男' | '女';
-  age: number;
-  tags: string[];
+  channelId: string;
   channelName: string;
-  lastSeen: string;
-  status: '待核查' | '跟踪中' | '已处理';
-};
-
-export type ChannelWatchEvent = {
-  id: string;
+  personId: string;
   personName: string;
-  eventType: string;
-  time: string;
-  action: string;
-  operator: string;
+  personType: string;
+  captureTime: string;
+  photos: string[];
+  video: string;
+  accuracy: number;
+  behavior: string;
+  withCompanion: boolean;
+  companionCount?: number;
+  alarmStatus: string;
+  alarmChannels: string[];
+  receiver: string;
+  resultRemark?: string;
+  deviceId: string;
 };
 
-export type ChannelWatchResponse = {
-  metrics: ChannelWatchMetrics;
-  persons: ChannelFocusItem[];
-  events: ChannelWatchEvent[];
+export type KeyPersonResponse = {
+  records: KeyPersonRecord[];
 };
 
 export async function getChannelWatch(options?: Record<string, any>) {
-  return request<ApiResponse<ChannelWatchResponse>>('/api/pedestrian/watch', {
+  return request<ApiResponse<KeyPersonResponse>>('/api/pedestrian/watch', {
     method: 'GET',
     ...(options || {}),
   });
 }
 
-export type TrajectoryItem = {
+export type TrajectoryPoint = {
+  channelId: string;
+  channelName: string;
+  time: string;
+  deviceId: string;
+};
+
+export type TrajectoryRecord = {
   id: string;
+  personId: string;
   personName: string;
-  path: string;
+  range: string;
   duration: string;
-  lastSeen: string;
-  confidence: number;
+  distanceKm: number;
+  hotspots: string[];
+  points: TrajectoryPoint[];
+  operator: string;
+  queryTime: string;
 };
 
 export type TrajectoryResponse = {
-  trajectories: TrajectoryItem[];
+  trajectories: TrajectoryRecord[];
 };
 
 export async function getChannelTrajectories(options?: Record<string, any>) {
@@ -129,28 +127,39 @@ export async function getChannelTrajectories(options?: Record<string, any>) {
   });
 }
 
-export type StrangerMetric = {
-  today: number;
-  highRisk: number;
-  followUp: number;
-};
-
-export type StrangerRecord = {
+export type CompanionMember = {
   id: string;
-  channelName: string;
-  captureTime: string;
-  description: string;
-  evidence: string;
-  status: '已通知' | '已确认' | '待处理';
+  gender: string;
+  ageRange: string;
+  appearance: string;
+  position: string;
+  photo: string;
 };
 
-export type StrangerResponse = {
-  metrics: StrangerMetric;
-  records: StrangerRecord[];
+export type CompanionRecord = {
+  id: string;
+  keyPersonId: string;
+  keyPersonName: string;
+  captureChannelId: string;
+  captureChannelName: string;
+  captureTime: string;
+  companionCount: number;
+  list: CompanionMember[];
+  behavior: string;
+  focus: boolean;
+  reason?: string;
+  linkResult?: string;
+  remark?: string;
+  deviceId: string;
+  accuracy: number;
+};
+
+export type CompanionResponse = {
+  records: CompanionRecord[];
 };
 
 export async function getStrangerRecords(options?: Record<string, any>) {
-  return request<ApiResponse<StrangerResponse>>('/api/pedestrian/strangers', {
+  return request<ApiResponse<CompanionResponse>>('/api/pedestrian/strangers', {
     method: 'GET',
     ...(options || {}),
   });
@@ -158,15 +167,25 @@ export async function getStrangerRecords(options?: Record<string, any>) {
 
 export type AccessRecord = {
   id: string;
+  channelId: string;
   channelName: string;
-  personName: string;
-  credential: string;
-  direction: string;
   time: string;
+  anonymousId: string;
+  faceCode: string;
+  gender: string;
+  ageRange: string;
+  direction: string;
+  belongings: string;
+  photo: string;
+  abnormal: boolean;
+  abnormalReason?: string;
+  alarmStatus: string;
+  remark?: string;
+  deviceId: string;
+  accuracy: number;
 };
 
 export type AccessResponse = {
-  total: number;
   records: AccessRecord[];
 };
 

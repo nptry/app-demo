@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
 import type { ColumnsType } from 'antd/es/table';
-import { Card, Table, Tag } from 'antd';
-import type { TrajectoryItem, TrajectoryResponse } from '@/services/pedestrian';
+import { Card, Table } from 'antd';
+import type { TrajectoryRecord, TrajectoryResponse } from '@/services/pedestrian';
 import { getChannelTrajectories } from '@/services/pedestrian';
 
 const TrajectoryTracking: React.FC = () => {
@@ -14,26 +14,40 @@ const TrajectoryTracking: React.FC = () => {
 
   const trajectories = data?.trajectories ?? [];
 
-  const columns: ColumnsType<TrajectoryItem> = [
-    { title: '人员', dataIndex: 'personName', width: 200, render: (value: string) => <strong>{value}</strong> },
-    { title: '行进路径', dataIndex: 'path', width: 360 },
-    { title: '持续时长', dataIndex: 'duration', width: 160 },
-    { title: '最近出现', dataIndex: 'lastSeen', width: 180 },
-    { title: '置信度', dataIndex: 'confidence', render: (value: number) => <Tag color={value >= 90 ? 'green' : 'orange'}>{value}%</Tag> },
-  ];
+  const columns: ColumnsType<TrajectoryRecord> = useMemo(
+    () => [
+      { title: '重点人员', dataIndex: 'personName', width: 200 },
+      { title: '查询时间范围', dataIndex: 'range', width: 220 },
+      { title: '轨迹持续', dataIndex: 'duration', width: 140 },
+      { title: '轨迹距离 (km)', dataIndex: 'distanceKm', width: 160 },
+      { title: '高频区域', dataIndex: 'hotspots', width: 240, render: (value: string[]) => value.join(' / ') },
+      { title: '操作人', dataIndex: 'operator', width: 160 },
+      { title: '查询时间', dataIndex: 'queryTime', width: 200 },
+    ],
+    [],
+  );
 
   return (
     <PageContainer header={{ title: '轨迹跟踪' }}>
       <Card bodyStyle={{ paddingTop: 8 }}>
-        <Table<TrajectoryItem>
+        <Table<TrajectoryRecord>
           rowKey="id"
           loading={loading}
           columns={columns}
           dataSource={trajectories}
-          pagination={{ pageSize: 6, showSizeChanger: false }}
-          scroll={{ x: 1100 }}
+          expandable={{
+            expandedRowRender: (record) => (
+              <div style={{ fontSize: 12 }}>
+                {record.points.map((point) => (
+                  <div key={`${record.id}-${point.time}`}>
+                    {point.time} · {point.channelName} · 设备：{point.deviceId}
+                  </div>
+                ))}
+              </div>
+            ),
+          }}
+          pagination={{ pageSize: 5, showSizeChanger: false }}
         />
-        {!trajectories.length && <div style={{ textAlign: 'center', padding: 16 }}>暂无轨迹数据</div>}
       </Card>
     </PageContainer>
   );

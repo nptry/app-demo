@@ -1,3 +1,4 @@
+
 import { request } from '@umijs/max';
 
 type ApiResponse<T> = {
@@ -5,39 +6,30 @@ type ApiResponse<T> = {
   data: T;
 };
 
-export type KeyAreaSummary = {
+export type KeyAreaSiteSummary = {
   totalSites: number;
-  coverageSqKm: number;
-  avgDailyVisitors: number;
-  alerts24h: number;
+  enabledSites: number;
+  totalAreaSqm: number;
 };
 
 export type KeyAreaSiteItem = {
   id: string;
   name: string;
-  type: '商业区' | '交通枢纽' | '活动区域' | '居民社区';
-  district: string;
+  siteType: '公共场所' | '活动区域' | '政府办公区' | '商业区域';
+  region: string;
   address: string;
-  areaSize: string;
+  coordinates: string;
+  areaSize: number;
   manager: string;
-  contact: string;
-  status: '正常' | '关注' | '管控';
-  riskLevel: '低' | '中' | '高';
-  description: string;
-};
-
-export type KeyAreaMeasure = {
-  id: string;
-  title: string;
-  detail: string;
-  owner: string;
-  lastUpdate: string;
+  phone: string;
+  plan: string;
+  description?: string;
+  status: '启用' | '禁用';
 };
 
 export type KeyAreaSiteResponse = {
-  summary: KeyAreaSummary;
+  summary: KeyAreaSiteSummary;
   sites: KeyAreaSiteItem[];
-  measures: KeyAreaMeasure[];
 };
 
 export async function getKeyAreaSites(options?: Record<string, any>) {
@@ -47,39 +39,24 @@ export async function getKeyAreaSites(options?: Record<string, any>) {
   });
 }
 
-export type DeploymentSummaryItem = {
-  type: string;
-  cameras: number;
-  aiNodes: number;
-  gateways: number;
-  coverage: string;
-};
-
-export type DeploymentDeviceItem = {
+export type DeploymentItem = {
   id: string;
-  areaName: string;
+  siteId: string;
+  siteName: string;
+  zoneCode: string;
+  zoneArea: number;
+  deviceType: '高清数字摄像机' | 'AI 边缘计算设备' | '4G 无线网关';
+  deviceId: string;
   deviceName: string;
-  deviceType: string;
-  poleCode: string;
-  location: string;
-  coordinates: string;
-  aiModels: string[];
-  status: '在线' | '维护' | '离线';
-};
-
-export type MaintenancePlanItem = {
-  id: string;
-  areaName: string;
-  action: string;
-  window: string;
+  position: string;
+  installHeight?: number;
+  installDate: string;
   owner: string;
-  status: '待执行' | '执行中' | '完成';
+  status: '正常运行' | '待调试' | '已拆除';
 };
 
 export type KeyAreaDeploymentResponse = {
-  summary: DeploymentSummaryItem[];
-  deployments: DeploymentDeviceItem[];
-  maintenancePlans: MaintenancePlanItem[];
+  deployments: DeploymentItem[];
 };
 
 export async function getKeyAreaDeployments(options?: Record<string, any>) {
@@ -89,43 +66,40 @@ export async function getKeyAreaDeployments(options?: Record<string, any>) {
   });
 }
 
-export type DensityMetrics = {
-  realtimeIndex: number;
-  highRiskZones: number;
-  warningsToday: number;
-  lastSync: string;
-};
-
-export type DensityAreaItem = {
-  id: string;
-  areaName: string;
-  zone: string;
-  realtimeDensity: number;
-  threshold: number;
-  status: '正常' | '预警' | '超限';
-  change: string;
-};
-
-export type DensityTrendItem = {
+export type DensityTrendPoint = {
   time: string;
-  avgDensity: number;
-  highDensityZones: number;
+  density: number;
 };
 
-export type DensityAlertItem = {
+export type DensityRecord = {
   id: string;
-  areaName: string;
-  reason: string;
-  triggeredAt: string;
-  handler: string;
-  status: '处理中' | '已处理';
+  siteId: string;
+  siteName: string;
+  zoneCode: string;
+  zoneArea: number;
+  time: string;
+  density: number;
+  totalPeople: number;
+  threshold: number;
+  trend: DensityTrendPoint[];
+  alarm: {
+    triggered: boolean;
+    triggeredAt?: string;
+    receiver?: string;
+    status?: '未处理' | '处理中' | '已处理';
+    remark?: string;
+  };
+  sourceDeviceId: string;
+  confidence: number;
 };
 
 export type KeyAreaDensityResponse = {
-  metrics: DensityMetrics;
-  areas: DensityAreaItem[];
-  trend: DensityTrendItem[];
-  alerts: DensityAlertItem[];
+  metrics: {
+    alertCount: number;
+    highDensityZones: number;
+    lastSync: string;
+  };
+  records: DensityRecord[];
 };
 
 export async function getKeyAreaDensity(options?: Record<string, any>) {
@@ -135,42 +109,31 @@ export async function getKeyAreaDensity(options?: Record<string, any>) {
   });
 }
 
-export type FlowMetrics = {
-  totalToday: number;
-  peakHour: string;
-  abnormalEvents: number;
-  avgSpeed: number;
-};
-
-export type FlowDirectionItem = {
+export type FlowRecord = {
   id: string;
-  areaName: string;
-  mainDirection: string;
-  eastToWest: number;
-  westToEast: number;
-  congestionLevel: '畅通' | '轻度拥挤' | '拥挤';
-};
-
-export type FlowTrendItem = {
+  siteId: string;
+  siteName: string;
+  zoneCode: string;
+  direction: string;
   time: string;
-  inbound: number;
-  outbound: number;
-};
-
-export type FlowEventItem = {
-  id: string;
-  areaName: string;
-  type: string;
-  detail: string;
-  time: string;
-  status: '已恢复' | '处理中';
+  forwardFlow: number;
+  reverseFlow?: number;
+  totalFlow: number;
+  threshold: number;
+  abnormal: boolean;
+  duration?: string;
+  suggestion?: string;
+  deviceId: string;
+  accuracy: number;
 };
 
 export type KeyAreaFlowResponse = {
-  metrics: FlowMetrics;
-  directions: FlowDirectionItem[];
-  trend: FlowTrendItem[];
-  events: FlowEventItem[];
+  metrics: {
+    totalFlows: number;
+    abnormalEvents: number;
+    lastSync: string;
+  };
+  records: FlowRecord[];
 };
 
 export async function getKeyAreaFlow(options?: Record<string, any>) {
@@ -180,49 +143,36 @@ export async function getKeyAreaFlow(options?: Record<string, any>) {
   });
 }
 
-export type TargetMetrics = {
-  watchlist: number;
-  hitsToday: number;
-  activeTracking: number;
-  lastPush: string;
-};
-
-export type FocusPersonItem = {
+export type TargetRecord = {
   id: string;
-  name: string;
-  gender: '男' | '女';
-  age: number;
-  tags: string[];
-  lastSeen: string;
-  status: '跟踪中' | '已核查' | '待核查';
-  areaName: string;
-  riskLevel: '低' | '中' | '高';
-};
-
-export type TargetEventItem = {
-  id: string;
-  personName: string;
-  eventType: string;
-  areaName: string;
-  matchedAt: string;
-  action: string;
-  handler: string;
-};
-
-export type PatrolRecordItem = {
-  id: string;
-  areaName: string;
-  task: string;
-  result: string;
+  siteId: string;
+  siteName: string;
+  zoneCode: string;
+  watchlistId: string;
   time: string;
-  operator: string;
+  personId: string;
+  personName: string;
+  personType: string;
+  behavior: string;
+  alarm: {
+    triggered: boolean;
+    channels?: string[];
+    receiver?: string;
+    status?: '未处理' | '处理中' | '已处理' | '误报';
+    remark?: string;
+  };
+  deviceId: string;
+  accuracy: number;
 };
 
 export type KeyAreaTargetResponse = {
-  metrics: TargetMetrics;
-  focusPersons: FocusPersonItem[];
-  events: TargetEventItem[];
-  patrols: PatrolRecordItem[];
+  metrics: {
+    watchlistCount: number;
+    hitsToday: number;
+    activeAlarms: number;
+    lastPush: string;
+  };
+  records: TargetRecord[];
 };
 
 export async function getKeyAreaTargets(options?: Record<string, any>) {

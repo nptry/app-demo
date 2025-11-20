@@ -6,9 +6,8 @@ import { Badge, Card, Col, Row, Statistic, Table, Tag } from 'antd';
 import type { AccountItem, AccountResponse } from '@/services/userManagement';
 import { getAccounts } from '@/services/userManagement';
 
-const statusColor: Record<AccountItem['status'], 'success' | 'warning' | 'error'> = {
+const statusColor: Record<AccountItem['status'], 'success' | 'error'> = {
   启用: 'success',
-  待激活: 'warning',
   禁用: 'error',
 };
 
@@ -20,24 +19,25 @@ const Account: React.FC = () => {
 
   const summary = data?.summary ?? {
     total: 0,
-    active: 0,
-    pending: 0,
-    locked: 0,
+    enabled: 0,
+    disabled: 0,
+    pendingReset: 0,
   };
   const accounts = data?.accounts ?? [];
 
   const columns: ColumnsType<AccountItem> = useMemo(
     () => [
+      { title: '账号 ID', dataIndex: 'id', width: 140 },
       {
-        title: '账号',
+        title: '登录账号',
         dataIndex: 'username',
         width: 160,
         render: (value: string) => <strong>{value}</strong>,
       },
       {
-        title: '姓名/岗位',
+        title: '用户实名 / 岗位',
         dataIndex: 'realName',
-        width: 200,
+        width: 220,
         render: (value: string, record) => (
           <div>
             <div>{value}</div>
@@ -45,21 +45,17 @@ const Account: React.FC = () => {
           </div>
         ),
       },
+      { title: '所属部门', dataIndex: 'department', width: 220 },
       {
-        title: '所属部门',
-        dataIndex: 'dept',
-        width: 200,
-      },
-      {
-        title: '角色',
+        title: '关联角色',
         dataIndex: 'role',
-        width: 160,
+        width: 180,
         render: (value: string) => <Tag color="blue">{value}</Tag>,
       },
       {
         title: '联系方式',
         dataIndex: 'phone',
-        width: 200,
+        width: 220,
         render: (value: string, record) => (
           <div>
             <div>{value}</div>
@@ -68,18 +64,13 @@ const Account: React.FC = () => {
         ),
       },
       {
-        title: '状态',
+        title: '账号状态',
         dataIndex: 'status',
-        width: 120,
-        render: (value: AccountItem['status']) => (
-          <Badge status={statusColor[value]} text={value} />
-        ),
+        width: 140,
+        render: (value: AccountItem['status']) => <Badge status={statusColor[value]} text={value} />,
       },
-      {
-        title: '最近登录',
-        dataIndex: 'lastLogin',
-        width: 180,
-      },
+      { title: '最后登录时间', dataIndex: 'lastLogin', width: 180 },
+      { title: '密码更新时间', dataIndex: 'passwordUpdatedAt', width: 180 },
     ],
     [],
   );
@@ -94,17 +85,17 @@ const Account: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="启用" value={summary.active} suffix="个" />
+            <Statistic title="启用账号" value={summary.enabled} suffix="个" />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="待激活" value={summary.pending} suffix="个" />
+            <Statistic title="禁用账号" value={summary.disabled} suffix="个" valueStyle={{ color: '#f5222d' }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="已禁用" value={summary.locked} suffix="个" />
+            <Statistic title="待密码重置" value={summary.pendingReset} suffix="个" />
           </Card>
         </Col>
       </Row>
@@ -116,7 +107,7 @@ const Account: React.FC = () => {
           columns={columns}
           dataSource={accounts}
           pagination={{ pageSize: 6, showSizeChanger: false }}
-          scroll={{ x: 1300 }}
+          scroll={{ x: 1400 }}
         />
       </Card>
     </PageContainer>

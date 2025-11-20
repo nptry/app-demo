@@ -5,18 +5,21 @@ type ApiResponse<T> = {
   data: T;
 };
 
-export type PermissionItem = {
-  id: string;
-  module: string;
-  description: string;
-  scope: string[];
-  assignedRoles: string[];
+export type PermissionSummary = {
+  total: number;
+  management: number;
+  usage: number;
+  disabled: number;
 };
 
-export type PermissionSummary = {
-  totalPermissions: number;
-  modules: number;
-  sensitive: number;
+export type PermissionItem = {
+  id: string;
+  name: string;
+  type: '管理权限' | '使用权限';
+  modules: string[];
+  status: '启用' | '禁用';
+  createdAt: string;
+  updatedBy: string;
 };
 
 export type PermissionResponse = {
@@ -31,18 +34,25 @@ export async function getPermissions(options?: Record<string, any>) {
   });
 }
 
+export type RoleSummary = {
+  total: number;
+  enabled: number;
+  disabled: number;
+  departments: number;
+};
+
 export type RoleItem = {
   id: string;
   name: string;
-  type: '管理' | '运维' | '业务';
-  description: string;
-  scope: string[];
-  members: number;
-  updatedAt: string;
+  department: string;
+  permissions: string[];
+  description?: string;
+  status: '启用' | '禁用';
+  createdAt: string;
 };
 
 export type RoleResponse = {
-  total: number;
+  summary: RoleSummary;
   roles: RoleItem[];
 };
 
@@ -55,23 +65,23 @@ export async function getRoles(options?: Record<string, any>) {
 
 export type AccountSummary = {
   total: number;
-  active: number;
-  pending: number;
-  locked: number;
+  enabled: number;
+  disabled: number;
+  pendingReset: number;
 };
 
 export type AccountItem = {
   id: string;
   username: string;
   realName: string;
-  org: string;
-  dept: string;
+  department: string;
+  role: string;
   position: string;
   phone: string;
   email: string;
-  role: string;
-  status: '启用' | '待激活' | '禁用';
-  lastLogin: string;
+  status: '启用' | '禁用';
+  lastLogin?: string;
+  passwordUpdatedAt?: string;
 };
 
 export type AccountResponse = {
@@ -88,13 +98,15 @@ export async function getAccounts(options?: Record<string, any>) {
 
 export type OperationLogItem = {
   id: string;
-  operator: string;
   account: string;
-  action: string;
-  target: string;
+  realName: string;
+  module: string;
+  actionType: string;
+  content: string;
   ip: string;
+  time: string;
   result: '成功' | '失败';
-  timestamp: string;
+  failReason?: string;
 };
 
 export type OperationLogResponse = {
@@ -108,21 +120,35 @@ export async function getOperationLogs(options?: Record<string, any>) {
   });
 }
 
+export type KeyPersonSummary = {
+  total: number;
+  inControl: number;
+  expired: number;
+  highRisk: number;
+};
+
 export type KeyPersonItem = {
   id: string;
   name: string;
-  role: string;
-  region: string;
-  phone: string;
-  email: string;
-  permissions: string[];
-  status: '在岗' | '请假' | '停用';
+  gender: '男' | '女' | '未知';
+  birthDate: string;
+  idNumber: string;
+  personType: '黑名单人员' | '重点关注人员' | '限制进入人员';
+  reason: string;
+  controlAreas: string[];
+  startTime: string;
+  endTime: string;
+  faceLibrary: string;
+  contactName?: string;
+  contactPhone?: string;
+  status: '在控' | '失控' | '已解除';
+  statusUpdatedAt: string;
+  operator: string;
+  remark?: string;
 };
 
 export type KeyPersonResponse = {
-  total: number;
-  onDuty: number;
-  backup: number;
+  summary: KeyPersonSummary;
   persons: KeyPersonItem[];
 };
 

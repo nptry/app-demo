@@ -1,0 +1,4 @@
+- Formatting: `.editorconfig` enforces LF endings, UTF-8, 2-space indentation, and trims trailing whitespace (except Markdown).
+- Tooling: Biome handles lint + format with single quotes for JSX/TS; recommended rules enabled with some relaxations (allows `any`, disables exhaustive deps and some a11y click/anchor rules).
+- Type checking: use `tsc --noEmit` for type errors; project targets modern React 19 JSX runtime (`reactClassic`).
+- General: stick to Ant Design/ProComponents patterns, TypeScript interfaces in `types/`, keep mock data in `mock/`, prefer hooks-based components.

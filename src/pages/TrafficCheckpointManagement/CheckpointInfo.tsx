@@ -2,18 +2,13 @@ import React, { useMemo } from 'react';
 import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
 import type { ColumnsType } from 'antd/es/table';
-import { Badge, Card, Col, List, Row, Statistic, Table, Tag } from 'antd';
-import type {
-  CheckpointInfoItem,
-  CheckpointTaskItem,
-  TrafficCheckpointResponse,
-} from '@/services/traffic';
+import { Badge, Card, Col, Row, Statistic, Table, Tag } from 'antd';
+import type { CheckpointInfoItem, TrafficCheckpointResponse } from '@/services/traffic';
 import { getTrafficCheckpoints } from '@/services/traffic';
 
-const statusColor: Record<CheckpointInfoItem['status'], 'success' | 'warning' | 'error'> = {
-  正常: 'success',
-  关注: 'warning',
-  中断: 'error',
+const statusColor: Record<CheckpointInfoItem['status'], 'success' | 'default'> = {
+  启用: 'success',
+  禁用: 'default',
 };
 
 const CheckpointInfo: React.FC = () => {
@@ -24,16 +19,14 @@ const CheckpointInfo: React.FC = () => {
 
   const summary = data?.summary ?? {
     total: 0,
-    monitored: 0,
-    aiNodes: 0,
-    warnings24h: 0,
+    enabled: 0,
+    laneCount: 0,
   };
-
   const checkpoints = data?.checkpoints ?? [];
-  const tasks = data?.tasks ?? [];
 
   const columns: ColumnsType<CheckpointInfoItem> = useMemo(
     () => [
+      { title: '卡口 ID', dataIndex: 'id', width: 140 },
       {
         title: '卡口名称',
         dataIndex: 'name',
@@ -41,34 +34,34 @@ const CheckpointInfo: React.FC = () => {
         render: (value: string, record) => (
           <div>
             <strong>{value}</strong>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.location}</div>
+            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.address}</div>
           </div>
         ),
       },
       {
-        title: '所属区域',
-        dataIndex: 'district',
-        width: 140,
+        title: '卡口类型',
+        dataIndex: 'checkpointTypes',
+        width: 240,
+        render: (types: string[]) => types.map((type) => (
+            <Tag key={type} color="blue" style={{ marginBottom: 4 }}>
+              {type}
+            </Tag>
+          )),
       },
+      { title: '所属区域', dataIndex: 'region', width: 200 },
+      { title: '经纬度', dataIndex: 'coordinates', width: 180 },
       {
-        title: '覆盖道路',
-        dataIndex: 'coverageRoads',
+        title: '车道数量 / 描述',
+        dataIndex: 'laneCount',
         width: 220,
-      },
-      {
-        title: '类型',
-        dataIndex: 'types',
-        width: 220,
-        render: (types: string[]) => (
-          <span>
-            {types.map((type) => (
-              <Tag color="blue" key={type}>
-                {type}
-              </Tag>
-            ))}
-          </span>
+        render: (value: number, record) => (
+          <div>
+            <div>车道：{value}</div>
+            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.laneDescription}</div>
+          </div>
         ),
       },
+      { title: '限速（km/h）', dataIndex: 'speedLimit', width: 140 },
       {
         title: '负责人',
         dataIndex: 'manager',
@@ -76,22 +69,12 @@ const CheckpointInfo: React.FC = () => {
         render: (value: string, record) => (
           <div>
             <div>{value}</div>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.contact}</div>
+            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.phone}</div>
           </div>
         ),
       },
-      {
-        title: '状态',
-        dataIndex: 'status',
-        width: 120,
-        render: (value: CheckpointInfoItem['status']) => (
-          <Badge status={statusColor[value]} text={value} />
-        ),
-      },
-      {
-        title: '说明',
-        dataIndex: 'description',
-      },
+      { title: '卡口状态', dataIndex: 'status', width: 140, render: (value: CheckpointInfoItem['status']) => <Badge status={statusColor[value]} text={value} /> },
+      { title: '电子地图/平面图', dataIndex: 'mapFile', width: 200 },
     ],
     [],
   );
@@ -99,24 +82,19 @@ const CheckpointInfo: React.FC = () => {
   return (
     <PageContainer header={{ title: '卡口基础信息' }}>
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={4}>
           <Card bordered={false}>
             <Statistic title="纳管卡口" value={summary.total} suffix="处" />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={4}>
           <Card bordered={false}>
-            <Statistic title="实时在线" value={summary.monitored} suffix="处" />
+            <Statistic title="已启用" value={summary.enabled} suffix="处" />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={4}>
           <Card bordered={false}>
-            <Statistic title="AI 边缘节点" value={summary.aiNodes} suffix="台" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="24h 告警" value={summary.warnings24h} suffix="条" />
+            <Statistic title="覆盖车道" value={summary.laneCount} suffix="条" />
           </Card>
         </Col>
       </Row>
@@ -128,30 +106,8 @@ const CheckpointInfo: React.FC = () => {
           columns={columns}
           dataSource={checkpoints}
           pagination={{ pageSize: 5, showSizeChanger: false }}
-          scroll={{ x: 1300 }}
+          scroll={{ x: 1600 }}
         />
-      </Card>
-
-      <Card title="重点保障任务" style={{ marginTop: 24 }}>
-        <List
-          dataSource={tasks}
-          renderItem={(task: CheckpointTaskItem) => (
-            <List.Item key={task.id}>
-              <List.Item.Meta
-                title={task.title}
-                description={
-                  <div>
-                    <div>{task.detail}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
-                      时间：{task.window} · 负责人：{task.owner}
-                    </div>
-                  </div>
-                }
-              />
-            </List.Item>
-          )}
-        />
-        {!tasks.length && <div style={{ textAlign: 'center', padding: 16 }}>暂无保障任务</div>}
       </Card>
     </PageContainer>
   );

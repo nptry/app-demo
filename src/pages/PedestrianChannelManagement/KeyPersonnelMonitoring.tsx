@@ -2,58 +2,61 @@ import React, { useMemo } from 'react';
 import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
 import type { ColumnsType } from 'antd/es/table';
-import { Card, Col, List, Row, Statistic, Table, Tag } from 'antd';
-import type { ChannelFocusItem, ChannelWatchEvent, ChannelWatchResponse } from '@/services/pedestrian';
+import { Badge, Card, Col, Row, Statistic, Table, Tag } from 'antd';
+import type { KeyPersonRecord, KeyPersonResponse } from '@/services/pedestrian';
 import { getChannelWatch } from '@/services/pedestrian';
-
-const statusColor: Record<ChannelFocusItem['status'], string> = {
-  待核查: 'orange',
-  跟踪中: 'blue',
-  已处理: 'green',
-};
 
 const KeyPersonnelMonitoring: React.FC = () => {
   const { data, loading } = useRequest(getChannelWatch, {
-    formatResult: (res: ChannelWatchResponse | { data: ChannelWatchResponse }) =>
-      (res as { data?: ChannelWatchResponse })?.data ?? (res as ChannelWatchResponse),
+    formatResult: (res: KeyPersonResponse | { data: KeyPersonResponse }) =>
+      (res as { data?: KeyPersonResponse })?.data ?? (res as KeyPersonResponse),
   });
 
-  const metrics = data?.metrics ?? {
-    watchlist: 0,
-    hitsToday: 0,
-    onlineTasks: 0,
-    lastPush: '--',
-  };
-  const persons = data?.persons ?? [];
-  const events = data?.events ?? [];
+  const records = data?.records ?? [];
+  const alarmCount = records.filter((record) => record.alarmStatus.includes('处理中')).length;
 
-  const columns: ColumnsType<ChannelFocusItem> = useMemo(
+  const columns: ColumnsType<KeyPersonRecord> = useMemo(
     () => [
+      { title: '通道', dataIndex: 'channelName', width: 200 },
       {
-        title: '姓名',
+        title: '重点人员',
         dataIndex: 'personName',
-        width: 160,
+        width: 200,
         render: (value: string, record) => (
           <div>
             <strong>{value}</strong>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>
-              {record.gender} · {record.age} 岁
-            </div>
+            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.personType}</div>
           </div>
         ),
       },
-      { title: '标签', dataIndex: 'tags', width: 220, render: (tags: string[]) => (
-        <span>
-          {tags.map((tag) => (
-            <Tag color="purple" key={tag}>
-              {tag}
+      { title: '捕获时间', dataIndex: 'captureTime', width: 200 },
+      { title: '行为描述', dataIndex: 'behavior', width: 220 },
+      {
+        title: '是否有随行人员',
+        dataIndex: 'withCompanion',
+        width: 160,
+        render: (value: boolean, record) =>
+          value ? <Tag color="orange">是 · {record.companionCount ?? 0} 人</Tag> : <Tag>否</Tag>,
+      },
+      {
+        title: '告警状态',
+        dataIndex: 'alarmStatus',
+        width: 200,
+        render: (value: string) => <Badge status={value.includes('处理中') ? 'processing' : value.includes('已处理') ? 'success' : 'default'} text={value} />,
+      },
+      {
+        title: '推送渠道',
+        dataIndex: 'alarmChannels',
+        width: 200,
+        render: (value: string[]) => value.map((channel) => (
+            <Tag key={channel} color="blue" style={{ marginBottom: 4 }}>
+              {channel}
             </Tag>
-          ))}
-        </span>
-      ) },
-      { title: '通道', dataIndex: 'channelName', width: 200 },
-      { title: '最近出现', dataIndex: 'lastSeen', width: 180 },
-      { title: '状态', dataIndex: 'status', width: 140, render: (value: ChannelFocusItem['status']) => <Tag color={statusColor[value]}>{value}</Tag> },
+          )),
+      },
+      { title: '告警接收人', dataIndex: 'receiver', width: 160 },
+      { title: '识别设备', dataIndex: 'deviceId', width: 160 },
+      { title: '识别准确率', dataIndex: 'accuracy', width: 140, render: (value: number) => `${(value * 100).toFixed(0)}%` },
     ],
     [],
   );
@@ -63,51 +66,25 @@ const KeyPersonnelMonitoring: React.FC = () => {
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="重点库人员" value={metrics.watchlist} suffix="人" />
+            <Statistic title="记录条数" value={records.length} suffix="条" />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="今日命中" value={metrics.hitsToday} suffix="次" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="跟进任务" value={metrics.onlineTasks} suffix="个" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="最新推送" value={metrics.lastPush} />
+            <Statistic title="告警处理中" value={alarmCount} suffix="条" />
           </Card>
         </Col>
       </Row>
 
-      <Card title="重点人员列表" style={{ marginTop: 24 }} bodyStyle={{ paddingTop: 8 }}>
-        <Table<ChannelFocusItem>
+      <Card title="重点人员记录" style={{ marginTop: 24 }} bodyStyle={{ paddingTop: 8 }}>
+        <Table<KeyPersonRecord>
           rowKey="id"
           loading={loading}
           columns={columns}
-          dataSource={persons}
-          pagination={{ pageSize: 5, showSizeChanger: false }}
-          scroll={{ x: 1000 }}
+          dataSource={records}
+          pagination={{ pageSize: 6, showSizeChanger: false }}
+          scroll={{ x: 1600 }}
         />
-      </Card>
-
-      <Card title="事件记录" style={{ marginTop: 24 }}>
-        <List
-          dataSource={events}
-          renderItem={(event: ChannelWatchEvent) => (
-            <List.Item key={event.id}>
-              <List.Item.Meta
-                title={`${event.personName} · ${event.eventType}`}
-                description={`时间：${event.time} · 动作：${event.action}`}
-              />
-              <Tag>{event.operator}</Tag>
-            </List.Item>
-          )}
-        />
-        {!events.length && <div style={{ textAlign: 'center', padding: 16 }}>暂无事件</div>}
       </Card>
     </PageContainer>
   );

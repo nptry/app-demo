@@ -3,7 +3,7 @@ import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
 import type { ColumnsType } from 'antd/es/table';
 import { Card, Col, Empty, Row, Statistic, Table, Tag } from 'antd';
-import type { DeviceConfigResponse, DeviceDeploymentItem } from '@/services/device';
+import type { DeviceApplicationItem, DeviceConfigResponse } from '@/services/device';
 import { getDeviceConfigInfo } from '@/services/device';
 
 const ConfigInfo: React.FC = () => {
@@ -12,78 +12,45 @@ const ConfigInfo: React.FC = () => {
       (res as { data?: DeviceConfigResponse })?.data ?? (res as DeviceConfigResponse),
   });
 
-  const applicationSummary = data?.applicationSummary ?? [];
-  const deployments = data?.deployments ?? [];
+  const summary = data?.summary ?? [];
+  const applications = data?.applications ?? [];
 
-  const columns: ColumnsType<DeviceDeploymentItem> = useMemo(
+  const columns: ColumnsType<DeviceApplicationItem> = useMemo(
     () => [
+      { title: '设备 ID', dataIndex: 'deviceId', width: 160 },
       {
         title: '设备名称',
         dataIndex: 'deviceName',
-        width: 200,
-        render: (value) => <strong>{value}</strong>,
-      },
-      {
-        title: '应用场景',
-        dataIndex: 'applicationType',
-        width: 160,
-        render: (value: string) => <Tag color="blue">{value}</Tag>,
-      },
-      {
-        title: '覆盖区域/通道',
-        dataIndex: 'deploymentArea',
         width: 220,
+        render: (value: string) => <strong>{value}</strong>,
       },
       {
-        title: '灯杆/卡口编号',
-        dataIndex: 'poleCode',
-        width: 160,
+        title: '应用类型',
+        dataIndex: 'applicationType',
+        width: 180,
+        render: (value: DeviceApplicationItem['applicationType']) => <Tag color="blue">{value}</Tag>,
       },
-      {
-        title: '安装位置',
-        dataIndex: 'location',
-        width: 240,
-      },
-      {
-        title: '坐标',
-        dataIndex: 'coordinates',
-        width: 160,
-      },
-      {
-        title: '网络/供电',
-        dataIndex: 'network',
-        width: 160,
-      },
-      {
-        title: '部署算法/服务',
-        dataIndex: 'edgeApps',
-        render: (apps: string[]) => (
-          <span>
-            {apps.map((app) => (
-              <Tag color="purple" key={app}>
-                {app}
-              </Tag>
-            ))}
-          </span>
-        ),
-      },
+      { title: '安装区域', dataIndex: 'region', width: 200 },
+      { title: '详细地址', dataIndex: 'address', width: 240 },
+      { title: '经纬度', dataIndex: 'coordinates', width: 180 },
+      { title: '智慧灯杆 ID', dataIndex: 'lampId', width: 160 },
+      { title: '部署时间', dataIndex: 'deployDate', width: 140 },
+      { title: '部署场景描述', dataIndex: 'description' },
     ],
     [],
   );
 
   return (
-    <PageContainer header={{ title: '设备配置信息' }}>
+    <PageContainer header={{ title: '设备应用信息' }}>
       <Row gutter={[16, 16]}>
-        {applicationSummary.length ? (
-          applicationSummary.map((app) => (
-            <Col xs={24} sm={12} md={8} key={app.type}>
+        {summary.length ? (
+          summary.map((item) => (
+            <Col xs={24} sm={12} md={8} key={item.type}>
               <Card bordered={false}>
-                <Statistic title={app.type} value={app.count} suffix="台" />
-                <div style={{ marginTop: 12, color: 'rgba(0,0,0,0.65)' }}>
-                  覆盖：{app.coverage}
-                </div>
+                <Statistic title={item.type} value={item.count} suffix="台" />
+                <div style={{ marginTop: 12, color: 'rgba(0,0,0,0.65)' }}>覆盖：{item.coverage}</div>
                 <div style={{ marginTop: 12 }}>
-                  {app.aiModels.map((model) => (
+                  {item.aiModels.map((model) => (
                     <Tag color="geekblue" key={model}>
                       {model}
                     </Tag>
@@ -102,13 +69,13 @@ const ConfigInfo: React.FC = () => {
       </Row>
 
       <Card title="部署明细" style={{ marginTop: 24 }} bodyStyle={{ paddingTop: 8 }}>
-        <Table<DeviceDeploymentItem>
-          rowKey="id"
+        <Table<DeviceApplicationItem>
+          rowKey={(record) => `${record.deviceId}-${record.applicationType}`}
           columns={columns}
-          dataSource={deployments}
+          dataSource={applications}
           loading={loading}
           pagination={{ pageSize: 8, showSizeChanger: false }}
-          scroll={{ x: 1300 }}
+          scroll={{ x: 1400 }}
         />
       </Card>
     </PageContainer>

@@ -1,0 +1,10 @@
+- Install deps: `yarn` (or `npm install`).
+- Local dev: `npm start` (default dev env) or `npm run start:dev` / `start:test` / `start:pre` for env-specific dev without mocks.
+- Build: `npm run build` (outputs to `dist/`); preview build via `npm run preview`.
+- Analyze bundle: `npm run analyze`.
+- Lint + type check: `npm run lint` (runs Biome + `tsc --noEmit`); auto-fix style with `npm run biome:lint -- --fix` (or `npm run lint:fix` if added).
+- Tests: `npm test` / `npm run test:coverage` / `npm run test:update`.
+- Type-only: `npm run tsc`.
+- Mock/openapi helpers: `npm run openapi`, `npm run record` for mock recording.
+- Deployment helper: `npm run deploy` (build + gh-pages) or `npm run serve` for static serving.
+- Husky/lint-staged triggered via `npm run prepare` during setup.

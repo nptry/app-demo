@@ -2,77 +2,59 @@ import React, { useMemo } from 'react';
 import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
 import type { ColumnsType } from 'antd/es/table';
-import { Card, Col, Row, Statistic, Table, Tag } from 'antd';
-import type { ViolationRecordItem, ViolationResponse } from '@/services/traffic';
+import { Card, Table, Tag } from 'antd';
+import type { ParkingViolationRecord } from '@/services/traffic';
 import { getParkingViolations } from '@/services/traffic';
-
-const statusColor: Record<ViolationRecordItem['status'], string> = {
-  待处置: 'default',
-  处理中: 'orange',
-  已完成: 'green',
-};
 
 const ParkingViolation: React.FC = () => {
   const { data, loading } = useRequest(getParkingViolations, {
-    formatResult: (res: ViolationResponse | { data: ViolationResponse }) =>
-      (res as { data?: ViolationResponse })?.data ?? (res as ViolationResponse),
+    formatResult: (res: ParkingViolationRecord[] | { data: ParkingViolationRecord[] }) =>
+      (res as { data?: ParkingViolationRecord[] })?.data ?? (res as ParkingViolationRecord[]),
   });
 
-  const metrics = data?.metrics ?? {
-    today: 0,
-    handled: 0,
-    pending: 0,
-    avgHandleMins: 0,
-  };
-  const records = data?.records ?? [];
+  const records = data ?? [];
 
-  const columns: ColumnsType<ViolationRecordItem> = useMemo(
+  const columns: ColumnsType<ParkingViolationRecord> = useMemo(
     () => [
-      { title: '时间', dataIndex: 'violationTime', width: 160 },
-      { title: '卡口', dataIndex: 'checkpoint', width: 200 },
-      { title: '车牌', dataIndex: 'plate', width: 140, render: (value: string) => <strong>{value}</strong> },
-      { title: '情况说明', dataIndex: 'description', width: 260 },
-      { title: '证据', dataIndex: 'evidence', width: 160, render: (value: string) => <a>{value ? '查看' : '无'}</a> },
-      { title: '等级', dataIndex: 'level', width: 120, render: (value: ViolationRecordItem['level']) => <Tag color={value === '严重' ? 'red' : 'orange'}>{value}</Tag> },
-      { title: '负责人', dataIndex: 'handler', width: 120 },
-      { title: '状态', dataIndex: 'status', width: 140, render: (value: ViolationRecordItem['status']) => <Tag color={statusColor[value]}>{value}</Tag> },
+      { title: '卡口', dataIndex: 'checkpointName', width: 220 },
+      { title: '违停区域', dataIndex: 'area', width: 220 },
+      { title: '禁停规定', dataIndex: 'rule', width: 200 },
+      { title: '开始时间', dataIndex: 'startTime', width: 180 },
+      { title: '持续时长', dataIndex: 'duration', width: 140 },
+      { title: '判定阈值 (秒)', dataIndex: 'threshold', width: 140 },
+      { title: '车牌', dataIndex: 'plateNumber', width: 140, render: (value: string) => <strong>{value}</strong> },
+      { title: '车辆类型', dataIndex: 'vehicleType', width: 140 },
+      {
+        title: '特殊车辆',
+        dataIndex: 'specialVehicle',
+        width: 140,
+        render: (value: boolean, record) =>
+          value ? <Tag color="blue">{record.specialReason ?? '特殊车辆'}</Tag> : <Tag>否</Tag>,
+      },
+      {
+        title: '告警状态',
+        dataIndex: 'alarmStatus',
+        width: 200,
+        render: (value: string) => <Tag color={value.includes('已处理') ? 'green' : 'orange'}>{value}</Tag>,
+      },
+      { title: '处置备注', dataIndex: 'remark', width: 220 },
+      { title: '证据', dataIndex: 'photos', width: 200, render: (value: string[]) => (value.length ? <a>照片({value.length})/视频</a> : '—') },
+      { title: '采集设备', dataIndex: 'deviceId', width: 160 },
+      { title: '识别准确率', dataIndex: 'accuracy', width: 140, render: (value: number) => `${(value * 100).toFixed(0)}%` },
     ],
     [],
   );
 
   return (
     <PageContainer header={{ title: '停车违章' }}>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="违停事件" value={metrics.today} suffix="起" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="已处置" value={metrics.handled} suffix="起" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="待处理" value={metrics.pending} suffix="起" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="平均处理时长" value={metrics.avgHandleMins} suffix="分钟" />
-          </Card>
-        </Col>
-      </Row>
-
-      <Card title="事件列表" style={{ marginTop: 24 }} bodyStyle={{ paddingTop: 8 }}>
-        <Table<ViolationRecordItem>
+      <Card bodyStyle={{ paddingTop: 8 }}>
+        <Table<ParkingViolationRecord>
           rowKey="id"
           loading={loading}
           columns={columns}
           dataSource={records}
           pagination={{ pageSize: 6, showSizeChanger: false }}
-          scroll={{ x: 1200 }}
+          scroll={{ x: 1800 }}
         />
       </Card>
     </PageContainer>

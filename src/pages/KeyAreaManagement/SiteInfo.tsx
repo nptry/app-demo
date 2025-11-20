@@ -2,20 +2,13 @@ import React, { useMemo } from 'react';
 import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
 import type { ColumnsType } from 'antd/es/table';
-import { Badge, Card, Col, List, Row, Statistic, Table, Tag } from 'antd';
-import type { KeyAreaMeasure, KeyAreaSiteItem, KeyAreaSiteResponse } from '@/services/keyArea';
+import { Badge, Card, Col, Row, Statistic, Table, Tag } from 'antd';
+import type { KeyAreaSiteItem, KeyAreaSiteResponse } from '@/services/keyArea';
 import { getKeyAreaSites } from '@/services/keyArea';
 
-const statusColor: Record<KeyAreaSiteItem['status'], 'success' | 'warning' | 'error'> = {
-  正常: 'success',
-  关注: 'warning',
-  管控: 'error',
-};
-
-const riskColor: Record<KeyAreaSiteItem['riskLevel'], string> = {
-  低: 'default',
-  中: 'orange',
-  高: 'red',
+const statusColor: Record<KeyAreaSiteItem['status'], 'success' | 'default'> = {
+  启用: 'success',
+  禁用: 'default',
 };
 
 const SiteInfo: React.FC = () => {
@@ -26,20 +19,18 @@ const SiteInfo: React.FC = () => {
 
   const summary = data?.summary ?? {
     totalSites: 0,
-    coverageSqKm: 0,
-    avgDailyVisitors: 0,
-    alerts24h: 0,
+    enabledSites: 0,
+    totalAreaSqm: 0,
   };
-
   const sites = data?.sites ?? [];
-  const measures = data?.measures ?? [];
 
   const columns: ColumnsType<KeyAreaSiteItem> = useMemo(
     () => [
+      { title: '场所 ID', dataIndex: 'id', width: 140 },
       {
-        title: '重点场所',
+        title: '场所名称',
         dataIndex: 'name',
-        width: 200,
+        width: 220,
         render: (value: string, record) => (
           <div>
             <strong>{value}</strong>
@@ -48,50 +39,27 @@ const SiteInfo: React.FC = () => {
         ),
       },
       {
-        title: '类型',
-        dataIndex: 'type',
-        width: 120,
-        render: (value: KeyAreaSiteItem['type']) => <Tag color="blue">{value}</Tag>,
-      },
-      {
-        title: '所属区域',
-        dataIndex: 'district',
+        title: '场所类型',
+        dataIndex: 'siteType',
         width: 160,
+        render: (value: KeyAreaSiteItem['siteType']) => <Tag color="blue">{value}</Tag>,
       },
+      { title: '所属区域', dataIndex: 'region', width: 200 },
+      { title: '面积（㎡）', dataIndex: 'areaSize', width: 140, render: (value: number) => value.toLocaleString() },
       {
-        title: '面积',
-        dataIndex: 'areaSize',
-        width: 120,
-      },
-      {
-        title: '负责人',
+        title: '负责人 / 联系方式',
         dataIndex: 'manager',
-        width: 140,
+        width: 220,
         render: (value: string, record) => (
           <div>
             <div>{value}</div>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.contact}</div>
+            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.phone}</div>
           </div>
         ),
       },
-      {
-        title: '运行状态',
-        dataIndex: 'status',
-        width: 120,
-        render: (value: KeyAreaSiteItem['status']) => (
-          <Badge status={statusColor[value]} text={value} />
-        ),
-      },
-      {
-        title: '风险等级',
-        dataIndex: 'riskLevel',
-        width: 120,
-        render: (value: KeyAreaSiteItem['riskLevel']) => <Tag color={riskColor[value]}>{value}</Tag>,
-      },
-      {
-        title: '描述',
-        dataIndex: 'description',
-      },
+      { title: '场所状态', dataIndex: 'status', width: 140, render: (value: KeyAreaSiteItem['status']) => <Badge status={statusColor[value]} text={value} /> },
+      { title: '场所描述', dataIndex: 'description', width: 260 },
+      { title: '现场平面图', dataIndex: 'plan', width: 200 },
     ],
     [],
   );
@@ -99,24 +67,20 @@ const SiteInfo: React.FC = () => {
   return (
     <PageContainer header={{ title: '场所基础信息' }}>
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={4}>
           <Card bordered={false}>
             <Statistic title="纳管场所" value={summary.totalSites} suffix="处" />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={4}>
           <Card bordered={false}>
-            <Statistic title="覆盖面积" value={summary.coverageSqKm} precision={1} suffix="km²" />
+            <Statistic title="启用监测" value={summary.enabledSites} suffix="处" />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card bordered={false}>
-            <Statistic title="日均客流" value={summary.avgDailyVisitors} suffix="人次" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="24h 告警" value={summary.alerts24h} suffix="条" />
+            <Statistic title="覆盖面积" value={(summary.totalAreaSqm / 1000).toFixed(1)} suffix="千㎡" />
+            <div style={{ marginTop: 12, color: 'rgba(0,0,0,0.45)' }}>折算约 {summary.totalAreaSqm.toLocaleString()} ㎡</div>
           </Card>
         </Col>
       </Row>
@@ -128,30 +92,8 @@ const SiteInfo: React.FC = () => {
           columns={columns}
           dataSource={sites}
           pagination={{ pageSize: 5, showSizeChanger: false }}
-          scroll={{ x: 1200 }}
+          scroll={{ x: 1500 }}
         />
-      </Card>
-
-      <Card title="在施管控措施" style={{ marginTop: 24 }}>
-        <List
-          dataSource={measures}
-          renderItem={(item: KeyAreaMeasure) => (
-            <List.Item key={item.id}>
-              <List.Item.Meta
-                title={item.title}
-                description={
-                  <div>
-                    <div>{item.detail}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
-                      负责人：{item.owner} · 更新时间：{item.lastUpdate}
-                    </div>
-                  </div>
-                }
-              />
-            </List.Item>
-          )}
-        />
-        {!measures.length && <div style={{ textAlign: 'center', padding: 16 }}>暂无管控措施</div>}
       </Card>
     </PageContainer>
   );

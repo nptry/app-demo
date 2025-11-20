@@ -2,26 +2,9 @@ import React, { useMemo } from 'react';
 import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
 import type { ColumnsType } from 'antd/es/table';
-import { Card, Col, List, Row, Statistic, Table, Tag, Timeline } from 'antd';
-import type {
-  FocusPersonItem,
-  KeyAreaTargetResponse,
-  PatrolRecordItem,
-  TargetEventItem,
-} from '@/services/keyArea';
+import { Badge, Card, Col, Row, Statistic, Table, Tag } from 'antd';
+import type { KeyAreaTargetResponse, TargetRecord } from '@/services/keyArea';
 import { getKeyAreaTargets } from '@/services/keyArea';
-
-const statusColor: Record<FocusPersonItem['status'], string> = {
-  跟踪中: 'orange',
-  已核查: 'green',
-  待核查: 'blue',
-};
-
-const riskColor: Record<FocusPersonItem['riskLevel'], string> = {
-  低: 'default',
-  中: 'orange',
-  高: 'red',
-};
 
 const TargetMonitoring: React.FC = () => {
   const { data, loading } = useRequest(getKeyAreaTargets, {
@@ -30,74 +13,60 @@ const TargetMonitoring: React.FC = () => {
   });
 
   const metrics = data?.metrics ?? {
-    watchlist: 0,
+    watchlistCount: 0,
     hitsToday: 0,
-    activeTracking: 0,
+    activeAlarms: 0,
     lastPush: '--',
   };
-  const focusPersons = data?.focusPersons ?? [];
-  const events = data?.events ?? [];
-  const patrols = data?.patrols ?? [];
+  const records = data?.records ?? [];
 
-  const columns: ColumnsType<FocusPersonItem> = useMemo(
+  const columns: ColumnsType<TargetRecord> = useMemo(
     () => [
+      { title: '场所', dataIndex: 'siteName', width: 200 },
+      { title: '监测区域编号', dataIndex: 'zoneCode', width: 180 },
       {
-        title: '姓名',
-        dataIndex: 'name',
-        width: 160,
+        title: '目标人员',
+        dataIndex: 'personName',
+        width: 180,
         render: (value: string, record) => (
           <div>
-            <strong>{value}</strong>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.gender} · {record.age} 岁</div>
+            <div style={{ fontWeight: 600 }}>{value}</div>
+            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.personType}</div>
+          </div>
+        ),
+      },
+      { title: '匹配时间', dataIndex: 'time', width: 180 },
+      { title: '行为描述', dataIndex: 'behavior', width: 220 },
+      {
+        title: '告警状态',
+        dataIndex: 'alarm',
+        width: 180,
+        render: (alarm: TargetRecord['alarm']) => (
+          <div>
+            <Badge status={alarm.triggered ? 'error' : 'default'} text={alarm.triggered ? alarm.status ?? '已触发' : '未触发'} />
+            <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>{alarm.receiver ?? '—'}</div>
           </div>
         ),
       },
       {
-        title: '标记标签',
-        dataIndex: 'tags',
-        width: 220,
-        render: (tags: string[]) => (
-          <span>
-            {tags.map((tag) => (
-              <Tag color="purple" key={tag}>
-                {tag}
-              </Tag>
-            ))}
-          </span>
-        ),
-      },
-      {
-        title: '最近出现',
-        dataIndex: 'lastSeen',
-        width: 180,
-      },
-      {
-        title: '所在场所',
-        dataIndex: 'areaName',
+        title: '推送渠道',
+        dataIndex: ['alarm', 'channels'],
         width: 200,
+        render: (value: string[] | undefined) =>
+          value ? value.map((channel) => <Tag key={channel}>{channel}</Tag>) : '—',
       },
-      {
-        title: '状态',
-        dataIndex: 'status',
-        width: 140,
-        render: (value: FocusPersonItem['status']) => <Tag color={statusColor[value]}>{value}</Tag>,
-      },
-      {
-        title: '风险等级',
-        dataIndex: 'riskLevel',
-        width: 140,
-        render: (value: FocusPersonItem['riskLevel']) => <Tag color={riskColor[value]}>{value}</Tag>,
-      },
+      { title: '识别设备', dataIndex: 'deviceId', width: 160 },
+      { title: '识别准确率', dataIndex: 'accuracy', width: 140, render: (value: number) => `${(value * 100).toFixed(0)}%` },
     ],
     [],
   );
 
   return (
-    <PageContainer header={{ title: '重点人员监测' }}>
+    <PageContainer header={{ title: '目标人群监测' }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="在册重点人员" value={metrics.watchlist} suffix="人" />
+            <Statistic title="重点人员库" value={metrics.watchlistCount} suffix="人" />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
@@ -107,69 +76,26 @@ const TargetMonitoring: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="跟踪处理中" value={metrics.activeTracking} suffix="人" />
+            <Statistic title="告警处理中" value={metrics.activeAlarms} suffix="条" />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="最新推送" value={metrics.lastPush} />
+            <Statistic title="最后推送时间" value={metrics.lastPush} />
           </Card>
         </Col>
       </Row>
 
-      <Card title="重点人员列表" style={{ marginTop: 24 }} bodyStyle={{ paddingTop: 8 }}>
-        <Table<FocusPersonItem>
+      <Card title="目标人群记录" style={{ marginTop: 24 }} bodyStyle={{ paddingTop: 8 }}>
+        <Table<TargetRecord>
           rowKey="id"
           loading={loading}
           columns={columns}
-          dataSource={focusPersons}
-          pagination={{ pageSize: 5, showSizeChanger: false }}
-          scroll={{ x: 1100 }}
+          dataSource={records}
+          pagination={{ pageSize: 6, showSizeChanger: false }}
+          scroll={{ x: 1500 }}
         />
       </Card>
-
-      <Row gutter={16} style={{ marginTop: 24 }}>
-        <Col xs={24} md={12}>
-          <Card title="事件时间线" bodyStyle={{ paddingTop: 16 }}>
-            <Timeline
-              items={events.map((event: TargetEventItem) => ({
-                color: 'purple',
-                children: (
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{event.personName}</div>
-                    <div style={{ color: 'rgba(0,0,0,0.65)' }}>{event.eventType} · {event.areaName}</div>
-                    <div style={{ fontSize: 12, marginTop: 4 }}>时间：{event.matchedAt}</div>
-                    <div style={{ fontSize: 12 }}>处置：{event.action} · 责任人：{event.handler}</div>
-                  </div>
-                ),
-              }))}
-            />
-            {!events.length && <div style={{ textAlign: 'center', padding: 16 }}>暂无事件</div>}
-          </Card>
-        </Col>
-        <Col xs={24} md={12}>
-          <Card title="巡查记录" bodyStyle={{ paddingTop: 16 }}>
-            <List
-              dataSource={patrols}
-              renderItem={(record: PatrolRecordItem) => (
-                <List.Item key={record.id}>
-                  <List.Item.Meta
-                    title={`${record.areaName} · ${record.task}`}
-                    description={
-                      <div>
-                        <div>{record.result}</div>
-                        <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>时间：{record.time}</div>
-                      </div>
-                    }
-                  />
-                  <Tag>{record.operator}</Tag>
-                </List.Item>
-              )}
-            />
-            {!patrols.length && <div style={{ textAlign: 'center', padding: 16 }}>暂无巡查记录</div>}
-          </Card>
-        </Col>
-      </Row>
     </PageContainer>
   );
 };

@@ -9,13 +9,13 @@ const Settings: ProLayoutProps & {
 } = {
   navTheme: 'light',
   // 拂晓蓝
-  colorPrimary: '#1890ff',
+  colorPrimary: '#ea3323',
   layout: 'mix',
   contentWidth: 'Fluid',
   fixedHeader: false,
   fixSiderbar: true,
   colorWeak: false,
-  title: 'Ant Design Pro',
+  title: '智慧灯杆管理系统',
   pwa: true,
   logo: '/logo.png',
   iconfontUrl: '',

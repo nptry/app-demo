@@ -190,6 +190,7 @@ const Login: React.FC = () => {
           initialValues={{
             autoLogin: true,
           }}
+          /* 注释掉“其他登录方式”展示，暂不支持多种登录方式
           actions={[
             <FormattedMessage
               key="loginWith"
@@ -198,6 +199,7 @@ const Login: React.FC = () => {
             />,
             <ActionIcons key="icons" />,
           ]}
+          */
           onFinish={async (values) => {
             await handleSubmit(values as API.LoginParams);
           }}
@@ -214,13 +216,14 @@ const Login: React.FC = () => {
                   defaultMessage: '账户密码登录',
                 }),
               },
-              {
-                key: 'mobile',
-                label: intl.formatMessage({
-                  id: 'pages.login.phoneLogin.tab',
-                  defaultMessage: '手机号登录',
-                }),
-              },
+              // 注释掉“手机号登录”选项
+              // {
+              //   key: 'mobile',
+              //   label: intl.formatMessage({
+              //     id: 'pages.login.phoneLogin.tab',
+              //     defaultMessage: '手机号登录',
+              //   }),
+              // },
             ]}
           />
 

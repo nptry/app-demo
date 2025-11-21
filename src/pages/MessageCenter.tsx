@@ -1,16 +1,6 @@
 import { PageContainer } from '@ant-design/pro-components';
 import { useRequest } from '@umijs/max';
-import {
-  Avatar,
-  Card,
-  Col,
-  List,
-  Row,
-  Space,
-  Statistic,
-  Tag,
-  Typography,
-} from 'antd';
+import { Avatar, Card, List, Space, Tag, Typography } from 'antd';
 import React, { useMemo } from 'react';
 
 import { getMessageCenterList } from '@/services/messageCenter';
@@ -27,12 +17,6 @@ const statusColorMap: Record<string, string> = {
   doing: 'processing',
   urgent: 'volcano',
   processing: 'blue',
-};
-
-const summaryCardStyle = {
-  borderRadius: 16,
-  background: '#ffffff',
-  boxShadow: '0 22px 50px rgba(15, 23, 42, 0.08)',
 };
 
 const listCardStyle = {
@@ -96,39 +80,8 @@ const MessageCenter: React.FC = () => {
     });
   }, [data]);
 
-  const unreadCount = useMemo(
-    () => data.filter((item) => !item.read).length,
-    [data],
-  );
-
-  const summaryItems = useMemo(
-    () => [
-      { title: '全部消息', value: data.length },
-      { title: '未读消息', value: unreadCount },
-    ],
-    [data.length, unreadCount],
-  );
-
   return (
     <PageContainer title="消息中心">
-      <Card
-        bordered={false}
-        bodyStyle={{ padding: 32 }}
-        style={summaryCardStyle}
-      >
-        <Row gutter={[24, 24]}>
-          {summaryItems.map((item) => (
-            <Col key={item.title} xs={24} sm={12} md={8} lg={6}>
-              <Statistic
-                title={item.title}
-                value={item.value}
-                valueStyle={{ fontSize: 28, color: '#1a1a1a', fontWeight: 600 }}
-                suffix=""
-              />
-            </Col>
-          ))}
-        </Row>
-      </Card>
       <Card bordered={false} bodyStyle={{ padding: 0 }} style={listCardStyle}>
         <List
           loading={loading}

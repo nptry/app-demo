@@ -7,6 +7,7 @@ import {
   AvatarDropdown,
   AvatarName,
   Footer,
+  MessageBell,
   SelectLang,
 } from '@/components';
 import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
@@ -63,7 +64,10 @@ export const layout: RunTimeLayoutConfig = ({
   setInitialState,
 }) => {
   return {
-    actionsRender: () => [<SelectLang key="SelectLang" />],
+    actionsRender: () => [
+      <MessageBell key="MessageBell" />,
+      <SelectLang key="SelectLang" />,
+    ],
     avatarProps: {
       src: initialState?.currentUser?.avatar,
       title: <AvatarName />,

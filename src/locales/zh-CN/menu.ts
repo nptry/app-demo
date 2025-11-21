@@ -85,4 +85,5 @@ export default {
   'menu.pedestrian-channel-management.trajectory-tracking': '轨迹跟踪',
   'menu.pedestrian-channel-management.stranger-monitoring': '陌生人监控',
   'menu.pedestrian-channel-management.access-records': '通行记录',
+  'menu.message-center': '消息中心',
 };

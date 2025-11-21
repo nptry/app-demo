@@ -95,4 +95,5 @@ export default {
   'menu.pedestrian-channel-management.stranger-monitoring':
     'Stranger Monitoring',
   'menu.pedestrian-channel-management.access-records': 'Access Records',
+  'menu.message-center': 'Message Center',
 };

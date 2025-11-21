@@ -54,7 +54,7 @@ export default {
   'menu.user-management.role': 'Role Management',
   'menu.user-management.account': 'Account Management',
   'menu.user-management.operation-log': 'Operation Log',
-  'menu.user-management.key-personnel': 'Key Personnel Management',
+  'menu.key-personnel': 'Key Personnel Management',
   'menu.device-management': 'Device Management',
   'menu.device-management.basic-info': 'Device Basic Info',
   'menu.device-management.config-info': 'Device Configuration Info',
@@ -67,22 +67,32 @@ export default {
   'menu.key-area-management': 'Key Area Population Management',
   'menu.key-area-management.site-info': 'Site Basic Info',
   'menu.key-area-management.device-deployment': 'Device Deployment Management',
-  'menu.key-area-management.density-monitoring': 'Population Density Monitoring',
+  'menu.key-area-management.density-monitoring':
+    'Population Density Monitoring',
   'menu.key-area-management.pedestrian-flow': 'Pedestrian Flow Monitoring',
   'menu.key-area-management.target-monitoring': 'Target Population Monitoring',
   'menu.traffic-checkpoint-management': 'Traffic Checkpoint Management',
   'menu.traffic-checkpoint-management.checkpoint-info': 'Checkpoint Basic Info',
-  'menu.traffic-checkpoint-management.device-deployment': 'Checkpoint Device Deployment',
-  'menu.traffic-checkpoint-management.license-records': 'License Recognition & Records',
-  'menu.traffic-checkpoint-management.traffic-monitoring': 'Traffic Flow Monitoring',
-  'menu.traffic-checkpoint-management.red-light-monitoring': 'Red-Light Violation Monitoring',
-  'menu.traffic-checkpoint-management.retrograde-monitoring': 'Wrong-Way Monitoring',
+  'menu.traffic-checkpoint-management.device-deployment':
+    'Checkpoint Device Deployment',
+  'menu.traffic-checkpoint-management.license-records':
+    'License Recognition & Records',
+  'menu.traffic-checkpoint-management.traffic-monitoring':
+    'Traffic Flow Monitoring',
+  'menu.traffic-checkpoint-management.red-light-monitoring':
+    'Red-Light Violation Monitoring',
+  'menu.traffic-checkpoint-management.retrograde-monitoring':
+    'Wrong-Way Monitoring',
   'menu.traffic-checkpoint-management.parking-violation': 'Parking Violation',
   'menu.pedestrian-channel-management': 'Pedestrian Channel Management',
   'menu.pedestrian-channel-management.channel-info': 'Channel Location Info',
-  'menu.pedestrian-channel-management.device-deployment': 'Channel Device Deployment',
-  'menu.pedestrian-channel-management.key-personnel-monitoring': 'Key Personnel Monitoring',
-  'menu.pedestrian-channel-management.trajectory-tracking': 'Trajectory Tracking',
-  'menu.pedestrian-channel-management.stranger-monitoring': 'Stranger Monitoring',
+  'menu.pedestrian-channel-management.device-deployment':
+    'Channel Device Deployment',
+  'menu.pedestrian-channel-management.key-personnel-monitoring':
+    'Key Personnel Monitoring',
+  'menu.pedestrian-channel-management.trajectory-tracking':
+    'Trajectory Tracking',
+  'menu.pedestrian-channel-management.stranger-monitoring':
+    'Stranger Monitoring',
   'menu.pedestrian-channel-management.access-records': 'Access Records',
 };

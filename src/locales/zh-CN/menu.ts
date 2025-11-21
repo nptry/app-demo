@@ -54,7 +54,7 @@ export default {
   'menu.user-management.role': '角色管理',
   'menu.user-management.account': '账号管理',
   'menu.user-management.operation-log': '操作日志',
-  'menu.user-management.key-personnel': '重点人员管理',
+  'menu.key-personnel': '重点人员管理',
   'menu.device-management': '设备管理',
   'menu.device-management.basic-info': '设备基础信息',
   'menu.device-management.config-info': '设备配置信息',

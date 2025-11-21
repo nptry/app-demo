@@ -22,7 +22,7 @@ export default [
       },
     ],
   },
-  
+
   {
     path: '/device-management',
     name: 'device-management',
@@ -204,6 +204,12 @@ export default [
     ],
   },
   {
+    path: '/key-personnel',
+    name: 'key-personnel',
+    icon: 'team',
+    component: './UserManagement/KeyPersonnel',
+  },
+  {
     path: '/user-management',
     name: 'user-management',
     icon: 'user',
@@ -232,13 +238,9 @@ export default [
         name: 'operation-log',
         component: './UserManagement/OperationLog',
       },
-      {
-        path: '/user-management/key-personnel',
-        name: 'key-personnel',
-        component: './UserManagement/KeyPersonnel',
-      },
     ],
   },
+
   {
     path: '/',
     redirect: '/device-management',

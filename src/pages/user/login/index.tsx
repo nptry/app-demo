@@ -183,7 +183,7 @@ const Login: React.FC = () => {
             maxWidth: '75vw',
           }}
           logo={<img alt="logo" src="/logo.png" />}
-          title="Smart Pole Management System"
+          title="HYPERVISE AIOT MANAGEMENT PLATFORM"
           subTitle={intl.formatMessage({
             id: 'pages.layouts.userLayout.title',
           })}

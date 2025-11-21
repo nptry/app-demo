@@ -15,7 +15,7 @@ const Settings: ProLayoutProps & {
   fixedHeader: false,
   fixSiderbar: true,
   colorWeak: false,
-  title: '智慧灯杆管理系统',
+  title: 'HYPERVISE AIOT MANAGEMENT PLATFORM',
   pwa: true,
   logo: '/logo.png',
   iconfontUrl: '',

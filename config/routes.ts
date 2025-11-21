@@ -240,6 +240,12 @@ export default [
       },
     ],
   },
+  {
+    path: '/message-center',
+    name: 'message-center',
+    icon: 'bell',
+    component: './MessageCenter',
+  },
 
   {
     path: '/',

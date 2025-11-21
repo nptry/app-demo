@@ -49,4 +49,5 @@ export default {
   'menu.editor.flow': 'ফ্লো এডিটর',
   'menu.editor.mind': 'মাইন্ড এডিটর',
   'menu.editor.koni': 'কোনি সম্পাদক',
+  'menu.message-center': 'বার্তা কেন্দ্র',
 };

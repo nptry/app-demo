@@ -77,7 +77,7 @@ export default {
   'menu.traffic-checkpoint-management.traffic-monitoring': '车流监控',
   'menu.traffic-checkpoint-management.red-light-monitoring': '红灯违法监控',
   'menu.traffic-checkpoint-management.retrograde-monitoring': '逆行监控',
-  'menu.traffic-checkpoint-management.parking-violation': '停车违章',
+  'menu.traffic-checkpoint-management.parking-violation': '违规停车',
   'menu.pedestrian-channel-management': '行人通道管理',
   'menu.pedestrian-channel-management.channel-info': '通道定位基础信息',
   'menu.pedestrian-channel-management.device-deployment': '通道设备部署',

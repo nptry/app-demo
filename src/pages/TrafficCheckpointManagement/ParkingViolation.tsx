@@ -46,7 +46,7 @@ const ParkingViolation: React.FC = () => {
   );
 
   return (
-    <PageContainer header={{ title: '停车违章' }}>
+    <PageContainer header={{ title: '违规停车' }}>
       <Card bodyStyle={{ paddingTop: 8 }}>
         <Table<ParkingViolationRecord>
           rowKey="id"

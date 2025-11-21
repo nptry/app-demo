@@ -20,7 +20,7 @@ const CompanionMonitoring: React.FC = () => {
       { title: '捕获通道', dataIndex: 'captureChannelName', width: 220 },
       { title: '捕获时间', dataIndex: 'captureTime', width: 200 },
       {
-        title: '随行人员数量',
+        title: '同行人员数量',
         dataIndex: 'companionCount',
         width: 160,
         render: (value: number) => <Tag color="blue">{value} 人</Tag>,
@@ -49,7 +49,7 @@ const CompanionMonitoring: React.FC = () => {
   );
 
   return (
-    <PageContainer header={{ title: '随行人员监测' }}>
+    <PageContainer header={{ title: '同行人员监测' }}>
       <Card bodyStyle={{ paddingTop: 8 }}>
         <Table<CompanionRecord>
           rowKey="id"

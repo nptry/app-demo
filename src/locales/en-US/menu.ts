@@ -69,7 +69,6 @@ export default {
   'menu.key-area-management.device-deployment': 'Device Deployment Management',
   'menu.key-area-management.density-monitoring':
     'Population Density Monitoring',
-  'menu.key-area-management.pedestrian-flow': 'Pedestrian Flow Monitoring',
   'menu.key-area-management.target-monitoring': 'Target Population Monitoring',
   'menu.traffic-checkpoint-management': 'Traffic Checkpoint Management',
   'menu.traffic-checkpoint-management.checkpoint-info': 'Checkpoint Basic Info',
@@ -77,8 +76,6 @@ export default {
     'Checkpoint Device Deployment',
   'menu.traffic-checkpoint-management.license-records':
     'License Recognition & Records',
-  'menu.traffic-checkpoint-management.traffic-monitoring':
-    'Traffic Flow Monitoring',
   'menu.traffic-checkpoint-management.red-light-monitoring':
     'Red-Light Violation Monitoring',
   'menu.traffic-checkpoint-management.retrograde-monitoring':

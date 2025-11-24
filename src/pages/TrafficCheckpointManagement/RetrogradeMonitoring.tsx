@@ -16,14 +16,8 @@ const RetrogradeMonitoring: React.FC = () => {
 
   const columns: ColumnsType<RetrogradeRecord> = useMemo(
     () => [
-      { title: '卡口', dataIndex: 'checkpointName', width: 220 },
       { title: '车道', dataIndex: 'lane', width: 180 },
-      { title: '规定方向', dataIndex: 'directionRule', width: 200 },
       { title: '逆行时间', dataIndex: 'violationTime', width: 200 },
-      { title: '车牌号', dataIndex: 'plateNumber', width: 140, render: (value: string) => <strong>{value}</strong> },
-      { title: '车辆类型', dataIndex: 'vehicleType', width: 140 },
-      { title: '逆行距离 (m)', dataIndex: 'distance', width: 140 },
-      { title: '逆行速度 (km/h)', dataIndex: 'speed', width: 140 },
       {
         title: '告警状态',
         dataIndex: 'alarmStatus',

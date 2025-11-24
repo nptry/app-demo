@@ -16,14 +16,8 @@ const RedLightMonitoring: React.FC = () => {
 
   const columns: ColumnsType<RedLightRecord> = useMemo(
     () => [
-      { title: '卡口', dataIndex: 'checkpointName', width: 200 },
       { title: '车道', dataIndex: 'lane', width: 180 },
       { title: '违章时间', dataIndex: 'violationTime', width: 200 },
-      { title: '红灯亮起时间', dataIndex: 'lightOnTime', width: 200 },
-      { title: '车牌号', dataIndex: 'plateNumber', width: 140, render: (value: string) => <strong>{value}</strong> },
-      { title: '车辆类型', dataIndex: 'vehicleType', width: 140 },
-      { title: '越线位置', dataIndex: 'position', width: 200 },
-      { title: '违章速度 (km/h)', dataIndex: 'speed', width: 160 },
       {
         title: '告警状态',
         dataIndex: 'alarm',

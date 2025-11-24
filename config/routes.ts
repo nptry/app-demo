@@ -105,11 +105,6 @@ export default [
         component: './KeyAreaManagement/DensityMonitoring',
       },
       {
-        path: '/key-area-management/pedestrian-flow',
-        name: 'pedestrian-flow',
-        component: './KeyAreaManagement/PedestrianFlow',
-      },
-      {
         path: '/key-area-management/target-monitoring',
         name: 'target-monitoring',
         component: './KeyAreaManagement/TargetMonitoring',
@@ -139,11 +134,6 @@ export default [
         path: '/traffic-checkpoint-management/license-records',
         name: 'license-records',
         component: './TrafficCheckpointManagement/LicenseRecords',
-      },
-      {
-        path: '/traffic-checkpoint-management/traffic-monitoring',
-        name: 'traffic-monitoring',
-        component: './TrafficCheckpointManagement/TrafficMonitoring',
       },
       {
         path: '/traffic-checkpoint-management/red-light-monitoring',

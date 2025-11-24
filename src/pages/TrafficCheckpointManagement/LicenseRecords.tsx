@@ -32,7 +32,6 @@ const LicenseRecords: React.FC = () => {
         width: 200,
         render: (value: string, record) => `${value} / ${record.vehicleColor} / ${record.plateColor}`,
       },
-      { title: '速度 (km/h)', dataIndex: 'speed', width: 130 },
       {
         title: '异常状态',
         dataIndex: 'abnormal',

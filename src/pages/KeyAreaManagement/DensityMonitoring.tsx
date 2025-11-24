@@ -23,20 +23,6 @@ const DensityMonitoring: React.FC = () => {
     () => [
       { title: '场所', dataIndex: 'siteName', width: 200 },
       { title: '监测区域编号', dataIndex: 'zoneCode', width: 180 },
-      {
-        title: '实时密度（人/㎡）',
-        dataIndex: 'density',
-        width: 180,
-        render: (value: number, record) => (
-          <div>
-            <div style={{ fontWeight: 600 }}>{value.toFixed(2)}</div>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>
-              阈值 {record.threshold.toFixed(2)}
-            </div>
-          </div>
-        ),
-      },
-      { title: '区域面积（㎡）', dataIndex: 'zoneArea', width: 150 },
       { title: '区域内人数', dataIndex: 'totalPeople', width: 140 },
       { title: '采集时间', dataIndex: 'time', width: 180 },
       {

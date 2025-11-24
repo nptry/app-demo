@@ -17,20 +17,6 @@ const ParkingViolation: React.FC = () => {
   const columns: ColumnsType<ParkingViolationRecord> = useMemo(
     () => [
       { title: '卡口', dataIndex: 'checkpointName', width: 220 },
-      { title: '违停区域', dataIndex: 'area', width: 220 },
-      { title: '禁停规定', dataIndex: 'rule', width: 200 },
-      { title: '开始时间', dataIndex: 'startTime', width: 180 },
-      { title: '持续时长', dataIndex: 'duration', width: 140 },
-      { title: '判定阈值 (秒)', dataIndex: 'threshold', width: 140 },
-      { title: '车牌', dataIndex: 'plateNumber', width: 140, render: (value: string) => <strong>{value}</strong> },
-      { title: '车辆类型', dataIndex: 'vehicleType', width: 140 },
-      {
-        title: '特殊车辆',
-        dataIndex: 'specialVehicle',
-        width: 140,
-        render: (value: boolean, record) =>
-          value ? <Tag color="blue">{record.specialReason ?? '特殊车辆'}</Tag> : <Tag>否</Tag>,
-      },
       {
         title: '告警状态',
         dataIndex: 'alarmStatus',

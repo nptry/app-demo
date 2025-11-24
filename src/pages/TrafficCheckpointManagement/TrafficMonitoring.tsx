@@ -31,8 +31,6 @@ const TrafficMonitoring: React.FC = () => {
       },
       { title: '拥堵持续', dataIndex: 'duration', width: 160, render: (value: string | undefined) => value ?? '—' },
       { title: '处理建议', dataIndex: 'suggestion', width: 240, render: (value: string | undefined) => value ?? '—' },
-      { title: '平均速度 (km/h)', dataIndex: 'avgSpeed', width: 160 },
-      { title: '最高速度 (km/h)', dataIndex: 'maxSpeed', width: 160 },
       { title: '采集设备', dataIndex: 'deviceId', width: 180 },
       { title: '识别准确率', dataIndex: 'accuracy', width: 160, render: (value: number) => `${(value * 100).toFixed(0)}%` },
     ],

@@ -17,25 +17,21 @@ const LicenseRecords: React.FC = () => {
 
   const columns: ColumnsType<LicenseRecordItem> = useMemo(
     () => [
-      { title: '抓拍时间', dataIndex: 'captureTime', width: 180 },
-      { title: '卡口', dataIndex: 'checkpointName', width: 200 },
-      { title: '抓拍方向', dataIndex: 'lane', width: 180 },
+      { title: '抓拍时间', dataIndex: 'captureTime' },
+      { title: '卡口', dataIndex: 'checkpointName' },
       {
         title: '车牌号',
         dataIndex: 'plateNumber',
-        width: 140,
         render: (value: string) => <strong>{value}</strong>,
       },
       {
         title: '车辆特征',
         dataIndex: 'vehicleType',
-        width: 200,
         render: (value: string, record) => `${value} / ${record.vehicleColor} / ${record.plateColor}`,
       },
       {
         title: '告警',
         dataIndex: 'abnormal',
-        width: 140,
         render: (value: boolean, record) =>
           value ? <Tag color="orange">{record.reason ?? '异常'}</Tag> : <Tag color="green">正常</Tag>,
       },
@@ -44,7 +40,7 @@ const LicenseRecords: React.FC = () => {
         dataIndex: 'photos',
         render: (value: string[]) => (value.length ? <a>查看({value.length})</a> : '—'),
       },
-      { title: '采集设备', dataIndex: 'deviceId', width: 160 },
+      { title: '采集设备', dataIndex: 'deviceId' },
     ],
     [],
   );

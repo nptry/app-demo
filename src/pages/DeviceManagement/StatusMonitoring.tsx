@@ -32,7 +32,6 @@ const StatusMonitoring: React.FC = () => {
       {
         title: '设备名称',
         dataIndex: 'deviceName',
-        width: 220,
         render: (value: string, record) => (
           <div>
             <div style={{ fontWeight: 600 }}>{value}</div>
@@ -43,28 +42,25 @@ const StatusMonitoring: React.FC = () => {
       {
         title: '实时状态',
         dataIndex: 'realtimeStatus',
-        width: 140,
         render: (value: DeviceStatusItem['realtimeStatus']) => (
           <Badge status={statusColor[value]} text={value} />
         ),
       },
-      {
-        title: 'CPU / 内存占用',
-        dataIndex: 'cpuUsage',
-        width: 180,
-        render: (value: number | undefined, record) =>
-          value !== undefined && record.memoryUsage !== undefined
-            ? `${value}% / ${record.memoryUsage}%`
-            : '—',
-      },
-      {
-        title: '网络信号强度',
-        dataIndex: 'signalStrength',
-        width: 160,
-        render: (value: string | undefined) => value ?? '—',
-      },
-      { title: '数据上传速率', dataIndex: 'uploadRate', width: 160 },
-      { title: '最后心跳时间', dataIndex: 'lastHeartbeat', width: 200 },
+      // {
+      //   title: 'CPU / 内存占用',
+      //   dataIndex: 'cpuUsage',
+      //   render: (value: number | undefined, record) =>
+      //     value !== undefined && record.memoryUsage !== undefined
+      //       ? `${value}% / ${record.memoryUsage}%`
+      //       : '—',
+      // },
+      // {
+      //   title: '网络信号强度',
+      //   dataIndex: 'signalStrength',
+      //   render: (value: string | undefined) => value ?? '—',
+      // },
+      // { title: '数据上传速率', dataIndex: 'uploadRate'},
+      { title: '最后心跳时间', dataIndex: 'lastHeartbeat' },
       { title: '异常提示', dataIndex: 'exception' },
     ],
     [],

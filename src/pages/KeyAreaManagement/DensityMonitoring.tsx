@@ -40,12 +40,6 @@ const DensityMonitoring: React.FC = () => {
         render: (value: string | undefined) => value ?? '—',
       },
       { title: '数据来源设备', dataIndex: 'sourceDeviceId', width: 160 },
-      {
-        title: '数据可信度',
-        dataIndex: 'confidence',
-        width: 160,
-        render: (value: number) => <Progress percent={value * 100} size="small" />,
-      },
     ],
     [],
   );

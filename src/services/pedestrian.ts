@@ -41,7 +41,7 @@ export type ChannelDeploymentItem = {
   id: string;
   channelId: string;
   channelName: string;
-  deviceType: '高清数字摄像机' | 'AI 边缘计算设备' | '4G 无线网关';
+  deviceType: '高清数字摄像机' | 'AI 边缘计算设备';
   deviceId: string;
   deviceName: string;
   position: string;

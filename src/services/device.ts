@@ -8,7 +8,7 @@ type ApiResponse<T> = {
 export type DeviceBasicInfoItem = {
   id: string;
   name: string;
-  type: 'AI 边缘计算设备' | '4G 无线网关设备';
+  type: 'AI 边缘计算设备';
   model: string;
   vendor: string;
   serialNumber: string;
@@ -62,7 +62,7 @@ export type DeviceStatusMetrics = {
 export type DeviceStatusItem = {
   deviceId: string;
   deviceName: string;
-  type: 'AI 边缘计算设备' | '4G 无线网关设备';
+  type: 'AI 边缘计算设备';
   realtimeStatus: '在线' | '离线' | '故障' | '维护中';
   cpuUsage?: number;
   memoryUsage?: number;

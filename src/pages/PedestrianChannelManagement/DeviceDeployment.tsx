@@ -34,7 +34,7 @@ type FilterState = {
   deviceType: ChannelDeploymentItem['deviceType'] | 'all';
 };
 
-const deviceTypeOptions: ChannelDeploymentItem['deviceType'][] = ['高清数字摄像机', 'AI 边缘计算设备', '4G 无线网关'];
+const deviceTypeOptions: ChannelDeploymentItem['deviceType'][] = ['高清数字摄像机', 'AI 边缘计算设备'];
 const statusOptions: ChannelDeploymentItem['status'][] = ['正常运行', '待调试', '已拆除'];
 
 const DeviceDeployment: React.FC = () => {

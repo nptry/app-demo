@@ -33,7 +33,7 @@ type FilterState = {
   deviceType: TrafficDeploymentItem['deviceType'] | 'all';
 };
 
-const deviceTypeOptions: TrafficDeploymentItem['deviceType'][] = ['高清数字摄像机', 'AI 边缘计算设备', '4G 无线网关'];
+const deviceTypeOptions: TrafficDeploymentItem['deviceType'][] = ['高清数字摄像机', 'AI 边缘计算设备'];
 const statusOptions: TrafficDeploymentItem['status'][] = ['正常运行', '待调试', '已拆除'];
 
 const DeviceDeployment: React.FC = () => {

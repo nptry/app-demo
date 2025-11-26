@@ -126,20 +126,6 @@ const deploymentData = {
       owner: 'Idris Ajayi',
       status: '待调试',
     },
-    {
-      id: 'DEP-010',
-      siteId: 'SITE-006',
-      siteName: 'Oshodi 枢纽天桥集群',
-      zoneCode: 'SITE-006-Z03',
-      zoneArea: 260,
-      deviceType: '4G 无线网关',
-      deviceId: 'GW-OSH-03',
-      deviceName: '天桥中段网关',
-      position: '天桥中段配电箱',
-      installDate: '2024-04-02',
-      owner: 'Grace Nneka',
-      status: '正常运行',
-    },
   ],
 };
 

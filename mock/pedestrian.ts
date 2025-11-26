@@ -79,19 +79,6 @@ const deploymentData = {
       status: '正常运行',
       testResult: '行人密度模型 v2.1',
     },
-    {
-      id: 'CHD-005',
-      channelId: 'CH-005',
-      channelName: 'CMS 地铁东出口',
-      deviceType: '4G 无线网关',
-      deviceId: 'GW-CMS-02',
-      deviceName: '地铁出口网关',
-      position: '出口旁配电箱',
-      installDate: '2024-02-05',
-      owner: 'Sara Yusuf',
-      status: '待调试',
-      testResult: '待完成链路切换',
-    },
   ],
 };
 

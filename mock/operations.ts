@@ -127,17 +127,6 @@ const resourceData = {
       detail: '交通卡口高空作业资质',
     },
     {
-      id: 'RES-S-03',
-      resourceType: '设备配件',
-      name: '4G 无线网关模块',
-      status: '库存充足',
-      department: 'Tin Can 前置仓',
-      contact: 'Chinedu Lawson',
-      phone: '08027719822',
-      detail: '可替换 15 套，适配 GW-600/620',
-      lastDispatch: '2024-05-08 14:20',
-    },
-    {
       id: 'RES-S-06',
       resourceType: '设备配件',
       name: '高清摄像机套件',
@@ -214,7 +203,6 @@ const statisticsData = {
     { type: '其他', value: 4 },
   ],
   topDevices: [
-    { deviceName: '4G 无线网关-港口二期', count: 3 },
     { deviceName: 'AI 边缘节点-维多利亚路口', count: 3 },
     { deviceName: 'AI 边缘节点-Oshodi 天桥', count: 2 },
   ],

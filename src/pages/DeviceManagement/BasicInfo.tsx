@@ -34,7 +34,7 @@ type FilterState = {
   type: DeviceBasicInfoItem['type'] | 'all';
 };
 
-const deviceTypeOptions: DeviceBasicInfoItem['type'][] = ['AI 边缘计算设备', '4G 无线网关设备'];
+const deviceTypeOptions: DeviceBasicInfoItem['type'][] = ['AI 边缘计算设备'];
 const deviceStatusOptions: DeviceBasicInfoItem['status'][] = ['在线', '离线', '故障', '维护中'];
 
 const BasicInfo: React.FC = () => {
@@ -63,7 +63,6 @@ const BasicInfo: React.FC = () => {
       return {
         total: devices.length,
         aiEdge: devices.filter((item) => item.type === 'AI 边缘计算设备').length,
-        gateways: devices.filter((item) => item.type === '4G 无线网关设备').length,
         online: devices.filter((item) => item.status === '在线').length,
       };
     }
@@ -218,11 +217,6 @@ const BasicInfo: React.FC = () => {
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
             <Statistic title="AI 边缘计算" value={summary.aiEdge} suffix="台" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="4G 无线网关" value={summary.gateways} suffix="台" />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>

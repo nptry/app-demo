@@ -43,7 +43,6 @@ const CompanionMonitoring: React.FC = () => {
       { title: '轨迹关联结果', dataIndex: 'linkResult', width: 240 },
       { title: '处置备注', dataIndex: 'remark', width: 200 },
       { title: '识别设备', dataIndex: 'deviceId', width: 160 },
-      { title: '识别准确率', dataIndex: 'accuracy', width: 160, render: (value: number) => `${(value * 100).toFixed(0)}%` },
     ],
     [],
   );

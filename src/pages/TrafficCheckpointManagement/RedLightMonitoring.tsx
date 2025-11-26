@@ -41,7 +41,6 @@ const RedLightMonitoring: React.FC = () => {
         ),
       },
       { title: '识别设备', dataIndex: 'deviceId', width: 160 },
-      { title: '识别准确率', dataIndex: 'accuracy', width: 160, render: (value: number) => `${(value * 100).toFixed(0)}%` },
     ],
     [],
   );

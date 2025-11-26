@@ -44,7 +44,6 @@ const LicenseRecords: React.FC = () => {
         dataIndex: 'photos',
         render: (value: string[]) => (value.length ? <a>查看({value.length})</a> : '—'),
       },
-      { title: '识别准确率', dataIndex: 'accuracy', width: 140, render: (value: number) => `${(value * 100).toFixed(0)}%` },
       { title: '采集设备', dataIndex: 'deviceId', width: 160 },
     ],
     [],

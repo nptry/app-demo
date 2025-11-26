@@ -27,7 +27,6 @@ const RetrogradeMonitoring: React.FC = () => {
       { title: '处置说明', dataIndex: 'remark', width: 220 },
       { title: '证据', dataIndex: 'photos', width: 200, render: (value: string[]) => (value.length ? <a>照片({value.length})/视频</a> : '—') },
       { title: '识别设备', dataIndex: 'deviceId', width: 160 },
-      { title: '识别准确率', dataIndex: 'accuracy', width: 160, render: (value: number) => `${(value * 100).toFixed(0)}%` },
     ],
     [],
   );

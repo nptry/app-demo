@@ -34,7 +34,6 @@ const AccessRecords: React.FC = () => {
       { title: '告警状态', dataIndex: 'alarmStatus', width: 180, render: (value: string) => <Badge status={value.includes('处理中') ? 'processing' : 'default'} text={value} /> },
       { title: '备注', dataIndex: 'remark', width: 200 },
       { title: '识别设备', dataIndex: 'deviceId', width: 160 },
-      { title: '识别准确率', dataIndex: 'accuracy', width: 140, render: (value: number) => `${(value * 100).toFixed(0)}%` },
     ],
     [],
   );

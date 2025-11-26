@@ -56,7 +56,6 @@ const TargetMonitoring: React.FC = () => {
           value ? value.map((channel) => <Tag key={channel}>{channel}</Tag>) : '—',
       },
       { title: '识别设备', dataIndex: 'deviceId', width: 160 },
-      { title: '识别准确率', dataIndex: 'accuracy', width: 140, render: (value: number) => `${(value * 100).toFixed(0)}%` },
     ],
     [],
   );

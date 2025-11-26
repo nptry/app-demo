@@ -43,7 +43,6 @@ const PedestrianFlow: React.FC = () => {
       { title: '异常持续', dataIndex: 'duration', width: 140, render: (value: string | undefined) => value ?? '—' },
       { title: '建议措施', dataIndex: 'suggestion', width: 220, render: (value: string | undefined) => value ?? '—' },
       { title: '采集设备', dataIndex: 'deviceId', width: 160 },
-      { title: '识别准确率', dataIndex: 'accuracy', width: 140, render: (value: number) => `${(value * 100).toFixed(0)}%` },
     ],
     [],
   );

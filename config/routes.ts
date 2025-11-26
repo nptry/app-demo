@@ -121,37 +121,37 @@ export default [
       },
     ],
   },
-  {
-    path: '/pedestrian-channel-management',
-    name: 'pedestrian-channel-management',
-    icon: 'branches',
-    routes: [
-      {
-        path: '/pedestrian-channel-management',
-        redirect: '/pedestrian-channel-management/channel-info',
-      },
-      {
-        path: '/pedestrian-channel-management/channel-info',
-        name: 'channel-info',
-        component: './PedestrianChannelManagement/ChannelInfo',
-      },
-      {
-        path: '/pedestrian-channel-management/device-deployment',
-        name: 'device-deployment',
-        component: './PedestrianChannelManagement/DeviceDeployment',
-      },
-      {
-        path: '/pedestrian-channel-management/trajectory-tracking',
-        name: 'trajectory-tracking',
-        component: './PedestrianChannelManagement/TrajectoryTracking',
-      },
-      {
-        path: '/pedestrian-channel-management/access-records',
-        name: 'access-records',
-        component: './PedestrianChannelManagement/AccessRecords',
-      },
-    ],
-  },
+  // {
+  //   path: '/pedestrian-channel-management',
+  //   name: 'pedestrian-channel-management',
+  //   icon: 'branches',
+  //   routes: [
+  //     {
+  //       path: '/pedestrian-channel-management',
+  //       redirect: '/pedestrian-channel-management/channel-info',
+  //     },
+  //     {
+  //       path: '/pedestrian-channel-management/channel-info',
+  //       name: 'channel-info',
+  //       component: './PedestrianChannelManagement/ChannelInfo',
+  //     },
+  //     {
+  //       path: '/pedestrian-channel-management/device-deployment',
+  //       name: 'device-deployment',
+  //       component: './PedestrianChannelManagement/DeviceDeployment',
+  //     },
+  //     {
+  //       path: '/pedestrian-channel-management/trajectory-tracking',
+  //       name: 'trajectory-tracking',
+  //       component: './PedestrianChannelManagement/TrajectoryTracking',
+  //     },
+  //     {
+  //       path: '/pedestrian-channel-management/access-records',
+  //       name: 'access-records',
+  //       component: './PedestrianChannelManagement/AccessRecords',
+  //     },
+  //   ],
+  // },
   {
     path: '/key-area-management',
     name: 'key-area-management',

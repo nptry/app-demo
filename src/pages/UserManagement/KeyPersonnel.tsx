@@ -227,7 +227,7 @@ const KeyPersonnel: React.FC = () => {
           ),
       },
       { title: '操作人', dataIndex: 'operator', width: 140 },
-      { title: '备注', dataIndex: 'remark' },
+      { title: '备注', dataIndex: 'remark', width: 150 },
       {
         title: '操作',
         dataIndex: 'action',

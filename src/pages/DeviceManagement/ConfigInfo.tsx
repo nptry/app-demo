@@ -172,7 +172,7 @@ const ConfigInfo: React.FC = () => {
       { title: '经纬度', dataIndex: 'coordinates', width: 180 },
       { title: '智慧灯杆 ID', dataIndex: 'lampId', width: 160 },
       { title: '部署时间', dataIndex: 'deployDate', width: 140 },
-      { title: '部署场景描述', dataIndex: 'description' },
+      { title: '部署场景描述', dataIndex: 'description', width: 150 },
       {
         title: '操作',
         dataIndex: 'action',

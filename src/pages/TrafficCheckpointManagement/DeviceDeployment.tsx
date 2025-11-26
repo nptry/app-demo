@@ -152,7 +152,7 @@ const DeviceDeployment: React.FC = () => {
           </div>
         ),
       },
-      { title: '安装车道/位置', dataIndex: 'lane', width: 200 },
+      { title: '安装车道', dataIndex: 'lane', width: 200 },
       { title: '安装位置描述', dataIndex: 'position', width: 220 },
       { title: '镜头焦距', dataIndex: 'lensFocal', width: 140 },
       { title: '部署时间', dataIndex: 'installDate', width: 160 },
@@ -258,8 +258,8 @@ const DeviceDeployment: React.FC = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="安装车道/位置" name="lane" rules={[{ required: true, message: '请输入安装车道' }]}>
-                <Input placeholder="请输入安装车道或方向" />
+              <Form.Item label="安装车道" name="lane" rules={[{ required: true, message: '请输入安装车道' }]}>
+                <Input placeholder="请输入安装车道" />
               </Form.Item>
             </Col>
           </Row>

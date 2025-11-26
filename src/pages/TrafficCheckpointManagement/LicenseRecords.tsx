@@ -19,7 +19,7 @@ const LicenseRecords: React.FC = () => {
     () => [
       { title: '抓拍时间', dataIndex: 'captureTime', width: 180 },
       { title: '卡口', dataIndex: 'checkpointName', width: 200 },
-      { title: '车道', dataIndex: 'lane', width: 180 },
+      { title: '抓拍方向', dataIndex: 'lane', width: 180 },
       {
         title: '车牌号',
         dataIndex: 'plateNumber',
@@ -33,7 +33,7 @@ const LicenseRecords: React.FC = () => {
         render: (value: string, record) => `${value} / ${record.vehicleColor} / ${record.plateColor}`,
       },
       {
-        title: '异常状态',
+        title: '告警',
         dataIndex: 'abnormal',
         width: 140,
         render: (value: boolean, record) =>

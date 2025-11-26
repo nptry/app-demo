@@ -54,7 +54,10 @@ export default {
   'menu.user-management.role': 'Role Management',
   'menu.user-management.account': 'Account Management',
   'menu.user-management.operation-log': 'Operation Log',
-  'menu.key-personnel': 'Key Personnel Management',
+  'menu.key-personnel-management': 'Key Personnel Management',
+  'menu.key-personnel-management.key-personnel-list': 'Key Personnel List',
+  'menu.key-personnel-management.key-personnel-monitoring':
+    'Key Personnel Monitoring',
   'menu.device-management': 'Device Management',
   'menu.device-management.basic-info': 'Device Basic Info',
   'menu.device-management.config-info': 'Device Configuration Info',
@@ -69,7 +72,6 @@ export default {
   'menu.key-area-management.device-deployment': 'Device Deployment Management',
   'menu.key-area-management.density-monitoring':
     'Population Density Monitoring',
-  'menu.key-area-management.target-monitoring': 'Target Population Monitoring',
   'menu.traffic-checkpoint-management': 'Traffic Checkpoint Management',
   'menu.traffic-checkpoint-management.checkpoint-info': 'Checkpoint Basic Info',
   'menu.traffic-checkpoint-management.device-deployment':
@@ -85,8 +87,6 @@ export default {
   'menu.pedestrian-channel-management.channel-info': 'Channel Location Info',
   'menu.pedestrian-channel-management.device-deployment':
     'Channel Device Deployment',
-  'menu.pedestrian-channel-management.key-personnel-monitoring':
-    'Key Personnel Monitoring',
   'menu.pedestrian-channel-management.trajectory-tracking':
     'Trajectory Tracking',
   'menu.pedestrian-channel-management.stranger-monitoring':

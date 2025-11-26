@@ -81,37 +81,6 @@ export default [
     ],
   },
   {
-    path: '/key-area-management',
-    name: 'key-area-management',
-    icon: 'cluster',
-    routes: [
-      {
-        path: '/key-area-management',
-        redirect: '/key-area-management/site-info',
-      },
-      {
-        path: '/key-area-management/site-info',
-        name: 'site-info',
-        component: './KeyAreaManagement/SiteInfo',
-      },
-      {
-        path: '/key-area-management/device-deployment',
-        name: 'device-deployment',
-        component: './KeyAreaManagement/DeviceDeployment',
-      },
-      {
-        path: '/key-area-management/density-monitoring',
-        name: 'density-monitoring',
-        component: './KeyAreaManagement/DensityMonitoring',
-      },
-      {
-        path: '/key-area-management/target-monitoring',
-        name: 'target-monitoring',
-        component: './KeyAreaManagement/TargetMonitoring',
-      },
-    ],
-  },
-  {
     path: '/traffic-checkpoint-management',
     name: 'traffic-checkpoint-management',
     icon: 'car',
@@ -172,11 +141,6 @@ export default [
         component: './PedestrianChannelManagement/DeviceDeployment',
       },
       {
-        path: '/pedestrian-channel-management/key-personnel-monitoring',
-        name: 'key-personnel-monitoring',
-        component: './PedestrianChannelManagement/KeyPersonnelMonitoring',
-      },
-      {
         path: '/pedestrian-channel-management/trajectory-tracking',
         name: 'trajectory-tracking',
         component: './PedestrianChannelManagement/TrajectoryTracking',
@@ -194,10 +158,51 @@ export default [
     ],
   },
   {
-    path: '/key-personnel',
-    name: 'key-personnel',
+    path: '/key-area-management',
+    name: 'key-area-management',
+    icon: 'cluster',
+    routes: [
+      {
+        path: '/key-area-management',
+        redirect: '/key-area-management/site-info',
+      },
+      {
+        path: '/key-area-management/site-info',
+        name: 'site-info',
+        component: './KeyAreaManagement/SiteInfo',
+      },
+      {
+        path: '/key-area-management/device-deployment',
+        name: 'device-deployment',
+        component: './KeyAreaManagement/DeviceDeployment',
+      },
+      {
+        path: '/key-area-management/density-monitoring',
+        name: 'density-monitoring',
+        component: './KeyAreaManagement/DensityMonitoring',
+      },
+    ],
+  },
+  {
+    path: '/key-personnel-management',
+    name: 'key-personnel-management',
     icon: 'team',
-    component: './UserManagement/KeyPersonnel',
+    routes: [
+      {
+        path: '/key-personnel-management',
+        redirect: '/key-personnel-management/key-personnel-list',
+      },
+      {
+        path: '/key-personnel-management/key-personnel-list',
+        name: 'key-personnel-list',
+        component: './UserManagement/KeyPersonnel',
+      },
+      {
+        path: '/key-personnel-management/key-personnel-monitoring',
+        name: 'key-personnel-monitoring',
+        component: './PedestrianChannelManagement/KeyPersonnelMonitoring',
+      },
+    ],
   },
   {
     path: '/user-management',

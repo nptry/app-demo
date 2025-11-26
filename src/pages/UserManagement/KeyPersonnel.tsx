@@ -182,6 +182,7 @@ const KeyPersonnel: React.FC = () => {
       {
         title: '布控区域',
         dataIndex: 'controlAreas',
+        width: 240,
         render: (areas: string[]) =>
           areas.map((area) => (
             <Tag key={area} color="purple" style={{ marginBottom: 4 }}>

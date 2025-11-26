@@ -183,7 +183,7 @@ const BasicInfo: React.FC = () => {
           <Badge status={statusBadge[value]} text={value} />
         ),
       },
-      { title: '备注', dataIndex: 'remark' },
+      { title: '备注', dataIndex: 'remark', width: 200 },
       {
         title: '操作',
         dataIndex: 'action',

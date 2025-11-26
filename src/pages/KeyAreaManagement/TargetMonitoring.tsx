@@ -36,7 +36,6 @@ const TargetMonitoring: React.FC = () => {
         ),
       },
       { title: '匹配时间', dataIndex: 'time', width: 180 },
-      { title: '行为描述', dataIndex: 'behavior', width: 220 },
       {
         title: '告警状态',
         dataIndex: 'alarm',

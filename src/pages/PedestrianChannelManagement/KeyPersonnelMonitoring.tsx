@@ -30,7 +30,6 @@ const KeyPersonnelMonitoring: React.FC = () => {
         ),
       },
       { title: '捕获时间', dataIndex: 'captureTime', width: 200 },
-      { title: '行为描述', dataIndex: 'behavior', width: 220 },
       {
         title: '是否有同行人员',
         dataIndex: 'withCompanion',

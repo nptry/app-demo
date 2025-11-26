@@ -146,11 +146,6 @@ export default [
         component: './PedestrianChannelManagement/TrajectoryTracking',
       },
       {
-        path: '/pedestrian-channel-management/stranger-monitoring',
-        name: 'stranger-monitoring',
-        component: './PedestrianChannelManagement/StrangerMonitoring',
-      },
-      {
         path: '/pedestrian-channel-management/access-records',
         name: 'access-records',
         component: './PedestrianChannelManagement/AccessRecords',

@@ -24,6 +24,13 @@ export default [
   },
 
   {
+    path: '/dashboard',
+    name: 'dashboard',
+    icon: 'dashboard',
+    component: './Dashboard',
+  },
+
+  {
     path: '/device-management',
     name: 'device-management',
     icon: 'appstore',
@@ -239,7 +246,7 @@ export default [
 
   {
     path: '/',
-    redirect: '/device-management',
+    redirect: '/dashboard',
   },
   {
     path: '*',

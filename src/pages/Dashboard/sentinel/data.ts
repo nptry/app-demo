@@ -118,6 +118,35 @@ export const generateHumanTrafficStats = () => [
   { name: '20:00', count: 6100 },
 ];
 
+// NEW: Crowd Density Alert Trend
+export const generateCrowdAlertTrend = () => [
+  { name: '00:00', value: 2 },
+  { name: '04:00', value: 0 },
+  { name: '08:00', value: 12 },
+  { name: '12:00', value: 25 },
+  { name: '16:00', value: 18 },
+  { name: '20:00', value: 30 },
+];
+
+// NEW: Intrusion Alert Trend (Line Chart Data - Legacy/Optional)
+export const generateIntrusionTrend = () => [
+  { name: '00:00', value: 5 },
+  { name: '04:00', value: 8 },
+  { name: '08:00', value: 3 },
+  { name: '12:00', value: 2 },
+  { name: '16:00', value: 4 },
+  { name: '20:00', value: 12 },
+];
+
+// NEW: Intrusion Data for Polar Bar Chart (Radial Bar)
+export const intrusionByArea = [
+  { name: '围墙周界', value: 45, fill: '#4ade80' }, // Emerald
+  { name: '地下管廊', value: 32, fill: '#2dd4bf' }, // Teal
+  { name: '配电房', value: 28, fill: '#fbbf24' }, // Amber
+  { name: '核心机房', value: 15, fill: '#f87171' }, // Red
+  { name: '楼顶天台', value: 10, fill: '#a78bfa' }, // Purple
+];
+
 // 5. Personnel
 export const generatePersonnel = (count: number) => {
   return Array.from({ length: count }).map((_, i) => ({
@@ -152,3 +181,5 @@ export const trafficTrend = generateTrafficStats();
 export const humanTrafficTrend = generateHumanTrafficStats();
 export const crowdAreas = generateCrowdAreas(20);
 export const personnelData = generatePersonnel(50);
+export const crowdAlertTrend = generateCrowdAlertTrend();
+export const intrusionTrend = generateIntrusionTrend();

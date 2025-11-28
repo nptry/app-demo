@@ -16,39 +16,45 @@ import {
   PolarRadiusAxis,
   Radar,
   RadarChart,
+  RadialBar,
+  RadialBarChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
 
-// Colors consistent with the Cyberpunk/Deep Blue theme
-const COLORS = [
-  '#22d3ee',
-  '#3b82f6',
-  '#818cf8',
-  '#f472b6',
-  '#ef4444',
-  '#10b981',
+// Colors updated for "Green/Industrial Tech" theme (#323e37 bg context)
+export const COLORS = [
+  '#4ade80',
+  '#2dd4bf',
   '#fbbf24',
+  '#f87171',
+  '#60a5fa',
+  '#a78bfa',
 ];
-const GRID_COLOR = '#1e293b';
+export const GRID_COLOR = '#4a5f54';
 const TEXT_COLOR = '#94a3b8';
 
 export const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-slate-900 border border-slate-700 p-3 rounded shadow-xl bg-opacity-90 backdrop-blur z-50">
-        <p className="text-slate-200 font-semibold mb-1">{label}</p>
-        {payload.map((entry: any) => (
-          <p
-            key={entry.name || entry.dataKey}
-            style={{ color: entry.color }}
-            className="text-sm"
-          >
-            {entry.name}: {entry.value}
-          </p>
-        ))}
+      <div className="bg-[#1c2622] border border-[#4ade80]/30 p-3 rounded shadow-[0_0_15px_rgba(0,0,0,0.5)] z-50">
+        <p className="text-slate-200 font-semibold mb-1 font-tech text-xs">
+          {label || payload[0].name}
+        </p>
+        {payload.map((entry: any, index: number) => {
+          const key = entry.dataKey ?? entry.name ?? `payload-${index}`;
+          return (
+            <p
+              key={key}
+              style={{ color: entry.color }}
+              className="text-sm font-mono"
+            >
+              {entry.name}: {entry.value}
+            </p>
+          );
+        })}
       </div>
     );
   }
@@ -59,24 +65,39 @@ export const SimpleLineChart = ({
   data,
   dataKey,
   xKey,
-  color = '#22d3ee',
+  color = '#4ade80',
   name,
 }: any) => (
   <ResponsiveContainer width="100%" height="100%">
-    <LineChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-      <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
-      <XAxis dataKey={xKey} stroke={TEXT_COLOR} tick={{ fontSize: 10 }} />
-      <YAxis stroke={TEXT_COLOR} tick={{ fontSize: 10 }} />
+    <LineChart
+      data={data}
+      margin={{ top: 10, right: 10, bottom: 0, left: -20 }}
+    >
+      <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} opacity={0.3} />
+      <XAxis
+        dataKey={xKey}
+        stroke={TEXT_COLOR}
+        tick={{ fontSize: 10 }}
+        tickLine={false}
+        axisLine={{ stroke: GRID_COLOR }}
+      />
+      <YAxis
+        stroke={TEXT_COLOR}
+        tick={{ fontSize: 10 }}
+        tickLine={false}
+        axisLine={{ stroke: GRID_COLOR }}
+      />
       <Tooltip content={<CustomTooltip />} />
-      <Legend />
       <Line
         type="monotone"
         dataKey={dataKey}
         stroke={color}
         strokeWidth={2}
-        dot={{ r: 3 }}
-        activeDot={{ r: 5 }}
+        dot={{ r: 0, strokeWidth: 0, fill: color }}
+        activeDot={{ r: 4, stroke: '#fff', strokeWidth: 2 }}
         name={name}
+        isAnimationActive={true}
+        animationDuration={2000}
       />
     </LineChart>
   </ResponsiveContainer>
@@ -84,74 +105,109 @@ export const SimpleLineChart = ({
 
 export const SimpleBarChart = ({ data, xKey, series }: any) => (
   <ResponsiveContainer width="100%" height="100%">
-    <BarChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+    <BarChart data={data} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
       <CartesianGrid
         strokeDasharray="3 3"
         stroke={GRID_COLOR}
         vertical={false}
+        opacity={0.3}
       />
-      <XAxis dataKey={xKey} stroke={TEXT_COLOR} tick={{ fontSize: 10 }} />
-      <YAxis stroke={TEXT_COLOR} tick={{ fontSize: 10 }} />
+      <XAxis
+        dataKey={xKey}
+        stroke={TEXT_COLOR}
+        tick={{ fontSize: 10 }}
+        tickLine={false}
+        axisLine={{ stroke: GRID_COLOR }}
+      />
+      <YAxis
+        stroke={TEXT_COLOR}
+        tick={{ fontSize: 10 }}
+        tickLine={false}
+        axisLine={{ stroke: GRID_COLOR }}
+      />
       <Tooltip content={<CustomTooltip />} />
-      <Legend />
       {series.map((s: any, i: number) => (
         <Bar
           key={s.key}
           dataKey={s.key}
           name={s.name}
           fill={COLORS[i % COLORS.length]}
-          radius={[4, 4, 0, 0]}
-          maxBarSize={60}
+          radius={[2, 2, 0, 0]}
+          maxBarSize={40}
+          animationDuration={1500}
         />
       ))}
     </BarChart>
   </ResponsiveContainer>
 );
 
-export const SimplePieChart = ({ data, nameKey, dataKey }: any) => (
-  <ResponsiveContainer width="100%" height="100%">
-    <PieChart>
-      <Pie
-        data={data}
-        cx="50%"
-        cy="50%"
-        innerRadius={50}
-        outerRadius={70}
-        paddingAngle={5}
-        dataKey={dataKey}
-        nameKey={nameKey}
-      >
-        {data.map((_entry: any, index: number) => (
-          <Cell
-            key={_entry.name || `cell-${index}`}
-            fill={COLORS[index % COLORS.length]}
-          />
-        ))}
-      </Pie>
-      <Tooltip content={<CustomTooltip />} />
-      <Legend verticalAlign="bottom" height={36} iconType="circle" />
-    </PieChart>
-  </ResponsiveContainer>
-);
+export const SimplePieChart = ({
+  data,
+  nameKey,
+  dataKey,
+  animate = false,
+}: any) => {
+  return (
+    <div className={`w-full h-full ${animate ? 'animate-spin-slow' : ''}`}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            innerRadius="50%"
+            outerRadius="80%"
+            paddingAngle={4}
+            dataKey={dataKey}
+            nameKey={nameKey}
+            stroke="none"
+          >
+            {data.map((entry: any, index: number) => {
+              const cellKey = entry?.[nameKey] ?? `cell-${index}`;
+              return (
+                <Cell key={cellKey} fill={COLORS[index % COLORS.length]} />
+              );
+            })}
+          </Pie>
+          <Tooltip content={<CustomTooltip />} />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
 
 export const AreaTrendChart = ({
   data,
   xKey,
   dataKey,
-  color = '#818cf8',
+  color = '#2dd4bf',
   name,
 }: any) => (
   <ResponsiveContainer width="100%" height="100%">
-    <AreaChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+    <AreaChart
+      data={data}
+      margin={{ top: 10, right: 10, bottom: 0, left: -20 }}
+    >
       <defs>
-        <linearGradient id={`color${dataKey}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="5%" stopColor={color} stopOpacity={0.8} />
-          <stop offset="95%" stopColor={color} stopOpacity={0} />
+        <linearGradient id={`color${dataKey}`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor={color} stopOpacity={0.6} />
+          <stop offset="100%" stopColor={color} stopOpacity={0.1} />
         </linearGradient>
       </defs>
-      <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
-      <XAxis dataKey={xKey} stroke={TEXT_COLOR} tick={{ fontSize: 10 }} />
-      <YAxis stroke={TEXT_COLOR} tick={{ fontSize: 10 }} />
+      <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} opacity={0.3} />
+      <XAxis
+        dataKey={xKey}
+        stroke={TEXT_COLOR}
+        tick={{ fontSize: 10 }}
+        tickLine={false}
+        axisLine={{ stroke: GRID_COLOR }}
+      />
+      <YAxis
+        stroke={TEXT_COLOR}
+        tick={{ fontSize: 10 }}
+        tickLine={false}
+        axisLine={{ stroke: GRID_COLOR }}
+      />
       <Tooltip content={<CustomTooltip />} />
       <Area
         type="monotone"
@@ -160,6 +216,8 @@ export const AreaTrendChart = ({
         fillOpacity={1}
         fill={`url(#color${dataKey})`}
         name={name}
+        animationDuration={2500}
+        animationEasing="ease-out"
       />
     </AreaChart>
   </ResponsiveContainer>
@@ -168,7 +226,7 @@ export const AreaTrendChart = ({
 export const SimpleRadarChart = ({ data, dataKey, nameKey }: any) => (
   <ResponsiveContainer width="100%" height="100%">
     <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
-      <PolarGrid stroke={GRID_COLOR} />
+      <PolarGrid stroke={GRID_COLOR} opacity={0.5} />
       <PolarAngleAxis
         dataKey={nameKey}
         tick={{ fill: TEXT_COLOR, fontSize: 10 }}
@@ -185,8 +243,50 @@ export const SimpleRadarChart = ({ data, dataKey, nameKey }: any) => (
         stroke={COLORS[0]}
         fill={COLORS[0]}
         fillOpacity={0.4}
+        isAnimationActive={true}
       />
       <Tooltip content={<CustomTooltip />} />
     </RadarChart>
+  </ResponsiveContainer>
+);
+
+export const SimpleRadialBarChart = ({ data, dataKey, nameKey }: any) => (
+  <ResponsiveContainer width="100%" height="100%">
+    <RadialBarChart
+      cx="40%"
+      cy="50%"
+      innerRadius="30%"
+      outerRadius="100%"
+      barSize={12}
+      data={data}
+    >
+      <PolarGrid gridType="circle" stroke={GRID_COLOR} opacity={0.2} />
+      <RadialBar
+        background={{ fill: '#323e37', opacity: 0.5 }}
+        dataKey={dataKey}
+        cornerRadius={10}
+      />
+      <Legend
+        iconSize={8}
+        layout="vertical"
+        verticalAlign="middle"
+        align="right"
+        wrapperStyle={{
+          right: 0,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          fontSize: '10px',
+          color: '#94a3b8',
+          width: '35%',
+        }}
+        payload={data.map((item: any) => ({
+          id: item[nameKey],
+          type: 'square',
+          value: `${item[nameKey]}`,
+          color: item.fill,
+        }))}
+      />
+      <Tooltip content={<CustomTooltip />} />
+    </RadialBarChart>
   </ResponsiveContainer>
 );

@@ -4,11 +4,8 @@ import { Layout } from './components/Layout';
 import {
   CrowdAreaView,
   DeviceFacilityView,
-  FacilityPage,
-  FaultManagementView,
   KeyPersonnelView,
   TrafficMountView,
-  UserManagementView,
 } from './components/ModuleViews';
 
 const App: React.FC = () => {
@@ -20,18 +17,12 @@ const App: React.FC = () => {
         return <Cockpit />;
       case 'device':
         return <DeviceFacilityView />;
-      case 'facility':
-        return <FacilityPage />;
-      case 'faults':
-        return <FaultManagementView />;
+      case 'crowd':
+        return <CrowdAreaView />; // "重点区域"
       case 'traffic':
         return <TrafficMountView />;
-      case 'crowd':
-        return <CrowdAreaView />;
       case 'personnel':
         return <KeyPersonnelView />;
-      case 'user':
-        return <UserManagementView />;
       default:
         return <Cockpit />;
     }

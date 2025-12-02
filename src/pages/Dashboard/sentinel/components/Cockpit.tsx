@@ -1,11 +1,12 @@
 import {
   AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
   TrendingUp,
-  Users,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   checkpointData,
   crowdAlertTrend,
@@ -13,7 +14,6 @@ import {
   deviceData,
   humanTrafficTrend,
   intrusionByArea,
-  personnelData,
   trafficTrend,
 } from '../data';
 import { AreaTrendChart, SimplePieChart, SimpleRadialBarChart } from './Charts';
@@ -181,39 +181,253 @@ const CentralMap = () => {
   );
 };
 
-// 2. Center Bottom - Key Personnel
-const PersonnelAlerts = () => {
-  const alerts = personnelData
-    .filter((p) => p.status === '失控' || p.type === '黑名单人员')
-    .slice(0, 4);
+// 2. Center Bottom - Camera Carousel
+const cameraFeeds = [
+  {
+    id: 'CAM-01',
+    location: '南门广场',
+    resolution: '4K球机',
+    traffic: '行人 238/5min',
+    alert: '密度 82%',
+    latency: '延迟 32ms',
+    bitrate: '码率 12Mbps',
+    temperature: '22℃',
+    status: '在线',
+    color: '#4ade80',
+  },
+  {
+    id: 'CAM-02',
+    location: '地铁站厅',
+    resolution: '2K云台',
+    traffic: '行人 185/5min',
+    alert: '拥挤 65%',
+    latency: '延迟 40ms',
+    bitrate: '码率 10Mbps',
+    temperature: '24℃',
+    status: '在线',
+    color: '#2dd4bf',
+  },
+  {
+    id: 'CAM-03',
+    location: '市民中心',
+    resolution: 'AI固定枪机',
+    traffic: '行人 92/5min',
+    alert: '异常停留 3人',
+    latency: '延迟 28ms',
+    bitrate: '码率 9Mbps',
+    temperature: '23℃',
+    status: '在线',
+    color: '#fbbf24',
+  },
+  {
+    id: 'CAM-04',
+    location: '景区入口',
+    resolution: '4K球机',
+    traffic: '行人 312/5min',
+    alert: '密度 90%',
+    latency: '延迟 35ms',
+    bitrate: '码率 14Mbps',
+    temperature: '25℃',
+    status: '在线',
+    color: '#f87171',
+  },
+  {
+    id: 'CAM-05',
+    location: '商业街东段',
+    resolution: '云台枪机',
+    traffic: '行人 210/5min',
+    alert: '店外排队',
+    latency: '延迟 30ms',
+    bitrate: '码率 11Mbps',
+    temperature: '26℃',
+    status: '在线',
+    color: '#60a5fa',
+  },
+  {
+    id: 'CAM-06',
+    location: '智慧停车场',
+    resolution: '双光谱',
+    traffic: '车流 125/5min',
+    alert: '违停 1起',
+    latency: '延迟 27ms',
+    bitrate: '码率 8Mbps',
+    temperature: '24℃',
+    status: '在线',
+    color: '#a78bfa',
+  },
+];
+
+const CAMERA_SLIDE_SIZE = 3;
+const cameraSlides = Array.from(
+  { length: Math.ceil(cameraFeeds.length / CAMERA_SLIDE_SIZE) },
+  (_, index) => {
+    const cameras = cameraFeeds.slice(
+      index * CAMERA_SLIDE_SIZE,
+      index * CAMERA_SLIDE_SIZE + CAMERA_SLIDE_SIZE,
+    );
+    const slideId =
+      cameras.map((cam) => cam.id).join('-') || `camera-slide-${index}`;
+    const placeholders = Array.from(
+      { length: Math.max(0, CAMERA_SLIDE_SIZE - cameras.length) },
+      (_, fillerIdx) => `${slideId}-placeholder-${fillerIdx + 1}`,
+    );
+
+    return { id: slideId, cameras, placeholders };
+  },
+).filter((slide) => slide.cameras.length > 0);
+
+const CameraCarousel = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const totalSlides = cameraSlides.length || 1;
+  const onlineCameras = cameraFeeds.filter(
+    (cam) => cam.status === '在线',
+  ).length;
+
+  useEffect(() => {
+    if (totalSlides <= 1) return undefined;
+
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % totalSlides);
+    }, 6000);
+
+    return () => clearInterval(timer);
+  }, [totalSlides]);
+
+  const handleSlideChange = (direction: 'prev' | 'next') => {
+    if (totalSlides <= 1) return;
+    setCurrentSlide((prev) =>
+      direction === 'next'
+        ? (prev + 1) % totalSlides
+        : (prev - 1 + totalSlides) % totalSlides,
+    );
+  };
+
+  const getStatusColor = (status: string) => {
+    if (status === '在线') return '#4ade80';
+    if (status === '维护') return '#fbbf24';
+    return '#f87171';
+  };
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 space-y-2 overflow-y-auto custom-scrollbar pr-1">
-        {alerts.map((p, i) => (
-          <div
-            key={p.id ?? `personnel-alert-${i}`}
-            className="flex items-center p-2.5 bg-[#1c2622]/60 rounded border-l-2 border-red-500/80 animate-slide-in hover:bg-[#323e37] transition-colors group"
-          >
-            <div className="w-8 h-8 rounded bg-red-900/20 flex items-center justify-center mr-3 border border-red-500/30 group-hover:border-red-500/60">
-              <Users size={14} className="text-red-400" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-center mb-0.5">
-                <span className="text-xs font-bold text-slate-200 truncate group-hover:text-white">
-                  {p.name}
-                </span>
-                <span className="text-[10px] text-red-400 font-mono bg-red-900/20 px-1 rounded">
-                  实时追踪
-                </span>
-              </div>
-              <div className="flex justify-between text-[10px] text-slate-400">
-                <span className="truncate w-2/3">{p.location}</span>
-                <span className="font-mono">10:4{i}</span>
-              </div>
-            </div>
+      <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+        <div className="flex items-center space-x-3">
+          <span className="text-emerald-300 font-semibold">
+            {onlineCameras} 路在线
+          </span>
+          <span className="text-slate-500">共 {cameraFeeds.length} 路接入</span>
+        </div>
+        {totalSlides > 1 && (
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              className="p-1 rounded border border-[#4a5f54] text-slate-300 hover:text-white hover:border-[#4ade80]/60 transition-colors"
+              onClick={() => handleSlideChange('prev')}
+            >
+              <ChevronLeft size={14} />
+            </button>
+            <button
+              type="button"
+              className="p-1 rounded border border-[#4a5f54] text-slate-300 hover:text-white hover:border-[#4ade80]/60 transition-colors"
+              onClick={() => handleSlideChange('next')}
+            >
+              <ChevronRight size={14} />
+            </button>
           </div>
-        ))}
+        )}
+      </div>
+      <div className="relative flex-1">
+        <div className="absolute inset-0 overflow-hidden rounded border border-[#4a5f54]/40 bg-[#0d1412]/70">
+          <div
+            className="flex h-full transition-transform duration-700 ease-in-out"
+            style={{
+              width: `${totalSlides * 100}%`,
+              transform: `translateX(-${(100 / totalSlides) * currentSlide}%)`,
+            }}
+          >
+            {cameraSlides.map((slide) => (
+              <div
+                key={slide.id}
+                className="w-full flex-shrink-0 flex gap-3 p-2"
+                style={{ width: `${100 / totalSlides}%` }}
+              >
+                {slide.cameras.map((camera) => (
+                  <div
+                    key={camera.id}
+                    className="flex-1 min-w-0 bg-[#111c17]/80 border border-[#4ade80]/20 rounded relative overflow-hidden"
+                  >
+                    <div
+                      className="absolute inset-0 opacity-60"
+                      style={{
+                        backgroundImage: `radial-gradient(circle at 30% 20%, ${camera.color}33, transparent 65%)`,
+                      }}
+                    ></div>
+                    <div className="relative z-10 flex flex-col h-full p-2 space-y-2">
+                      <div className="relative h-24 w-full rounded bg-[#0b1210]/80 overflow-hidden">
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            backgroundImage: `linear-gradient(135deg, ${camera.color}55, rgba(7,15,13,0.9))`,
+                          }}
+                        ></div>
+                        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.15)_0%,transparent_40%)] opacity-40" />
+                        <div className="absolute top-1 left-1 text-[10px] font-mono text-white bg-black/40 px-1 rounded">
+                          {camera.id}
+                        </div>
+                        <div className="absolute bottom-1 left-1 flex items-center text-[10px] text-white space-x-1">
+                          <span
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{
+                              backgroundColor: getStatusColor(camera.status),
+                            }}
+                          ></span>
+                          <span>{camera.status}</span>
+                        </div>
+                        <div className="absolute bottom-1 right-1 text-[10px] text-white bg-black/40 px-1 rounded">
+                          {camera.resolution}
+                        </div>
+                      </div>
+                      <div className="flex-1 text-[11px] text-slate-300">
+                        <div className="flex items-center justify-between font-semibold text-xs">
+                          <span className="truncate">{camera.location}</span>
+                          <span className="text-emerald-300">
+                            {camera.alert}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between text-[10px] text-slate-400">
+                          <span>{camera.traffic}</span>
+                          <span>{camera.temperature}</span>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between text-[10px] text-slate-400">
+                          <span>{camera.bitrate}</span>
+                          <span>{camera.latency}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {slide.placeholders.map((placeholderId) => (
+                  <div
+                    key={placeholderId}
+                    className="flex-1 min-w-0 opacity-0 pointer-events-none"
+                  ></div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+        {totalSlides > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-2">
+            {cameraSlides.map((slide, idx) => (
+              <span
+                key={`${slide.id}-indicator`}
+                className={`w-6 h-0.5 rounded-full ${
+                  idx === currentSlide ? 'bg-[#4ade80]' : 'bg-slate-600'
+                }`}
+              ></span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -394,7 +608,7 @@ export const Cockpit = () => {
         </TechBorderContainer>
       </div>
 
-      {/* Center: Full Domain Map (Top) & Personnel Alerts (Bottom) */}
+      {/* Center: Full Domain Map (Top) & Camera Preview (Bottom) */}
       <div className="flex-1 h-full flex flex-col gap-3">
         <TechBorderContainer
           title="全域态势感知"
@@ -404,8 +618,8 @@ export const Cockpit = () => {
           <CentralMap />
         </TechBorderContainer>
 
-        <TechBorderContainer title="重点人员实时预警" height="flex-1">
-          <PersonnelAlerts />
+        <TechBorderContainer title="摄像头实时预览" height="flex-1">
+          <CameraCarousel />
         </TechBorderContainer>
       </div>
 

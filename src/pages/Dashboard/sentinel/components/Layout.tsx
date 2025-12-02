@@ -1,5 +1,13 @@
-import { Car, LayoutDashboard, MapPin, Server, UserX } from 'lucide-react';
-import React from 'react';
+import {
+  Car,
+  LayoutDashboard,
+  MapPin,
+  Maximize2,
+  Minimize2,
+  Server,
+  UserX,
+} from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -38,6 +46,31 @@ export const Layout: React.FC<LayoutProps> = ({
   activeTab,
   setActiveTab,
 }) => {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === dashboardRef.current);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!dashboardRef.current) return;
+
+    if (document.fullscreenElement === dashboardRef.current) {
+      document.exitFullscreen?.();
+      return;
+    }
+
+    dashboardRef.current.requestFullscreen?.();
+  };
+
   // Menu items based on "Hypervise" version requirements
   const menuItems = [
     { id: 'cockpit', label: '驾驶舱', icon: LayoutDashboard },
@@ -48,7 +81,10 @@ export const Layout: React.FC<LayoutProps> = ({
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-[#0b1210] overflow-hidden text-slate-200 font-sans selection:bg-[#4ade80]/30">
+    <div
+      ref={dashboardRef}
+      className="flex flex-col h-screen bg-[#0b1210] overflow-hidden text-slate-200 font-sans selection:bg-[#4ade80]/30"
+    >
       <style>{`
           @keyframes spin-slow {
             from { transform: rotate(0deg); }
@@ -93,6 +129,18 @@ export const Layout: React.FC<LayoutProps> = ({
             </div>
 
             <div className="flex justify-end items-center w-1/3 space-x-4">
+              <button
+                type="button"
+                onClick={toggleFullscreen}
+                className="flex items-center space-x-2 px-4 py-2 bg-[#1c2622] border border-[#323e37] text-xs uppercase tracking-widest font-semibold text-slate-200 hover:text-[#4ade80] hover:border-[#4ade80] transition-colors"
+              >
+                {isFullscreen ? (
+                  <Minimize2 size={14} />
+                ) : (
+                  <Maximize2 size={14} />
+                )}
+                <span>{isFullscreen ? '退出全屏' : '全屏模式'}</span>
+              </button>
               <div className="text-right">
                 <div className="text-xs text-slate-500 font-mono">
                   {new Date().toLocaleTimeString()}

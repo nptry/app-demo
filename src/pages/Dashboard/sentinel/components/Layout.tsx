@@ -73,11 +73,11 @@ export const Layout: React.FC<LayoutProps> = ({
 
   // Menu items based on "Hypervise" version requirements
   const menuItems = [
-    { id: 'cockpit', label: '驾驶舱', icon: LayoutDashboard },
-    { id: 'device', label: '设备监测', icon: Server },
-    { id: 'crowd', label: '重点区域', icon: MapPin },
-    { id: 'traffic', label: '交通卡口', icon: Car },
-    { id: 'personnel', label: '重点人员', icon: UserX },
+    { id: 'cockpit', label: 'Command Center', icon: LayoutDashboard },
+    { id: 'device', label: 'Device', icon: Server },
+    { id: 'crowd', label: 'Key Area', icon: MapPin },
+    { id: 'traffic', label: 'Checkpoints', icon: Car },
+    { id: 'personnel', label: 'Key Personnel', icon: UserX },
   ];
 
   return (
@@ -139,7 +139,7 @@ export const Layout: React.FC<LayoutProps> = ({
                 ) : (
                   <Maximize2 size={14} />
                 )}
-                <span>{isFullscreen ? '退出全屏' : '全屏模式'}</span>
+                <span>{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
               </button>
               <div className="text-right">
                 <div className="text-xs text-slate-500 font-mono">

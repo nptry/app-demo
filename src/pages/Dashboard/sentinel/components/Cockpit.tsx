@@ -555,7 +555,7 @@ export const Cockpit = () => {
       <div className="w-full md:w-1/4 flex flex-col gap-3 h-full">
         {/* Top Stats */}
         <div className="h-[20%] flex gap-2">
-          <TechBorderContainer title="重点区域" className="flex-1">
+          <TechBorderContainer title="Key Area" className="flex-1">
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-3xl font-bold font-tech text-[#4ade80]">
                 {crowdAreas.length}
@@ -563,7 +563,7 @@ export const Cockpit = () => {
               <div className="text-[10px] text-slate-400">区域总数</div>
             </div>
           </TechBorderContainer>
-          <TechBorderContainer title="交通卡口" className="flex-1">
+          <TechBorderContainer title="Checkpoints" className="flex-1">
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-3xl font-bold font-tech text-[#2dd4bf]">
                 {checkpointData.length}
@@ -573,7 +573,8 @@ export const Cockpit = () => {
           </TechBorderContainer>
         </div>
 
-        <TechBorderContainer title="人群密度告警" height="h-[40%]">
+        {/* 人群密度告警 */}
+        <TechBorderContainer title="Crowd Density Alarm" height="h-[40%]">
           <div className="flex justify-between items-end mb-2">
             <div className="text-2xl font-bold font-tech text-amber-400">
               {crowdAlertTrend.reduce((a, b) => a + b.value, 0)}
@@ -591,7 +592,11 @@ export const Cockpit = () => {
           </div>
         </TechBorderContainer>
 
-        <TechBorderContainer title="禁入区域闯入告警" height="h-[40%]">
+        {/* 禁入区域闯入告警 */}
+        <TechBorderContainer
+          title="Restricted Area Intrusion Alarm"
+          height="h-[40%]"
+        >
           <div className="flex justify-between items-end mb-2">
             <div className="text-2xl font-bold font-tech text-red-400">
               {intrusionByArea.reduce((a, b) => a + b.value, 0)}
@@ -611,29 +616,36 @@ export const Cockpit = () => {
       {/* Center: Full Domain Map (Top) & Camera Preview (Bottom) */}
       <div className="flex-1 h-full flex flex-col gap-3">
         <TechBorderContainer
-          title="全域态势感知"
+          title="Overall Monitoring"
           height="h-[65%]"
           className="w-full border-[#4ade80]/40"
         >
           <CentralMap />
         </TechBorderContainer>
 
-        <TechBorderContainer title="摄像头实时预览" height="flex-1">
+        {/* 摄像头实时预览 */}
+        <TechBorderContainer
+          title="Real-Time Remote Video Preview"
+          height="flex-1"
+        >
           <CameraCarousel />
         </TechBorderContainer>
       </div>
 
       {/* Right Column: Flow & Violation Analysis (New) */}
       <div className="w-full md:w-1/4 h-full flex flex-col gap-3">
-        <TechBorderContainer title="今日人流量监测" height="h-[33%]">
+        {/* 今日人流量监漓 */}
+        <TechBorderContainer title="Pedestrian Flow" height="h-[33%]">
           <HumanFlowMonitor />
         </TechBorderContainer>
 
-        <TechBorderContainer title="今日车流量监测" height="h-[33%]">
+        {/* 今日车流量监测 */}
+        <TechBorderContainer title="Vehicle Flow" height="h-[33%]">
           <VehicleFlowMonitor />
         </TechBorderContainer>
 
-        <TechBorderContainer title="交通违规抓拍分析" height="h-[33%]">
+        {/* 交通违规抓拍 */}
+        <TechBorderContainer title="Traffic Violation" height="h-[33%]">
           <ViolationAnalysis />
         </TechBorderContainer>
       </div>

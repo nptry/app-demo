@@ -319,15 +319,12 @@ export const DeviceFacilityView = () => {
     <div className="h-full p-3 flex gap-3">
       {/* Left Panel */}
       <div className="w-1/4 flex flex-col gap-3">
-        <TechContainer title="设备数据汇总" height="h-auto">
+        {/* 设备数据汇总 */}
+        <TechContainer title="Data Summary" height="h-auto">
           <div className="grid grid-cols-2 gap-2 mb-2">
+            <DataSummaryBox title="Total" value={deviceData.length} unit="台" />
             <DataSummaryBox
-              title="设备总数"
-              value={deviceData.length}
-              unit="台"
-            />
-            <DataSummaryBox
-              title="在线率"
+              title="Online Rate"
               value={onlineRate}
               unit="%"
               color="text-[#4ade80]"
@@ -335,7 +332,7 @@ export const DeviceFacilityView = () => {
           </div>
         </TechContainer>
 
-        <TechContainer title="设备列表" height="flex-1">
+        <TechContainer title="Device List" height="flex-1">
           <ItemList
             items={deviceData}
             selectedId={selectedId}
@@ -361,7 +358,7 @@ export const DeviceFacilityView = () => {
       {/* Right Map */}
       <div className="flex-1">
         <TechContainer
-          title="设备分布地图"
+          title="Device Distribution"
           height="h-full"
           className="border-[#4ade80]/30"
         >
@@ -385,28 +382,29 @@ export const TrafficMountView = () => {
     <div className="h-full p-3 flex gap-3">
       {/* Left */}
       <div className="w-1/5 flex flex-col gap-3">
-        <TechContainer title="卡口概览" height="h-1/3">
+        <TechContainer title="Overview" height="h-1/3">
+          {/* 卡口总数 */}
           <DataSummaryBox
-            title="卡口总数"
+            title="Total"
             value={checkpointData.length}
             unit="个"
           />
           <div className="flex space-x-2 mt-2">
             <div className="flex-1 bg-blue-900/20 border border-blue-500/30 p-2 rounded text-center">
-              <div className="text-[10px] text-blue-300">启用</div>
+              <div className="text-[10px] text-blue-300">Enable</div>
               <div className="text-lg font-bold text-blue-400">
                 {enabledCount}
               </div>
             </div>
             <div className="flex-1 bg-[#1c2622]/40 border border-[#4a5f54]/30 p-2 rounded text-center">
-              <div className="text-[10px] text-slate-400">停用</div>
+              <div className="text-[10px] text-slate-400">Disable</div>
               <div className="text-lg font-bold text-slate-500">
                 {checkpointData.length - enabledCount}
               </div>
             </div>
           </div>
         </TechContainer>
-        <TechContainer title="卡口列表" height="flex-1">
+        <TechContainer title="Checkpoint List" height="flex-1">
           <ItemList
             items={checkpointData}
             selectedId={selectedId}
@@ -429,7 +427,7 @@ export const TrafficMountView = () => {
 
       {/* Center Map */}
       <div className="flex-1">
-        <TechContainer title="卡口分布图" height="h-full">
+        <TechContainer title="Traffic Checkpoints" height="h-full">
           <InteractiveMap
             items={checkpointData}
             selectedId={selectedId}
@@ -440,7 +438,8 @@ export const TrafficMountView = () => {
 
       {/* Right Stats */}
       <div className="w-1/4 flex flex-col gap-3">
-        <TechContainer title="违规类型分布" height="h-[35%]">
+        {/* 违规类型分布 */}
+        <TechContainer title="Violation Type Distribution" height="h-[35%]">
           <SimplePieChart
             data={[
               { name: '车牌识别', value: 1200 },
@@ -453,7 +452,8 @@ export const TrafficMountView = () => {
             animate
           />
         </TechContainer>
-        <TechContainer title="红灯违法趋势" height="h-[30%]">
+        {/* 红灯违法趋势 */}
+        <TechContainer title="Red Light Running" height="h-[30%]">
           <SimpleLineChart
             data={trafficTrend}
             xKey="name"
@@ -462,7 +462,8 @@ export const TrafficMountView = () => {
             color="#ef4444"
           />
         </TechContainer>
-        <TechContainer title="违规停车趋势" height="flex-1">
+        {/* 违规停车趋势 */}
+        <TechContainer title="llegal Parking" height="flex-1">
           <AreaTrendChart
             data={trafficTrend}
             xKey="name"
@@ -485,7 +486,7 @@ export const CrowdAreaView = () => {
     <div className="h-full p-3 flex gap-3">
       {/* Left */}
       <div className="w-1/5 flex flex-col gap-3">
-        <TechContainer title="区域概况" height="h-auto">
+        <TechContainer title="Area Overview" height="h-auto">
           <DataSummaryBox
             title="场所总数"
             value={crowdAreas.length}
@@ -498,7 +499,7 @@ export const CrowdAreaView = () => {
             color="text-[#4ade80]"
           />
         </TechContainer>
-        <TechContainer title="重点场所列表" height="flex-1">
+        <TechContainer title="Key Area List" height="flex-1">
           <ItemList
             items={crowdAreas}
             selectedId={selectedId}
@@ -521,7 +522,8 @@ export const CrowdAreaView = () => {
 
       {/* Center Map */}
       <div className="flex-1">
-        <TechContainer title="人流热力图" height="h-full">
+        {/* 人流热力图 */}
+        <TechContainer title="Pedestrian Flow Heatmap" height="h-full">
           <InteractiveMap
             items={crowdAreas}
             selectedId={selectedId}
@@ -533,7 +535,8 @@ export const CrowdAreaView = () => {
 
       {/* Right Alerts */}
       <div className="w-1/4 flex flex-col gap-3">
-        <TechContainer title="实时密度预警" height="h-full">
+        {/* 实时密度预警 */}
+        <TechContainer title="Real-Time Crowd Density Alarm" height="h-full">
           <div className="flex items-center justify-between p-4 bg-red-900/20 border border-red-500/30 rounded mb-4 shrink-0">
             <div>
               <div className="text-xs text-red-300">当前预警数</div>
@@ -614,8 +617,9 @@ export const KeyPersonnelView = () => {
     <div className="h-full p-3 grid grid-cols-12 grid-rows-12 gap-3">
       {/* Stats Row */}
       <div className="col-span-3 row-span-2">
+        {/* 重点人员总数 */}
         <TechContainer
-          title="重点人员总数"
+          title="Total Key Personnel"
           height="h-full"
           className="bg-indigo-900/10"
         >
@@ -628,8 +632,9 @@ export const KeyPersonnelView = () => {
         </TechContainer>
       </div>
       <div className="col-span-3 row-span-2">
+        {/* 监控预警总数 */}
         <TechContainer
-          title="监控预警总数"
+          title="Total Alarm Number"
           height="h-full"
           className="bg-red-900/10"
         >
@@ -640,8 +645,9 @@ export const KeyPersonnelView = () => {
         </TechContainer>
       </div>
       <div className="col-span-3 row-span-2">
+        {/* 失控人员 */}
         <TechContainer
-          title="失控人员"
+          title="Out-of-Control Personnel"
           height="h-full"
           className="bg-amber-900/10"
         >
@@ -654,8 +660,9 @@ export const KeyPersonnelView = () => {
         </TechContainer>
       </div>
       <div className="col-span-3 row-span-2">
+        {/* 今日新增 */}
         <TechContainer
-          title="今日新增"
+          title="Today's New Additions"
           height="h-full"
           className="bg-[#2dd4bf]/10"
         >
@@ -668,7 +675,8 @@ export const KeyPersonnelView = () => {
 
       {/* Chart Row 1 */}
       <div className="col-span-4 row-span-5">
-        <TechContainer title="人员类型分布" height="h-full">
+        {/* 人员类型分布 */}
+        <TechContainer title="Personnel Type Distribution" height="h-full">
           <SimplePieChart
             data={typeData}
             dataKey="value"
@@ -678,7 +686,8 @@ export const KeyPersonnelView = () => {
         </TechContainer>
       </div>
       <div className="col-span-4 row-span-5">
-        <TechContainer title="人员状态分布" height="h-full">
+        {/* 人员状态分布 */}
+        <TechContainer title="Personnel Status Distribution" height="h-full">
           <SimpleBarChart
             data={statusData}
             xKey="name"
@@ -687,14 +696,16 @@ export const KeyPersonnelView = () => {
         </TechContainer>
       </div>
       <div className="col-span-4 row-span-5">
-        <TechContainer title="预警特征分析" height="h-full">
+        {/* 预警特征分析 */}
+        <TechContainer title="Alarm Feature Analysis" height="h-full">
           <SimpleRadarChart data={radarData} dataKey="A" nameKey="subject" />
         </TechContainer>
       </div>
 
       {/* Chart Row 2 */}
       <div className="col-span-8 row-span-5">
-        <TechContainer title="预警趋势 (24小时)" height="h-full">
+        {/* 预警趋势 (24小时) */}
+        <TechContainer title="Trend" height="h-full">
           <SimpleLineChart
             data={trafficTrend}
             xKey="name"
@@ -705,7 +716,8 @@ export const KeyPersonnelView = () => {
         </TechContainer>
       </div>
       <div className="col-span-4 row-span-5">
-        <TechContainer title="预警处理状态" height="h-full">
+        {/* 预警处理状态 */}
+        <TechContainer title="Alarm Event Handling" height="h-full">
           <SimplePieChart
             data={[
               { name: '已处理', value: 80 },

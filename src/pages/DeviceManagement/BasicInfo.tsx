@@ -1,7 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
-import type { ColumnsType } from 'antd/es/table';
+import { useRequest } from '@umijs/max';
 import {
   Badge,
   Button,
@@ -10,22 +8,42 @@ import {
   Form,
   Input,
   Modal,
+  message,
   Popconfirm,
   Row,
   Select,
   Space,
   Statistic,
   Table,
-  message,
 } from 'antd';
-import type { DeviceBasicInfoItem, DeviceBasicInfoResponse } from '@/services/device';
-import { getDeviceBasicInfo } from '@/services/device';
+import type { ColumnsType } from 'antd/es/table';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import type {
+  DeviceBasicInfoItem,
+  DeviceBasicInfoResponse,
+  DeviceStatusItem,
+  DeviceStatusResponse,
+} from '@/services/device';
+import { getDeviceBasicInfo, getDeviceStatus } from '@/services/device';
 
-const statusBadge: Record<DeviceBasicInfoItem['status'], 'success' | 'processing' | 'error' | 'warning'> = {
+const statusBadge: Record<
+  DeviceBasicInfoItem['status'],
+  'success' | 'processing' | 'error' | 'warning'
+> = {
   在线: 'success',
   维护中: 'warning',
   故障: 'error',
   离线: 'error',
+};
+
+const statusColor: Record<
+  DeviceStatusItem['realtimeStatus'],
+  'success' | 'warning' | 'error' | 'default'
+> = {
+  在线: 'success',
+  维护中: 'warning',
+  故障: 'error',
+  离线: 'default',
 };
 
 type FilterState = {
@@ -35,19 +53,48 @@ type FilterState = {
 };
 
 const deviceTypeOptions: DeviceBasicInfoItem['type'][] = ['AI 边缘计算设备'];
-const deviceStatusOptions: DeviceBasicInfoItem['status'][] = ['在线', '离线', '故障', '维护中'];
+const deviceStatusOptions: DeviceBasicInfoItem['status'][] = [
+  '在线',
+  '离线',
+  '故障',
+  '维护中',
+];
+
+type EnrichedDevice = DeviceBasicInfoItem & {
+  realtimeStatus?: DeviceStatusItem['realtimeStatus'];
+  lastHeartbeat?: string;
+  exception?: string;
+};
 
 const BasicInfo: React.FC = () => {
   const { data, loading } = useRequest(getDeviceBasicInfo, {
-    formatResult: (res: DeviceBasicInfoResponse | { data: DeviceBasicInfoResponse }) =>
-      (res as { data?: DeviceBasicInfoResponse })?.data ?? (res as DeviceBasicInfoResponse),
+    formatResult: (
+      res: DeviceBasicInfoResponse | { data: DeviceBasicInfoResponse },
+    ) =>
+      (res as { data?: DeviceBasicInfoResponse })?.data ??
+      (res as DeviceBasicInfoResponse),
   });
+  const { data: statusData, loading: statusLoading } = useRequest(
+    getDeviceStatus,
+    {
+      formatResult: (
+        res: DeviceStatusResponse | { data: DeviceStatusResponse },
+      ) =>
+        (res as { data?: DeviceStatusResponse })?.data ??
+        (res as DeviceStatusResponse),
+    },
+  );
 
   const [initialized, setInitialized] = useState(false);
   const [devices, setDevices] = useState<DeviceBasicInfoItem[]>([]);
-  const [filters, setFilters] = useState<FilterState>({ keyword: '', status: 'all', type: 'all' });
+  const [filters, setFilters] = useState<FilterState>({
+    keyword: '',
+    status: 'all',
+    type: 'all',
+  });
   const [modalVisible, setModalVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<DeviceBasicInfoItem | null>(null);
+  const [editingRecord, setEditingRecord] =
+    useState<DeviceBasicInfoItem | null>(null);
   const [form] = Form.useForm<DeviceBasicInfoItem>();
   const [filterForm] = Form.useForm();
 
@@ -62,7 +109,8 @@ const BasicInfo: React.FC = () => {
     if (devices.length) {
       return {
         total: devices.length,
-        aiEdge: devices.filter((item) => item.type === 'AI 边缘计算设备').length,
+        aiEdge: devices.filter((item) => item.type === 'AI 边缘计算设备')
+          .length,
         online: devices.filter((item) => item.status === '在线').length,
       };
     }
@@ -76,19 +124,40 @@ const BasicInfo: React.FC = () => {
     );
   }, [data?.summary, devices]);
 
+  const statusList = statusData?.statuses ?? [];
+  const statusMap = useMemo(() => {
+    return statusList.reduce<Record<string, DeviceStatusItem>>((acc, item) => {
+      acc[item.deviceId] = item;
+      return acc;
+    }, {});
+  }, [statusList]);
+
+  const enrichedDevices = useMemo<EnrichedDevice[]>(() => {
+    return devices.map((item) => {
+      const statusInfo = statusMap[item.id];
+      return {
+        ...item,
+        realtimeStatus: statusInfo?.realtimeStatus,
+        lastHeartbeat: statusInfo?.lastHeartbeat,
+        exception: statusInfo?.exception,
+      };
+    });
+  }, [devices, statusMap]);
+
   const filteredDevices = useMemo(() => {
     const keyword = filters.keyword.trim().toLowerCase();
-    return devices.filter((item) => {
+    return enrichedDevices.filter((item) => {
       const matchKeyword = keyword
         ? [item.name, item.vendor, item.serialNumber]
             .filter(Boolean)
             .some((field) => field?.toLowerCase().includes(keyword))
         : true;
-      const matchStatus = filters.status === 'all' || item.status === filters.status;
+      const matchStatus =
+        filters.status === 'all' || item.status === filters.status;
       const matchType = filters.type === 'all' || item.type === filters.type;
       return matchKeyword && matchStatus && matchType;
     });
-  }, [devices, filters.keyword, filters.status, filters.type]);
+  }, [enrichedDevices, filters.keyword, filters.status, filters.type]);
 
   const handleFilterChange = useCallback(
     (_: unknown, values: Record<string, string>) => {
@@ -133,7 +202,9 @@ const BasicInfo: React.FC = () => {
   const handleModalOk = useCallback(async () => {
     const values = await form.validateFields();
     if (editingRecord) {
-      setDevices((prev) => prev.map((item) => (item.id === editingRecord.id ? values : item)));
+      setDevices((prev) =>
+        prev.map((item) => (item.id === editingRecord.id ? values : item)),
+      );
       message.success('设备信息已更新');
     } else {
       const newDevice: DeviceBasicInfoItem = {
@@ -151,7 +222,7 @@ const BasicInfo: React.FC = () => {
     setModalVisible(false);
   }, []);
 
-  const columns: ColumnsType<DeviceBasicInfoItem> = useMemo(
+  const columns: ColumnsType<EnrichedDevice> = useMemo(
     () => [
       { title: '设备 ID', dataIndex: 'id', width: 150 },
       {
@@ -167,7 +238,9 @@ const BasicInfo: React.FC = () => {
         render: (value: DeviceBasicInfoItem['type'], record) => (
           <div>
             <div>{value}</div>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.model}</div>
+            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>
+              {record.model}
+            </div>
           </div>
         ),
       },
@@ -183,6 +256,15 @@ const BasicInfo: React.FC = () => {
           <Badge status={statusBadge[value]} text={value} />
         ),
       },
+      {
+        title: '实时状态',
+        dataIndex: 'realtimeStatus',
+        width: 150,
+        render: (value: DeviceStatusItem['realtimeStatus']) =>
+          value ? <Badge status={statusColor[value]} text={value} /> : '—',
+      },
+      { title: '最后心跳时间', dataIndex: 'lastHeartbeat', width: 200 },
+      { title: '异常提示', dataIndex: 'exception', width: 220 },
       { title: '备注', dataIndex: 'remark', width: 200 },
       {
         title: '操作',
@@ -194,7 +276,12 @@ const BasicInfo: React.FC = () => {
             <Button type="link" onClick={() => handleEdit(record)}>
               编辑
             </Button>
-            <Popconfirm title="确认删除该设备？" okText="确认" cancelText="取消" onConfirm={() => handleDelete(record.id)}>
+            <Popconfirm
+              title="确认删除该设备？"
+              okText="确认"
+              cancelText="取消"
+              onConfirm={() => handleDelete(record.id)}
+            >
               <Button type="link" danger>
                 删除
               </Button>
@@ -205,9 +292,15 @@ const BasicInfo: React.FC = () => {
     ],
     [handleDelete, handleEdit],
   );
+  const metrics = statusData?.metrics ?? {
+    onlineRate: 0,
+    offlineDevices: 0,
+    faultDevices: 0,
+    lastSync: '--',
+  };
 
   return (
-    <PageContainer header={{ title: '设备基础信息' }}>
+    <PageContainer header={{ title: '设备管理' }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
@@ -222,6 +315,42 @@ const BasicInfo: React.FC = () => {
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
             <Statistic title="当前在线" value={summary.online} suffix="台" />
+          </Card>
+        </Col>
+      </Row>
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col xs={24} sm={12} md={6}>
+          <Card bordered={false}>
+            <Statistic
+              title="在线率"
+              value={metrics.onlineRate}
+              precision={1}
+              suffix="%"
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card bordered={false}>
+            <Statistic
+              title="离线设备"
+              value={metrics.offlineDevices}
+              suffix="台"
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card bordered={false}>
+            <Statistic
+              title="故障设备"
+              value={metrics.faultDevices}
+              suffix="台"
+              valueStyle={{ color: '#f5222d' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card bordered={false}>
+            <Statistic title="状态同步时间" value={metrics.lastSync} />
           </Card>
         </Col>
       </Row>
@@ -244,31 +373,47 @@ const BasicInfo: React.FC = () => {
           style={{ marginBottom: 16 }}
         >
           <Form.Item name="keyword">
-            <Input allowClear placeholder="搜索名称 / 厂商 / 序列号" style={{ width: 240 }} />
+            <Input
+              allowClear
+              placeholder="搜索名称 / 厂商 / 序列号"
+              style={{ width: 240 }}
+            />
           </Form.Item>
           <Form.Item name="type">
             <Select
               style={{ width: 180 }}
-              options={[{ value: 'all', label: '全部类型' }, ...deviceTypeOptions.map((type) => ({ label: type, value: type }))]}
+              options={[
+                { value: 'all', label: '全部类型' },
+                ...deviceTypeOptions.map((type) => ({
+                  label: type,
+                  value: type,
+                })),
+              ]}
             />
           </Form.Item>
           <Form.Item name="status">
             <Select
               style={{ width: 180 }}
-              options={[{ value: 'all', label: '全部状态' }, ...deviceStatusOptions.map((status) => ({ label: status, value: status }))]}
+              options={[
+                { value: 'all', label: '全部状态' },
+                ...deviceStatusOptions.map((status) => ({
+                  label: status,
+                  value: status,
+                })),
+              ]}
             />
           </Form.Item>
           <Form.Item>
             <Button onClick={handleFilterReset}>重置筛选</Button>
           </Form.Item>
         </Form>
-        <Table<DeviceBasicInfoItem>
+        <Table<EnrichedDevice>
           rowKey="id"
-          loading={loading && !initialized}
+          loading={(loading && !initialized) || statusLoading}
           columns={columns}
           dataSource={filteredDevices}
           pagination={{ pageSize: 8, showSizeChanger: false }}
-          scroll={{ x: 1600 }}
+          scroll={{ x: 1900 }}
         />
       </Card>
 
@@ -287,24 +432,46 @@ const BasicInfo: React.FC = () => {
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="设备名称" name="name" rules={[{ required: true, message: '请输入设备名称' }]}>
+              <Form.Item
+                label="设备名称"
+                name="name"
+                rules={[{ required: true, message: '请输入设备名称' }]}
+              >
                 <Input placeholder="请输入设备名称" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="设备类型" name="type" rules={[{ required: true, message: '请选择设备类型' }]}>
-                <Select options={deviceTypeOptions.map((type) => ({ label: type, value: type }))} placeholder="请选择设备类型" />
+              <Form.Item
+                label="设备类型"
+                name="type"
+                rules={[{ required: true, message: '请选择设备类型' }]}
+              >
+                <Select
+                  options={deviceTypeOptions.map((type) => ({
+                    label: type,
+                    value: type,
+                  }))}
+                  placeholder="请选择设备类型"
+                />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="设备型号" name="model" rules={[{ required: true, message: '请输入型号' }]}>
+              <Form.Item
+                label="设备型号"
+                name="model"
+                rules={[{ required: true, message: '请输入型号' }]}
+              >
                 <Input placeholder="请输入设备型号" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="供应商" name="vendor" rules={[{ required: true, message: '请输入供应商' }]}>
+              <Form.Item
+                label="供应商"
+                name="vendor"
+                rules={[{ required: true, message: '请输入供应商' }]}
+              >
                 <Input placeholder="请输入供应商" />
               </Form.Item>
             </Col>
@@ -316,19 +483,37 @@ const BasicInfo: React.FC = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="设备状态" name="status" rules={[{ required: true, message: '请选择设备状态' }]}>
-                <Select options={deviceStatusOptions.map((status) => ({ label: status, value: status }))} placeholder="请选择设备状态" />
+              <Form.Item
+                label="设备状态"
+                name="status"
+                rules={[{ required: true, message: '请选择设备状态' }]}
+              >
+                <Select
+                  options={deviceStatusOptions.map((status) => ({
+                    label: status,
+                    value: status,
+                  }))}
+                  placeholder="请选择设备状态"
+                />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="安装时间" name="installDate" rules={[{ required: true, message: '请输入安装时间' }]}>
+              <Form.Item
+                label="安装时间"
+                name="installDate"
+                rules={[{ required: true, message: '请输入安装时间' }]}
+              >
                 <Input placeholder="示例：2024-08-01" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="质保期限" name="warrantyDate" rules={[{ required: true, message: '请输入质保期限' }]}>
+              <Form.Item
+                label="质保期限"
+                name="warrantyDate"
+                rules={[{ required: true, message: '请输入质保期限' }]}
+              >
                 <Input placeholder="示例：2026-08-01" />
               </Form.Item>
             </Col>

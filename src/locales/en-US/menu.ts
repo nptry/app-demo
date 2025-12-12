@@ -58,24 +58,19 @@ export default {
   'menu.key-personnel-management.key-personnel-list': 'Key Personnel List',
   'menu.key-personnel-management.key-personnel-monitoring':
     'Key Personnel Monitoring',
-  'menu.device-management': 'Device Management',
-  'menu.device-management.basic-info': 'Device Basic Info',
-  'menu.device-management.config-info': 'Device Configuration Info',
-  'menu.device-management.status-monitoring': 'Device Status Monitoring',
+  'menu.device-management': 'Basic Information Management',
+  'menu.device-management.basic-info': 'Device Management',
+  'menu.device-management.device-deployment': 'Device Deployment',
+  'menu.device-management.scenario-management': 'Scenario Management',
   'menu.operations-management': 'Operations Management',
   'menu.operations-management.infrastructure': 'Infrastructure Management',
   'menu.operations-management.resources': 'Operations Resource Management',
   'menu.operations-management.fault': 'Fault Management (Work Orders)',
   'menu.operations-management.statistics': 'Operations Statistics',
   'menu.key-area-management': 'Key Area Population Management',
-  'menu.key-area-management.site-info': 'Site Basic Info',
-  'menu.key-area-management.device-deployment': 'Device Deployment Management',
   'menu.key-area-management.density-monitoring':
     'Population Density Monitoring',
   'menu.traffic-checkpoint-management': 'Traffic Checkpoint Management',
-  'menu.traffic-checkpoint-management.checkpoint-info': 'Checkpoint Basic Info',
-  'menu.traffic-checkpoint-management.device-deployment':
-    'Checkpoint Device Deployment',
   'menu.traffic-checkpoint-management.license-records':
     'License Recognition & Records',
   'menu.traffic-checkpoint-management.red-light-monitoring':

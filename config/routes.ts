@@ -36,6 +36,11 @@ export default [
     icon: 'appstore',
     routes: [
       {
+        path: '/device-management/scenario-management',
+        name: 'scenario-management',
+        component: './DeviceManagement/ScenarioManagement',
+      },
+      {
         path: '/device-management',
         redirect: '/device-management/basic-info',
       },
@@ -45,14 +50,9 @@ export default [
         component: './DeviceManagement/BasicInfo',
       },
       {
-        path: '/device-management/config-info',
-        name: 'config-info',
-        component: './DeviceManagement/ConfigInfo',
-      },
-      {
-        path: '/device-management/status-monitoring',
-        name: 'status-monitoring',
-        component: './DeviceManagement/StatusMonitoring',
+        path: '/device-management/device-deployment',
+        name: 'device-deployment',
+        component: './DeviceManagement/DeviceDeployment',
       },
     ],
   },
@@ -64,17 +64,7 @@ export default [
     routes: [
       {
         path: '/traffic-checkpoint-management',
-        redirect: '/traffic-checkpoint-management/checkpoint-info',
-      },
-      {
-        path: '/traffic-checkpoint-management/checkpoint-info',
-        name: 'checkpoint-info',
-        component: './TrafficCheckpointManagement/CheckpointInfo',
-      },
-      {
-        path: '/traffic-checkpoint-management/device-deployment',
-        name: 'device-deployment',
-        component: './TrafficCheckpointManagement/DeviceDeployment',
+        redirect: '/traffic-checkpoint-management/license-records',
       },
       {
         path: '/traffic-checkpoint-management/license-records',
@@ -136,17 +126,7 @@ export default [
     routes: [
       {
         path: '/key-area-management',
-        redirect: '/key-area-management/site-info',
-      },
-      {
-        path: '/key-area-management/site-info',
-        name: 'site-info',
-        component: './KeyAreaManagement/SiteInfo',
-      },
-      {
-        path: '/key-area-management/device-deployment',
-        name: 'device-deployment',
-        component: './KeyAreaManagement/DeviceDeployment',
+        redirect: '/key-area-management/density-monitoring',
       },
       {
         path: '/key-area-management/density-monitoring',

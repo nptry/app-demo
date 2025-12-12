@@ -28,30 +28,6 @@ export type DeviceBasicInfoResponse = {
   devices: DeviceBasicInfoItem[];
 };
 
-export type DeviceApplicationSummary = {
-  type: string;
-  count: number;
-  coverage: string;
-  aiModels: string[];
-};
-
-export type DeviceApplicationItem = {
-  deviceId: string;
-  deviceName: string;
-  applicationType: '重点区域监测' | '交通卡口监测' | '行人通道监测';
-  region: string;
-  address: string;
-  coordinates: string;
-  lampId: string;
-  description?: string;
-  deployDate: string;
-};
-
-export type DeviceConfigResponse = {
-  summary: DeviceApplicationSummary[];
-  applications: DeviceApplicationItem[];
-};
-
 export type DeviceStatusMetrics = {
   onlineRate: number;
   offlineDevices: number;
@@ -79,13 +55,6 @@ export type DeviceStatusResponse = {
 
 export async function getDeviceBasicInfo(options?: Record<string, any>) {
   return request<ApiResponse<DeviceBasicInfoResponse>>('/api/device/basic-info', {
-    method: 'GET',
-    ...(options || {}),
-  });
-}
-
-export async function getDeviceConfigInfo(options?: Record<string, any>) {
-  return request<ApiResponse<DeviceConfigResponse>>('/api/device/config-info', {
     method: 'GET',
     ...(options || {}),
   });

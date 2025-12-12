@@ -12,7 +12,7 @@ const permissionData = {
       id: 'QM-001',
       name: '设备状态查看权限',
       type: '使用权限',
-      modules: ['设备管理', '运维管理'],
+      modules: ['基础信息管理', '运维管理'],
       status: '启用',
       createdAt: '2024-05-08 09:30:12',
       updatedBy: 'admin_01',

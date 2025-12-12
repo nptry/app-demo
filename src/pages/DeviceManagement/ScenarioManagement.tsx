@@ -2,7 +2,6 @@ import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { useRequest } from '@umijs/max';
 import {
-  Badge,
   Button,
   Card,
   Col,
@@ -30,34 +29,12 @@ import type {
 } from '@/services/traffic';
 import { getTrafficCheckpoints } from '@/services/traffic';
 
-const checkpointStatusColor: Record<
-  CheckpointInfoItem['status'],
-  'success' | 'default'
-> = {
-  启用: 'success',
-  禁用: 'default',
-};
-
-const checkpointStatusOptions: CheckpointInfoItem['status'][] = [
-  '启用',
-  '禁用',
-];
-
-const siteStatusColor: Record<
-  KeyAreaSiteItem['status'],
-  'success' | 'default'
-> = {
-  启用: 'success',
-  禁用: 'default',
-};
-
 const siteTypeOptions: KeyAreaSiteItem['siteType'][] = [
   '公共场所',
   '活动区域',
   '政府办公区',
   '商业区域',
 ];
-const siteStatusOptions: KeyAreaSiteItem['status'][] = ['启用', '禁用'];
 
 type ScenarioTabKey = 'checkpoint' | 'site';
 
@@ -74,11 +51,9 @@ const CheckpointInfoTab: React.FC = () => {
   const [checkpoints, setCheckpoints] = useState<CheckpointInfoItem[]>([]);
   const [filters, setFilters] = useState<{
     keyword: string;
-    status: CheckpointInfoItem['status'] | 'all';
     type: string | 'all';
   }>({
     keyword: '',
-    status: 'all',
     type: 'all',
   });
   const [modalVisible, setModalVisible] = useState(false);
@@ -99,20 +74,16 @@ const CheckpointInfoTab: React.FC = () => {
     if (checkpoints.length) {
       return {
         total: checkpoints.length,
-        enabled: checkpoints.filter((item) => item.status === '启用').length,
         laneCount: checkpoints.reduce(
           (acc, item) => acc + (item.laneCount ?? 0),
           0,
         ),
       };
     }
-    return (
-      data?.summary ?? {
-        total: 0,
-        enabled: 0,
-        laneCount: 0,
-      }
-    );
+    return {
+      total: data?.summary?.total ?? 0,
+      laneCount: data?.summary?.laneCount ?? 0,
+    };
   }, [checkpoints, data?.summary]);
 
   const typeOptions = useMemo(() => {
@@ -132,21 +103,16 @@ const CheckpointInfoTab: React.FC = () => {
             field?.toLowerCase().includes(keyword),
           )
         : true;
-      const matchStatus =
-        filters.status === 'all' || item.status === filters.status;
       const matchType =
         filters.type === 'all' || item.checkpointTypes.includes(filters.type);
-      return matchKeyword && matchStatus && matchType;
+      return matchKeyword && matchType;
     });
-  }, [checkpoints, filters.keyword, filters.status, filters.type]);
+  }, [checkpoints, filters.keyword, filters.type]);
 
   const handleFilterChange = useCallback(
     (_: unknown, values: Record<string, string>) => {
       setFilters({
         keyword: values.keyword ?? '',
-        status: (values.status ?? 'all') as
-          | CheckpointInfoItem['status']
-          | 'all',
         type: (values.type ?? 'all') as string | 'all',
       });
     },
@@ -155,15 +121,12 @@ const CheckpointInfoTab: React.FC = () => {
 
   const handleFilterReset = useCallback(() => {
     filterForm.resetFields();
-    setFilters({ keyword: '', status: 'all', type: 'all' });
+    setFilters({ keyword: '', type: 'all' });
   }, [filterForm]);
 
   const openCreateModal = useCallback(() => {
     setEditingRecord(null);
     form.resetFields();
-    form.setFieldsValue({
-      status: '启用',
-    });
     setModalVisible(true);
   }, [form]);
 
@@ -189,7 +152,9 @@ const CheckpointInfoTab: React.FC = () => {
     if (editingRecord) {
       setCheckpoints((prev) =>
         prev.map((item) =>
-          item.id === editingRecord.id ? { ...values, checkpointTypes } : item,
+          item.id === editingRecord.id
+            ? { ...item, ...values, checkpointTypes }
+            : item,
         ),
       );
       message.success('卡口信息已更新');
@@ -198,6 +163,7 @@ const CheckpointInfoTab: React.FC = () => {
         ...values,
         checkpointTypes,
         id: values.id?.trim() ? values.id : `CP-${Date.now()}`,
+        status: '启用',
       };
       setCheckpoints((prev) => [newItem, ...prev]);
       message.success('新建卡口成功');
@@ -265,16 +231,6 @@ const CheckpointInfoTab: React.FC = () => {
           </div>
         ),
       },
-      { title: '布控级别', dataIndex: 'controlLevel', width: 160 },
-      {
-        title: '状态',
-        dataIndex: 'status',
-        width: 120,
-        render: (value: CheckpointInfoItem['status']) => (
-          <Badge status={checkpointStatusColor[value]} text={value} />
-        ),
-      },
-      { title: '建设单位', dataIndex: 'owner', width: 160 },
       { title: '备注', dataIndex: 'remark', width: 200 },
       {
         title: '操作',
@@ -306,17 +262,12 @@ const CheckpointInfoTab: React.FC = () => {
   return (
     <>
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={8}>
+        <Col xs={24} sm={12} md={12}>
           <Card bordered={false}>
             <Statistic title="卡口总数" value={summary.total} suffix="个" />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={8}>
-          <Card bordered={false}>
-            <Statistic title="启用卡口" value={summary.enabled} suffix="个" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8}>
+        <Col xs={24} sm={12} md={12}>
           <Card bordered={false}>
             <Statistic title="覆盖车道" value={summary.laneCount} suffix="条" />
           </Card>
@@ -336,7 +287,7 @@ const CheckpointInfoTab: React.FC = () => {
         <Form
           form={filterForm}
           layout="inline"
-          initialValues={{ keyword: '', status: 'all', type: 'all' }}
+          initialValues={{ keyword: '', type: 'all' }}
           onValuesChange={handleFilterChange}
           style={{ marginBottom: 16 }}
         >
@@ -356,20 +307,6 @@ const CheckpointInfoTab: React.FC = () => {
                 ...typeOptions.map((item) => ({ label: item, value: item })),
               ]}
               placeholder="卡口类型"
-            />
-          </Form.Item>
-          <Form.Item name="status">
-            <Select
-              allowClear={false}
-              style={{ width: 160 }}
-              options={[
-                { label: '全部状态', value: 'all' },
-                ...checkpointStatusOptions.map((status) => ({
-                  label: status,
-                  value: status,
-                })),
-              ]}
-              placeholder="卡口状态"
             />
           </Form.Item>
           <Form.Item>
@@ -490,37 +427,6 @@ const CheckpointInfoTab: React.FC = () => {
               </Form.Item>
             </Col>
           </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item label="布控级别" name="controlLevel">
-                <Select
-                  placeholder="请选择布控级别"
-                  options={['普通', '重点', '高危'].map((level) => ({
-                    label: level,
-                    value: level,
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="状态"
-                name="status"
-                rules={[{ required: true, message: '请选择状态' }]}
-              >
-                <Select
-                  options={checkpointStatusOptions.map((status) => ({
-                    label: status,
-                    value: status,
-                  }))}
-                  placeholder="请选择状态"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item label="建设单位" name="owner">
-            <Input placeholder="请输入建设单位" />
-          </Form.Item>
           <Form.Item label="车道描述" name="laneDescription">
             <Input.TextArea rows={2} placeholder="请输入车道描述" />
           </Form.Item>
@@ -533,7 +439,10 @@ const CheckpointInfoTab: React.FC = () => {
   );
 };
 
-type SiteFormValues = Omit<KeyAreaSiteItem, 'id'> & { id?: string };
+type SiteFormValues = Omit<
+  KeyAreaSiteItem,
+  'id' | 'status' | 'plan' | 'description'
+> & { id?: string };
 
 const SiteInfoTab: React.FC = () => {
   const { data, loading } = useRequest(getKeyAreaSites, {
@@ -546,11 +455,9 @@ const SiteInfoTab: React.FC = () => {
   const [siteList, setSiteList] = useState<KeyAreaSiteItem[]>([]);
   const [filters, setFilters] = useState<{
     keyword: string;
-    status: KeyAreaSiteItem['status'] | 'all';
     siteType: KeyAreaSiteItem['siteType'] | 'all';
   }>({
     keyword: '',
-    status: 'all',
     siteType: 'all',
   });
   const [modalVisible, setModalVisible] = useState(false);
@@ -573,22 +480,15 @@ const SiteInfoTab: React.FC = () => {
         (acc, item) => acc + (item.areaSize ?? 0),
         0,
       );
-      const enabledSites = siteList.filter(
-        (item) => item.status === '启用',
-      ).length;
       return {
         totalSites: siteList.length,
-        enabledSites,
         totalAreaSqm,
       };
     }
-    return (
-      data?.summary ?? {
-        totalSites: 0,
-        enabledSites: 0,
-        totalAreaSqm: 0,
-      }
-    );
+    return {
+      totalSites: data?.summary?.totalSites ?? 0,
+      totalAreaSqm: data?.summary?.totalAreaSqm ?? 0,
+    };
   }, [data?.summary, siteList]);
 
   const filteredSites = useMemo(() => {
@@ -599,21 +499,16 @@ const SiteInfoTab: React.FC = () => {
             .filter(Boolean)
             .some((field) => field?.toLowerCase().includes(keyword))
         : true;
-      const matchStatus =
-        filters.status === 'all' || item.status === filters.status;
       const matchType =
         filters.siteType === 'all' || item.siteType === filters.siteType;
-      return matchKeyword && matchStatus && matchType;
+      return matchKeyword && matchType;
     });
-  }, [filters.keyword, filters.siteType, filters.status, siteList]);
+  }, [filters.keyword, filters.siteType, siteList]);
 
   const handleFilterChange = useCallback(
     (_: unknown, allValues: Record<string, string>) => {
       setFilters({
         keyword: allValues.keyword ?? '',
-        status: (allValues.status ?? 'all') as
-          | KeyAreaSiteItem['status']
-          | 'all',
         siteType: (allValues.siteType ?? 'all') as
           | KeyAreaSiteItem['siteType']
           | 'all',
@@ -624,14 +519,13 @@ const SiteInfoTab: React.FC = () => {
 
   const handleFilterReset = useCallback(() => {
     filterForm.resetFields();
-    setFilters({ keyword: '', status: 'all', siteType: 'all' });
+    setFilters({ keyword: '', siteType: 'all' });
   }, [filterForm]);
 
   const openCreateModal = useCallback(() => {
     setEditingRecord(null);
     form.resetFields();
     form.setFieldsValue({
-      status: '启用',
       siteType: '公共场所',
     });
     setModalVisible(true);
@@ -657,16 +551,17 @@ const SiteInfoTab: React.FC = () => {
       setSiteList((prev) =>
         prev.map((item) =>
           item.id === editingRecord.id
-            ? { ...editingRecord, ...values, id: editingRecord.id }
+            ? { ...item, ...values, id: editingRecord.id }
             : item,
         ),
       );
       message.success('场所信息已更新');
     } else {
       const newSite: KeyAreaSiteItem = {
-        ...(values as KeyAreaSiteItem),
+        ...(values as Omit<KeyAreaSiteItem, 'status'>),
         id: values.id?.trim() ? values.id : `SITE-${Date.now()}`,
         plan: values.plan ?? '—',
+        status: '启用',
       };
       setSiteList((prev) => [newSite, ...prev]);
       message.success('新建场所成功');
@@ -723,16 +618,6 @@ const SiteInfoTab: React.FC = () => {
         ),
       },
       {
-        title: '场所状态',
-        dataIndex: 'status',
-        width: 140,
-        render: (value: KeyAreaSiteItem['status']) => (
-          <Badge status={siteStatusColor[value]} text={value} />
-        ),
-      },
-      { title: '场所描述', dataIndex: 'description', width: 260 },
-      { title: '现场平面图', dataIndex: 'plan', width: 200 },
-      {
         title: '操作',
         dataIndex: 'action',
         width: 160,
@@ -766,7 +651,7 @@ const SiteInfoTab: React.FC = () => {
   return (
     <>
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={8}>
+        <Col xs={24} sm={12} md={12}>
           <Card bordered={false}>
             <Statistic
               title="场所总数"
@@ -775,16 +660,7 @@ const SiteInfoTab: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={8}>
-          <Card bordered={false}>
-            <Statistic
-              title="启用场所"
-              value={summary.enabledSites}
-              suffix="处"
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8}>
+        <Col xs={24} sm={12} md={12}>
           <Card bordered={false}>
             <Statistic
               title="覆盖总面积"
@@ -808,7 +684,7 @@ const SiteInfoTab: React.FC = () => {
         <Form
           form={filterForm}
           layout="inline"
-          initialValues={{ keyword: '', status: 'all', siteType: 'all' }}
+          initialValues={{ keyword: '', siteType: 'all' }}
           onValuesChange={handleFilterChange}
           style={{ marginBottom: 16 }}
         >
@@ -830,19 +706,6 @@ const SiteInfoTab: React.FC = () => {
                 })),
               ]}
               placeholder="场所类型"
-            />
-          </Form.Item>
-          <Form.Item name="status">
-            <Select
-              style={{ width: 160 }}
-              options={[
-                { label: '全部状态', value: 'all' },
-                ...siteStatusOptions.map((status) => ({
-                  label: status,
-                  value: status,
-                })),
-              ]}
-              placeholder="场所状态"
             />
           </Form.Item>
           <Form.Item>
@@ -949,31 +812,6 @@ const SiteInfoTab: React.FC = () => {
             rules={[{ required: true, message: '请输入详细地址' }]}
           >
             <Input placeholder="请输入详细地址" />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="场所状态"
-                name="status"
-                rules={[{ required: true, message: '请选择场所状态' }]}
-              >
-                <Select
-                  options={siteStatusOptions.map((status) => ({
-                    label: status,
-                    value: status,
-                  }))}
-                  placeholder="请选择状态"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="场所描述" name="description">
-                <Input placeholder="请输入场所描述" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item label="现场平面图" name="plan">
-            <Input placeholder="例如：plan_2024_v1.png" />
           </Form.Item>
           <Form.Item label="备注" name="remark">
             <Input.TextArea rows={3} placeholder="请输入备注信息" />

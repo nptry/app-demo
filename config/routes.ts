@@ -56,37 +56,7 @@ export default [
       },
     ],
   },
-  {
-    path: '/operations-management',
-    name: 'operations-management',
-    icon: 'tool',
-    routes: [
-      {
-        path: '/operations-management',
-        redirect: '/operations-management/infrastructure',
-      },
-      {
-        path: '/operations-management/infrastructure',
-        name: 'infrastructure',
-        component: './OperationsManagement/Infrastructure',
-      },
-      {
-        path: '/operations-management/resources',
-        name: 'resources',
-        component: './OperationsManagement/Resources',
-      },
-      {
-        path: '/operations-management/fault',
-        name: 'fault',
-        component: './OperationsManagement/Fault',
-      },
-      {
-        path: '/operations-management/statistics',
-        name: 'statistics',
-        component: './OperationsManagement/Statistics',
-      },
-    ],
-  },
+
   {
     path: '/traffic-checkpoint-management',
     name: 'traffic-checkpoint-management',
@@ -252,5 +222,36 @@ export default [
     path: '*',
     layout: false,
     component: './404',
+  },
+  {
+    path: '/operations-management',
+    name: 'operations-management',
+    icon: 'tool',
+    routes: [
+      {
+        path: '/operations-management',
+        redirect: '/operations-management/infrastructure',
+      },
+      {
+        path: '/operations-management/infrastructure',
+        name: 'infrastructure',
+        component: './OperationsManagement/Infrastructure',
+      },
+      {
+        path: '/operations-management/resources',
+        name: 'resources',
+        component: './OperationsManagement/Resources',
+      },
+      {
+        path: '/operations-management/fault',
+        name: 'fault',
+        component: './OperationsManagement/Fault',
+      },
+      {
+        path: '/operations-management/statistics',
+        name: 'statistics',
+        component: './OperationsManagement/Statistics',
+      },
+    ],
   },
 ];

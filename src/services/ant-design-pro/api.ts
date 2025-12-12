@@ -4,32 +4,83 @@ import { request } from '@umijs/max';
 
 /** 获取当前的用户 GET /api/currentUser */
 export async function currentUser(options?: { [key: string]: any }) {
-  return request<{
-    data: API.CurrentUser;
-  }>('/api/currentUser', {
-    method: 'GET',
-    ...(options || {}),
-  });
+  if (typeof localStorage === 'undefined') {
+    throw new Error('No localStorage');
+  }
+
+  const adminStr = localStorage.getItem('current_admin');
+  if (!adminStr) {
+    throw new Error('No current admin');
+  }
+
+  const admin = JSON.parse(adminStr);
+  return {
+    data: {
+      name: admin.username,
+      userid: String(admin.id),
+      access: 'admin',
+      phone: admin.mobile,
+    } as API.CurrentUser,
+  };
 }
 
 /** 退出登录接口 POST /api/login/outLogin */
 export async function outLogin(options?: { [key: string]: any }) {
-  return request<Record<string, any>>('/api/login/outLogin', {
-    method: 'POST',
-    ...(options || {}),
-  });
+  if (typeof localStorage === 'undefined') {
+    return { success: true };
+  }
+  try {
+    await request<Record<string, any>>('/api/v1/admin/auth/logout', {
+      method: 'DELETE',
+      ...(options || {}),
+    });
+  } finally {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('current_admin');
+  }
+  return { success: true };
 }
 
 /** 登录接口 POST /api/login/account */
 export async function login(body: API.LoginParams, options?: { [key: string]: any }) {
-  return request<API.LoginResult>('/api/login/account', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    data: body,
-    ...(options || {}),
-  });
+  try {
+    const res = await request<{
+      success: boolean;
+      data: { token: string; admin: any };
+    }>('/api/v1/admin/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: {
+        username: body.username,
+        password: body.password,
+      },
+      ...(options || {}),
+    });
+
+    if (typeof localStorage !== 'undefined') {
+      const { token, admin } = res.data || {};
+      if (token) {
+        localStorage.setItem('admin_token', token);
+      }
+      if (admin) {
+        localStorage.setItem('current_admin', JSON.stringify(admin));
+      }
+    }
+
+    return {
+      status: 'ok',
+      type: body.type,
+      currentAuthority: 'admin',
+    } as API.LoginResult;
+  } catch (_e) {
+    return {
+      status: 'error',
+      type: body.type,
+      currentAuthority: 'guest',
+    } as API.LoginResult;
+  }
 }
 
 /** 此处后端没有提供注释 GET /api/notices */

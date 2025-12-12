@@ -1,7 +1,6 @@
 import { PageContainer } from '@ant-design/pro-components';
 import { useRequest } from '@umijs/max';
 import {
-  Badge,
   Button,
   Card,
   Col,
@@ -31,42 +30,14 @@ import type {
 } from '@/services/traffic';
 import { getTrafficDeployments } from '@/services/traffic';
 
-const trafficStatusColor: Record<
-  TrafficDeploymentItem['status'],
-  'success' | 'processing' | 'default'
-> = {
-  正常运行: 'success',
-  待调试: 'processing',
-  已拆除: 'default',
-};
-
-const keyAreaStatusColor: Record<
-  DeploymentItem['status'],
-  'success' | 'processing' | 'default'
-> = {
-  正常运行: 'success',
-  待调试: 'processing',
-  已拆除: 'default',
-};
-
 const trafficDeviceTypeOptions: TrafficDeploymentItem['deviceType'][] = [
   '高清数字摄像机',
   'AI 边缘计算设备',
-];
-const trafficStatusOptions: TrafficDeploymentItem['status'][] = [
-  '正常运行',
-  '待调试',
-  '已拆除',
 ];
 
 const keyAreaDeviceTypeOptions: DeploymentItem['deviceType'][] = [
   '高清数字摄像机',
   'AI 边缘计算设备',
-];
-const keyAreaStatusOptions: DeploymentItem['status'][] = [
-  '正常运行',
-  '待调试',
-  '已拆除',
 ];
 
 type TabKey = 'traffic' | 'key-area';
@@ -84,11 +55,9 @@ const TrafficDeploymentTab: React.FC = () => {
   const [deployments, setDeployments] = useState<TrafficDeploymentItem[]>([]);
   const [filters, setFilters] = useState<{
     keyword: string;
-    status: TrafficDeploymentItem['status'] | 'all';
     deviceType: TrafficDeploymentItem['deviceType'] | 'all';
   }>({
     keyword: '',
-    status: 'all',
     deviceType: 'all',
   });
   const [modalVisible, setModalVisible] = useState(false);
@@ -118,21 +87,16 @@ const TrafficDeploymentTab: React.FC = () => {
             .filter(Boolean)
             .some((field) => field?.toLowerCase().includes(keyword))
         : true;
-      const matchStatus =
-        filters.status === 'all' || item.status === filters.status;
       const matchType =
         filters.deviceType === 'all' || item.deviceType === filters.deviceType;
-      return matchKeyword && matchStatus && matchType;
+      return matchKeyword && matchType;
     });
-  }, [deployments, filters.deviceType, filters.keyword, filters.status]);
+  }, [deployments, filters.deviceType, filters.keyword]);
 
   const handleFilterChange = useCallback(
     (_: unknown, values: Record<string, string>) => {
       setFilters({
         keyword: values.keyword ?? '',
-        status: (values.status ?? 'all') as
-          | TrafficDeploymentItem['status']
-          | 'all',
         deviceType: (values.deviceType ?? 'all') as
           | TrafficDeploymentItem['deviceType']
           | 'all',
@@ -143,14 +107,13 @@ const TrafficDeploymentTab: React.FC = () => {
 
   const handleFilterReset = useCallback(() => {
     filterForm.resetFields();
-    setFilters({ keyword: '', status: 'all', deviceType: 'all' });
+    setFilters({ keyword: '', deviceType: 'all' });
   }, [filterForm]);
 
   const openCreateModal = useCallback(() => {
     setEditingRecord(null);
     form.resetFields();
     form.setFieldsValue({
-      status: '正常运行',
       deviceType: '高清数字摄像机',
     });
     setModalVisible(true);
@@ -174,13 +137,16 @@ const TrafficDeploymentTab: React.FC = () => {
     const values = await form.validateFields();
     if (editingRecord) {
       setDeployments((prev) =>
-        prev.map((item) => (item.id === editingRecord.id ? values : item)),
+        prev.map((item) =>
+          item.id === editingRecord.id ? { ...item, ...values } : item,
+        ),
       );
       message.success('部署信息已更新');
     } else {
       const newItem: TrafficDeploymentItem = {
         ...values,
         id: values.id?.trim() ? values.id : `TD-${Date.now()}`,
+        status: '正常运行',
       };
       setDeployments((prev) => [newItem, ...prev]);
       message.success('新增部署成功');
@@ -219,18 +185,8 @@ const TrafficDeploymentTab: React.FC = () => {
       },
       { title: '安装车道', dataIndex: 'lane', width: 200 },
       { title: '安装位置描述', dataIndex: 'position', width: 220 },
-      { title: '镜头焦距', dataIndex: 'lensFocal', width: 140 },
       { title: '部署时间', dataIndex: 'installDate', width: 160 },
       { title: '责任人', dataIndex: 'owner', width: 160 },
-      {
-        title: '部署状态',
-        dataIndex: 'status',
-        width: 140,
-        render: (value: TrafficDeploymentItem['status']) => (
-          <Badge status={trafficStatusColor[value]} text={value} />
-        ),
-      },
-      { title: '调试结果', dataIndex: 'result', width: 200 },
       {
         title: '操作',
         dataIndex: 'action',
@@ -271,7 +227,7 @@ const TrafficDeploymentTab: React.FC = () => {
         <Form
           form={filterForm}
           layout="inline"
-          initialValues={{ keyword: '', status: 'all', deviceType: 'all' }}
+          initialValues={{ keyword: '', deviceType: 'all' }}
           onValuesChange={handleFilterChange}
           style={{ marginBottom: 16 }}
         >
@@ -290,18 +246,6 @@ const TrafficDeploymentTab: React.FC = () => {
                 ...trafficDeviceTypeOptions.map((type) => ({
                   value: type,
                   label: type,
-                })),
-              ]}
-            />
-          </Form.Item>
-          <Form.Item name="status">
-            <Select
-              style={{ width: 180 }}
-              options={[
-                { value: 'all', label: '全部部署状态' },
-                ...trafficStatusOptions.map((status) => ({
-                  value: status,
-                  label: status,
                 })),
               ]}
             />
@@ -399,32 +343,14 @@ const TrafficDeploymentTab: React.FC = () => {
           >
             <Input placeholder="请输入安装位置描述" />
           </Form.Item>
-          <Form.Item label="镜头焦距" name="lensFocal">
-            <Input placeholder="示例：12mm" />
-          </Form.Item>
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={24}>
               <Form.Item
                 label="部署时间"
                 name="installDate"
                 rules={[{ required: true, message: '请输入部署时间' }]}
               >
                 <Input placeholder="示例：2024-08-01" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="部署状态"
-                name="status"
-                rules={[{ required: true, message: '请选择部署状态' }]}
-              >
-                <Select
-                  options={trafficStatusOptions.map((status) => ({
-                    label: status,
-                    value: status,
-                  }))}
-                  placeholder="请选择部署状态"
-                />
               </Form.Item>
             </Col>
           </Row>
@@ -434,9 +360,6 @@ const TrafficDeploymentTab: React.FC = () => {
             rules={[{ required: true, message: '请输入责任人' }]}
           >
             <Input placeholder="请输入责任人" />
-          </Form.Item>
-          <Form.Item label="调试结果" name="result">
-            <Input placeholder="请输入调试结果或备注" />
           </Form.Item>
         </Form>
       </Modal>
@@ -457,11 +380,9 @@ const KeyAreaDeploymentTab: React.FC = () => {
   const [deployments, setDeployments] = useState<DeploymentItem[]>([]);
   const [filters, setFilters] = useState<{
     keyword: string;
-    status: DeploymentItem['status'] | 'all';
     deviceType: DeploymentItem['deviceType'] | 'all';
   }>({
     keyword: '',
-    status: 'all',
     deviceType: 'all',
   });
   const [modalVisible, setModalVisible] = useState(false);
@@ -486,19 +407,16 @@ const KeyAreaDeploymentTab: React.FC = () => {
             .filter(Boolean)
             .some((field) => field?.toLowerCase().includes(keyword))
         : true;
-      const matchStatus =
-        filters.status === 'all' || item.status === filters.status;
       const matchType =
         filters.deviceType === 'all' || item.deviceType === filters.deviceType;
-      return matchKeyword && matchStatus && matchType;
+      return matchKeyword && matchType;
     });
-  }, [deployments, filters.deviceType, filters.keyword, filters.status]);
+  }, [deployments, filters.deviceType, filters.keyword]);
 
   const handleFilterChange = useCallback(
     (_: unknown, values: Record<string, string>) => {
       setFilters({
         keyword: values.keyword ?? '',
-        status: (values.status ?? 'all') as DeploymentItem['status'] | 'all',
         deviceType: (values.deviceType ?? 'all') as
           | DeploymentItem['deviceType']
           | 'all',
@@ -509,14 +427,13 @@ const KeyAreaDeploymentTab: React.FC = () => {
 
   const handleFilterReset = useCallback(() => {
     filterForm.resetFields();
-    setFilters({ keyword: '', status: 'all', deviceType: 'all' });
+    setFilters({ keyword: '', deviceType: 'all' });
   }, [filterForm]);
 
   const openCreateModal = useCallback(() => {
     setEditingRecord(null);
     form.resetFields();
     form.setFieldsValue({
-      status: '正常运行',
       deviceType: '高清数字摄像机',
     });
     setModalVisible(true);
@@ -540,7 +457,9 @@ const KeyAreaDeploymentTab: React.FC = () => {
     const values = await form.validateFields();
     if (editingRecord) {
       setDeployments((prev) =>
-        prev.map((item) => (item.id === editingRecord.id ? values : item)),
+        prev.map((item) =>
+          item.id === editingRecord.id ? { ...item, ...values } : item,
+        ),
       );
       message.success('部署信息已更新');
     } else {
@@ -548,6 +467,7 @@ const KeyAreaDeploymentTab: React.FC = () => {
         ...values,
         id: values.id?.trim() ? values.id : `DEP-${Date.now()}`,
         installHeight: values.installHeight ?? 0,
+        status: '正常运行',
       };
       setDeployments((prev) => [newItem, ...prev]);
       message.success('新增部署成功');
@@ -591,14 +511,6 @@ const KeyAreaDeploymentTab: React.FC = () => {
       { title: '部署时间', dataIndex: 'installDate', width: 160 },
       { title: '责任人', dataIndex: 'owner', width: 140 },
       {
-        title: '部署状态',
-        dataIndex: 'status',
-        width: 140,
-        render: (value: DeploymentItem['status']) => (
-          <Badge status={keyAreaStatusColor[value]} text={value} />
-        ),
-      },
-      {
         title: '操作',
         dataIndex: 'action',
         width: 160,
@@ -638,7 +550,7 @@ const KeyAreaDeploymentTab: React.FC = () => {
         <Form
           form={filterForm}
           layout="inline"
-          initialValues={{ keyword: '', status: 'all', deviceType: 'all' }}
+          initialValues={{ keyword: '', deviceType: 'all' }}
           onValuesChange={handleFilterChange}
           style={{ marginBottom: 16 }}
         >
@@ -657,18 +569,6 @@ const KeyAreaDeploymentTab: React.FC = () => {
                 ...keyAreaDeviceTypeOptions.map((type) => ({
                   label: type,
                   value: type,
-                })),
-              ]}
-            />
-          </Form.Item>
-          <Form.Item name="status">
-            <Select
-              style={{ width: 180 }}
-              options={[
-                { value: 'all', label: '全部部署状态' },
-                ...keyAreaStatusOptions.map((status) => ({
-                  label: status,
-                  value: status,
                 })),
               ]}
             />
@@ -785,19 +685,6 @@ const KeyAreaDeploymentTab: React.FC = () => {
             rules={[{ required: true, message: '请输入责任人' }]}
           >
             <Input placeholder="请输入责任人" />
-          </Form.Item>
-          <Form.Item
-            label="部署状态"
-            name="status"
-            rules={[{ required: true, message: '请选择部署状态' }]}
-          >
-            <Select
-              options={keyAreaStatusOptions.map((status) => ({
-                label: status,
-                value: status,
-              }))}
-              placeholder="请选择部署状态"
-            />
           </Form.Item>
         </Form>
       </Modal>

@@ -22,12 +22,22 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { KeyAreaSiteItem, KeyAreaSiteResponse } from '@/services/keyArea';
-import { getKeyAreaSites } from '@/services/keyArea';
+import {
+  createSite,
+  deleteSite,
+  getSites,
+  updateSite,
+} from '@/services/keyArea';
 import type {
   CheckpointInfoItem,
   TrafficCheckpointResponse,
 } from '@/services/traffic';
-import { getTrafficCheckpoints } from '@/services/traffic';
+import {
+  createTrafficCheckpoint,
+  deleteTrafficCheckpoint,
+  getTrafficCheckpoints,
+  updateTrafficCheckpoint,
+} from '@/services/traffic';
 
 const siteTypeOptions: KeyAreaSiteItem['siteType'][] = [
   '公共场所',
@@ -139,7 +149,8 @@ const CheckpointInfoTab: React.FC = () => {
     [form],
   );
 
-  const handleDelete = useCallback((id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
+    await deleteTrafficCheckpoint(id);
     setCheckpoints((prev) => prev.filter((item) => item.id !== id));
     message.success('删除成功');
   }, []);
@@ -150,22 +161,20 @@ const CheckpointInfoTab: React.FC = () => {
       ? values.checkpointTypes
       : [];
     if (editingRecord) {
+      const res = await updateTrafficCheckpoint(editingRecord.id, {
+        ...values,
+        checkpointTypes,
+      });
       setCheckpoints((prev) =>
-        prev.map((item) =>
-          item.id === editingRecord.id
-            ? { ...item, ...values, checkpointTypes }
-            : item,
-        ),
+        prev.map((item) => (item.id === editingRecord.id ? res.data : item)),
       );
       message.success('卡口信息已更新');
     } else {
-      const newItem: CheckpointInfoItem = {
+      const res = await createTrafficCheckpoint({
         ...values,
         checkpointTypes,
-        id: values.id?.trim() ? values.id : `CP-${Date.now()}`,
-        status: '启用',
-      };
-      setCheckpoints((prev) => [newItem, ...prev]);
+      });
+      setCheckpoints((prev) => [res.data, ...prev]);
       message.success('新建卡口成功');
     }
     setModalVisible(false);
@@ -445,7 +454,7 @@ type SiteFormValues = Omit<
 > & { id?: string };
 
 const SiteInfoTab: React.FC = () => {
-  const { data, loading } = useRequest(getKeyAreaSites, {
+  const { data, loading } = useRequest(getSites, {
     formatResult: (res: KeyAreaSiteResponse | { data: KeyAreaSiteResponse }) =>
       (res as { data?: KeyAreaSiteResponse })?.data ??
       (res as KeyAreaSiteResponse),
@@ -540,7 +549,8 @@ const SiteInfoTab: React.FC = () => {
     [form],
   );
 
-  const handleDelete = useCallback((id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
+    await deleteSite(id);
     setSiteList((prev) => prev.filter((item) => item.id !== id));
     message.success('删除成功');
   }, []);
@@ -548,22 +558,14 @@ const SiteInfoTab: React.FC = () => {
   const handleModalOk = useCallback(async () => {
     const values = await form.validateFields();
     if (editingRecord) {
+      const res = await updateSite(editingRecord.id, values);
       setSiteList((prev) =>
-        prev.map((item) =>
-          item.id === editingRecord.id
-            ? { ...item, ...values, id: editingRecord.id }
-            : item,
-        ),
+        prev.map((item) => (item.id === editingRecord.id ? res.data : item)),
       );
       message.success('场所信息已更新');
     } else {
-      const newSite: KeyAreaSiteItem = {
-        ...(values as Omit<KeyAreaSiteItem, 'status'>),
-        id: values.id?.trim() ? values.id : `SITE-${Date.now()}`,
-        plan: values.plan ?? '—',
-        status: '启用',
-      };
-      setSiteList((prev) => [newSite, ...prev]);
+      const res = await createSite(values);
+      setSiteList((prev) => [res.data, ...prev]);
       message.success('新建场所成功');
     }
     setModalVisible(false);

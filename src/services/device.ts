@@ -54,14 +54,14 @@ export type DeviceStatusResponse = {
 };
 
 export async function getDeviceBasicInfo(options?: Record<string, any>) {
-  return request<ApiResponse<DeviceBasicInfoResponse>>('/api/device/basic-info', {
+  return request<ApiResponse<DeviceBasicInfoResponse>>('/api/v1/admin/devices/basic-info', {
     method: 'GET',
     ...(options || {}),
   });
 }
 
 export async function getDeviceStatus(options?: Record<string, any>) {
-  return request<ApiResponse<DeviceStatusResponse>>('/api/device/status', {
+  return request<ApiResponse<DeviceStatusResponse>>('/api/v1/admin/devices/status', {
     method: 'GET',
     ...(options || {}),
   });

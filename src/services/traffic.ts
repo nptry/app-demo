@@ -31,10 +31,52 @@ export type TrafficCheckpointResponse = {
 };
 
 export async function getTrafficCheckpoints(options?: Record<string, any>) {
-  return request<ApiResponse<TrafficCheckpointResponse>>('/api/traffic/checkpoints', {
+  return request<ApiResponse<TrafficCheckpointResponse>>('/api/v1/admin/traffic/checkpoints', {
     method: 'GET',
     ...(options || {}),
   });
+}
+
+export async function createTrafficCheckpoint(
+  body: Partial<CheckpointInfoItem>,
+  options?: Record<string, any>,
+) {
+  return request<ApiResponse<CheckpointInfoItem>>(
+    '/api/v1/admin/traffic/checkpoints',
+    {
+      method: 'POST',
+      data: body,
+      ...(options || {}),
+    },
+  );
+}
+
+export async function updateTrafficCheckpoint(
+  id: string,
+  body: Partial<CheckpointInfoItem>,
+  options?: Record<string, any>,
+) {
+  return request<ApiResponse<CheckpointInfoItem>>(
+    `/api/v1/admin/traffic/checkpoints/${id}`,
+    {
+      method: 'PATCH',
+      data: body,
+      ...(options || {}),
+    },
+  );
+}
+
+export async function deleteTrafficCheckpoint(
+  id: string,
+  options?: Record<string, any>,
+) {
+  return request<ApiResponse<Record<string, never>>>(
+    `/api/v1/admin/traffic/checkpoints/${id}`,
+    {
+      method: 'DELETE',
+      ...(options || {}),
+    },
+  );
 }
 
 export type TrafficDeploymentItem = {
@@ -58,10 +100,52 @@ export type TrafficDeploymentResponse = {
 };
 
 export async function getTrafficDeployments(options?: Record<string, any>) {
-  return request<ApiResponse<TrafficDeploymentResponse>>('/api/traffic/deployments', {
+  return request<ApiResponse<TrafficDeploymentResponse>>('/api/v1/admin/traffic/deployments', {
     method: 'GET',
     ...(options || {}),
   });
+}
+
+export async function createTrafficDeployment(
+  body: Partial<TrafficDeploymentItem>,
+  options?: Record<string, any>,
+) {
+  return request<ApiResponse<TrafficDeploymentItem>>(
+    '/api/v1/admin/traffic/deployments',
+    {
+      method: 'POST',
+      data: body,
+      ...(options || {}),
+    },
+  );
+}
+
+export async function updateTrafficDeployment(
+  id: string,
+  body: Partial<TrafficDeploymentItem>,
+  options?: Record<string, any>,
+) {
+  return request<ApiResponse<TrafficDeploymentItem>>(
+    `/api/v1/admin/traffic/deployments/${id}`,
+    {
+      method: 'PATCH',
+      data: body,
+      ...(options || {}),
+    },
+  );
+}
+
+export async function deleteTrafficDeployment(
+  id: string,
+  options?: Record<string, any>,
+) {
+  return request<ApiResponse<Record<string, never>>>(
+    `/api/v1/admin/traffic/deployments/${id}`,
+    {
+      method: 'DELETE',
+      ...(options || {}),
+    },
+  );
 }
 
 export type LicenseRecordItem = {

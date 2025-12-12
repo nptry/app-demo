@@ -33,10 +33,48 @@ export type KeyAreaSiteResponse = {
 };
 
 export async function getKeyAreaSites(options?: Record<string, any>) {
-  return request<ApiResponse<KeyAreaSiteResponse>>('/api/key-area/sites', {
+  return request<ApiResponse<KeyAreaSiteResponse>>('/api/v1/admin/site/sites', {
     method: 'GET',
     ...(options || {}),
   });
+}
+
+export const getSites = getKeyAreaSites;
+
+export async function createSite(
+  body: Partial<KeyAreaSiteItem>,
+  options?: Record<string, any>,
+) {
+  return request<ApiResponse<KeyAreaSiteItem>>('/api/v1/admin/site/sites', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+export async function updateSite(
+  id: string,
+  body: Partial<KeyAreaSiteItem>,
+  options?: Record<string, any>,
+) {
+  return request<ApiResponse<KeyAreaSiteItem>>(
+    `/api/v1/admin/site/sites/${id}`,
+    {
+      method: 'PATCH',
+      data: body,
+      ...(options || {}),
+    },
+  );
+}
+
+export async function deleteSite(id: string, options?: Record<string, any>) {
+  return request<ApiResponse<Record<string, never>>>(
+    `/api/v1/admin/site/sites/${id}`,
+    {
+      method: 'DELETE',
+      ...(options || {}),
+    },
+  );
 }
 
 export type DeploymentItem = {
@@ -60,10 +98,51 @@ export type KeyAreaDeploymentResponse = {
 };
 
 export async function getKeyAreaDeployments(options?: Record<string, any>) {
-  return request<ApiResponse<KeyAreaDeploymentResponse>>('/api/key-area/deployments', {
+  return request<ApiResponse<KeyAreaDeploymentResponse>>('/api/v1/admin/site/deployments', {
     method: 'GET',
     ...(options || {}),
   });
+}
+
+export const getSiteDeployments = getKeyAreaDeployments;
+
+export async function createSiteDeployment(
+  body: Partial<DeploymentItem>,
+  options?: Record<string, any>,
+) {
+  return request<ApiResponse<DeploymentItem>>('/api/v1/admin/site/deployments', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+export async function updateSiteDeployment(
+  id: string,
+  body: Partial<DeploymentItem>,
+  options?: Record<string, any>,
+) {
+  return request<ApiResponse<DeploymentItem>>(
+    `/api/v1/admin/site/deployments/${id}`,
+    {
+      method: 'PATCH',
+      data: body,
+      ...(options || {}),
+    },
+  );
+}
+
+export async function deleteSiteDeployment(
+  id: string,
+  options?: Record<string, any>,
+) {
+  return request<ApiResponse<Record<string, never>>>(
+    `/api/v1/admin/site/deployments/${id}`,
+    {
+      method: 'DELETE',
+      ...(options || {}),
+    },
+  );
 }
 
 export type DensityTrendPoint = {

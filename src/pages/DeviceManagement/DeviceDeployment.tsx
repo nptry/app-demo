@@ -22,25 +22,39 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   DeploymentItem,
   KeyAreaDeploymentResponse,
+  KeyAreaSiteResponse,
 } from '@/services/keyArea';
-import { getKeyAreaDeployments } from '@/services/keyArea';
+import {
+  createSiteDeployment,
+  deleteSiteDeployment,
+  getSiteDeployments,
+  getSites,
+  updateSiteDeployment,
+} from '@/services/keyArea';
 import type {
+  TrafficCheckpointResponse,
   TrafficDeploymentItem,
   TrafficDeploymentResponse,
 } from '@/services/traffic';
-import { getTrafficDeployments } from '@/services/traffic';
+import {
+  createTrafficDeployment,
+  deleteTrafficDeployment,
+  getTrafficCheckpoints,
+  getTrafficDeployments,
+  updateTrafficDeployment,
+} from '@/services/traffic';
 
 const trafficDeviceTypeOptions: TrafficDeploymentItem['deviceType'][] = [
   '高清数字摄像机',
   'AI 边缘计算设备',
 ];
 
-const keyAreaDeviceTypeOptions: DeploymentItem['deviceType'][] = [
+const siteDeviceTypeOptions: DeploymentItem['deviceType'][] = [
   '高清数字摄像机',
   'AI 边缘计算设备',
 ];
 
-type TabKey = 'traffic' | 'key-area';
+type TabKey = 'traffic' | 'site';
 
 const TrafficDeploymentTab: React.FC = () => {
   const { data, loading } = useRequest(getTrafficDeployments, {
@@ -49,6 +63,14 @@ const TrafficDeploymentTab: React.FC = () => {
     ) =>
       (res as { data?: TrafficDeploymentResponse })?.data ??
       (res as TrafficDeploymentResponse),
+  });
+
+  const { data: checkpointData } = useRequest(getTrafficCheckpoints, {
+    formatResult: (
+      res: TrafficCheckpointResponse | { data: TrafficCheckpointResponse },
+    ) =>
+      (res as { data?: TrafficCheckpointResponse })?.data ??
+      (res as TrafficCheckpointResponse),
   });
 
   const [initialized, setInitialized] = useState(false);
@@ -72,6 +94,11 @@ const TrafficDeploymentTab: React.FC = () => {
       setInitialized(true);
     }
   }, [data?.deployments, initialized]);
+
+  const checkpointOptions = useMemo(
+    () => checkpointData?.checkpoints ?? [],
+    [checkpointData?.checkpoints],
+  );
 
   const filteredDeployments = useMemo(() => {
     const keyword = filters.keyword.trim().toLowerCase();
@@ -128,7 +155,8 @@ const TrafficDeploymentTab: React.FC = () => {
     [form],
   );
 
-  const handleDelete = useCallback((id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
+    await deleteTrafficDeployment(id);
     setDeployments((prev) => prev.filter((item) => item.id !== id));
     message.success('删除成功');
   }, []);
@@ -136,19 +164,14 @@ const TrafficDeploymentTab: React.FC = () => {
   const handleModalOk = useCallback(async () => {
     const values = await form.validateFields();
     if (editingRecord) {
+      const res = await updateTrafficDeployment(editingRecord.id, values);
       setDeployments((prev) =>
-        prev.map((item) =>
-          item.id === editingRecord.id ? { ...item, ...values } : item,
-        ),
+        prev.map((item) => (item.id === editingRecord.id ? res.data : item)),
       );
       message.success('部署信息已更新');
     } else {
-      const newItem: TrafficDeploymentItem = {
-        ...values,
-        id: values.id?.trim() ? values.id : `TD-${Date.now()}`,
-        status: '正常运行',
-      };
-      setDeployments((prev) => [newItem, ...prev]);
+      const res = await createTrafficDeployment(values);
+      setDeployments((prev) => [res.data, ...prev]);
       message.success('新增部署成功');
     }
     setModalVisible(false);
@@ -286,11 +309,19 @@ const TrafficDeploymentTab: React.FC = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="卡口名称"
-                name="checkpointName"
-                rules={[{ required: true, message: '请输入卡口名称' }]}
+                label="所属卡口"
+                name="checkpointId"
+                rules={[{ required: true, message: '请选择卡口' }]}
               >
-                <Input placeholder="请输入卡口名称" />
+                <Select
+                  showSearch
+                  optionFilterProp="label"
+                  options={checkpointOptions.map((checkpoint) => ({
+                    label: checkpoint.name,
+                    value: checkpoint.id,
+                  }))}
+                  placeholder="请选择卡口"
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -367,13 +398,19 @@ const TrafficDeploymentTab: React.FC = () => {
   );
 };
 
-const KeyAreaDeploymentTab: React.FC = () => {
-  const { data, loading } = useRequest(getKeyAreaDeployments, {
+const SiteDeploymentTab: React.FC = () => {
+  const { data, loading } = useRequest(getSiteDeployments, {
     formatResult: (
       res: KeyAreaDeploymentResponse | { data: KeyAreaDeploymentResponse },
     ) =>
       (res as { data?: KeyAreaDeploymentResponse })?.data ??
       (res as KeyAreaDeploymentResponse),
+  });
+
+  const { data: siteData } = useRequest(getSites, {
+    formatResult: (res: KeyAreaSiteResponse | { data: KeyAreaSiteResponse }) =>
+      (res as { data?: KeyAreaSiteResponse })?.data ??
+      (res as KeyAreaSiteResponse),
   });
 
   const [initialized, setInitialized] = useState(false);
@@ -398,6 +435,8 @@ const KeyAreaDeploymentTab: React.FC = () => {
       setInitialized(true);
     }
   }, [data?.deployments, initialized]);
+
+  const siteOptions = useMemo(() => siteData?.sites ?? [], [siteData?.sites]);
 
   const filteredDeployments = useMemo(() => {
     const keyword = filters.keyword.trim().toLowerCase();
@@ -448,7 +487,8 @@ const KeyAreaDeploymentTab: React.FC = () => {
     [form],
   );
 
-  const handleDelete = useCallback((id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
+    await deleteSiteDeployment(id);
     setDeployments((prev) => prev.filter((item) => item.id !== id));
     message.success('删除成功');
   }, []);
@@ -456,20 +496,14 @@ const KeyAreaDeploymentTab: React.FC = () => {
   const handleModalOk = useCallback(async () => {
     const values = await form.validateFields();
     if (editingRecord) {
+      const res = await updateSiteDeployment(editingRecord.id, values);
       setDeployments((prev) =>
-        prev.map((item) =>
-          item.id === editingRecord.id ? { ...item, ...values } : item,
-        ),
+        prev.map((item) => (item.id === editingRecord.id ? res.data : item)),
       );
       message.success('部署信息已更新');
     } else {
-      const newItem: DeploymentItem = {
-        ...values,
-        id: values.id?.trim() ? values.id : `DEP-${Date.now()}`,
-        installHeight: values.installHeight ?? 0,
-        status: '正常运行',
-      };
-      setDeployments((prev) => [newItem, ...prev]);
+      const res = await createSiteDeployment(values);
+      setDeployments((prev) => [res.data, ...prev]);
       message.success('新增部署成功');
     }
     setModalVisible(false);
@@ -566,7 +600,7 @@ const KeyAreaDeploymentTab: React.FC = () => {
               style={{ width: 200 }}
               options={[
                 { value: 'all', label: '全部设备类型' },
-                ...keyAreaDeviceTypeOptions.map((type) => ({
+                ...siteDeviceTypeOptions.map((type) => ({
                   label: type,
                   value: type,
                 })),
@@ -608,10 +642,18 @@ const KeyAreaDeploymentTab: React.FC = () => {
           )}
           <Form.Item
             label="所属场所"
-            name="siteName"
-            rules={[{ required: true, message: '请输入所属场所' }]}
+            name="siteId"
+            rules={[{ required: true, message: '请选择所属场所' }]}
           >
-            <Input placeholder="请输入场所名称" />
+            <Select
+              showSearch
+              optionFilterProp="label"
+              options={siteOptions.map((site) => ({
+                label: site.name,
+                value: site.id,
+              }))}
+              placeholder="请选择场所"
+            />
           </Form.Item>
           <Form.Item
             label="监测区域编号"
@@ -637,7 +679,7 @@ const KeyAreaDeploymentTab: React.FC = () => {
             rules={[{ required: true, message: '请选择设备类型' }]}
           >
             <Select
-              options={keyAreaDeviceTypeOptions.map((type) => ({
+              options={siteDeviceTypeOptions.map((type) => ({
                 label: type,
                 value: type,
               }))}
@@ -708,9 +750,9 @@ const DeviceDeployment: React.FC = () => {
             children: <TrafficDeploymentTab />,
           },
           {
-            key: 'key-area',
+            key: 'site',
             label: '重点区域部署',
-            children: <KeyAreaDeploymentTab />,
+            children: <SiteDeploymentTab />,
           },
         ]}
       />

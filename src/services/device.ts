@@ -5,17 +5,29 @@ type ApiResponse<T> = {
   data: T;
 };
 
+export type DevicePointInfo = {
+  id: number;
+  name: string;
+  pointType: 'checkpoint' | 'site';
+  code?: string;
+  deviceId?: number;
+};
+
 export type DeviceBasicInfoItem = {
   id: string;
   name: string;
-  type: 'AI 边缘计算设备';
-  model: string;
-  vendor: string;
-  serialNumber: string;
-  installDate: string;
-  warrantyDate: string;
+  type: 'AI 边缘计算设备' | string;
+  model?: string;
+  vendor?: string;
+  serialNumber?: string;
+  installDate?: string;
+  warrantyDate?: string;
   status: '在线' | '离线' | '故障' | '维护中';
   remark?: string;
+  pointIds?: number[];
+  points?: DevicePointInfo[];
+  sn?: string;
+  deviceType?: string;
 };
 
 export type DeviceBasicInfoResponse = {
@@ -65,4 +77,48 @@ export async function getDeviceStatus(options?: Record<string, any>) {
     method: 'GET',
     ...(options || {}),
   });
+}
+
+type DevicePayload = {
+  name?: string;
+  sn?: string;
+  model?: string;
+  device_type?: string;
+  ip_address?: string;
+  status?: 'online' | 'offline' | 'fault' | 'maintenance';
+  metadata?: Record<string, any>;
+  point_ids?: (string | number)[];
+};
+
+export async function createDevice(body: DevicePayload, options?: Record<string, any>) {
+  return request<ApiResponse<DeviceBasicInfoItem>>('/api/v1/admin/devices', {
+    method: 'POST',
+    data: { device: body },
+    ...(options || {}),
+  });
+}
+
+export async function updateDevice(
+  id: string,
+  body: DevicePayload,
+  options?: Record<string, any>,
+) {
+  return request<ApiResponse<DeviceBasicInfoItem>>(
+    `/api/v1/admin/devices/${id}`,
+    {
+      method: 'PATCH',
+      data: { device: body },
+      ...(options || {}),
+    },
+  );
+}
+
+export async function deleteDevice(id: string, options?: Record<string, any>) {
+  return request<ApiResponse<Record<string, never>>>(
+    `/api/v1/admin/devices/${id}`,
+    {
+      method: 'DELETE',
+      ...(options || {}),
+    },
+  );
 }

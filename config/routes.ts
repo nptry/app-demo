@@ -36,23 +36,18 @@ export default [
     icon: 'appstore',
     routes: [
       {
-        path: '/device-management/scenario-management',
-        name: 'scenario-management',
-        component: './DeviceManagement/ScenarioManagement',
+        path: '/device-management/point-management',
+        name: 'point-management',
+        component: './DeviceManagement/PointManagement',
       },
       {
         path: '/device-management',
-        redirect: '/device-management/basic-info',
+        redirect: '/device-management/point-management',
       },
       {
         path: '/device-management/basic-info',
         name: 'basic-info',
         component: './DeviceManagement/BasicInfo',
-      },
-      {
-        path: '/device-management/device-deployment',
-        name: 'device-deployment',
-        component: './DeviceManagement/DeviceDeployment',
       },
     ],
   },

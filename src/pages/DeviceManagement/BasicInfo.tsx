@@ -15,16 +15,25 @@ import {
   Space,
   Statistic,
   Table,
+  Tag,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   DeviceBasicInfoItem,
   DeviceBasicInfoResponse,
+  DevicePointInfo,
   DeviceStatusItem,
   DeviceStatusResponse,
 } from '@/services/device';
-import { getDeviceBasicInfo, getDeviceStatus } from '@/services/device';
+import {
+  createDevice,
+  deleteDevice,
+  getDeviceBasicInfo,
+  getDeviceStatus,
+  updateDevice,
+} from '@/services/device';
+import { getPointOptions, type PointOption } from '@/services/point';
 
 const statusBadge: Record<
   DeviceBasicInfoItem['status'],
@@ -49,16 +58,64 @@ const statusColor: Record<
 type FilterState = {
   keyword: string;
   status: DeviceBasicInfoItem['status'] | 'all';
-  type: DeviceBasicInfoItem['type'] | 'all';
+  type: 'all' | string;
 };
 
-const deviceTypeOptions: DeviceBasicInfoItem['type'][] = ['AI 边缘计算设备'];
+type DeviceFormValues = DeviceBasicInfoItem & {
+  deviceType?: string;
+  pointIds?: number[];
+};
+
+const buildDevicePayload = (values: DeviceFormValues) => {
+  const metadataEntries = [['remark', values.remark]].filter(
+    ([, value]) => value !== undefined && value !== '',
+  );
+  const metadata =
+    metadataEntries.length > 0
+      ? Object.fromEntries(metadataEntries)
+      : undefined;
+
+  return {
+    name: values.name,
+    model: values.model,
+    device_type: values.deviceType,
+    sn: values.serialNumber,
+    status: values.status ? mapStatusToApi(values.status) : undefined,
+    metadata,
+    point_ids:
+      values.pointIds && values.pointIds.length > 0
+        ? values.pointIds
+        : undefined,
+  };
+};
+
+const deviceTypeOptions = [
+  { label: 'AI 边缘计算设备', value: 'pangu' },
+  { label: '智能盒子', value: 'box' },
+];
+const deviceTypeLabel: Record<string, string> = {
+  pangu: 'AI 边缘计算设备',
+  box: '智能盒子',
+};
 const deviceStatusOptions: DeviceBasicInfoItem['status'][] = [
   '在线',
   '离线',
   '故障',
   '维护中',
 ];
+const statusToApiMap: Record<
+  DeviceBasicInfoItem['status'],
+  'online' | 'offline' | 'fault' | 'maintenance'
+> = {
+  在线: 'online',
+  离线: 'offline',
+  故障: 'fault',
+  维护中: 'maintenance',
+};
+const mapStatusToApi = (
+  status: DeviceBasicInfoItem['status'],
+): 'online' | 'offline' | 'fault' | 'maintenance' =>
+  statusToApiMap[status] ?? 'offline';
 
 type EnrichedDevice = DeviceBasicInfoItem & {
   realtimeStatus?: DeviceStatusItem['realtimeStatus'];
@@ -67,26 +124,33 @@ type EnrichedDevice = DeviceBasicInfoItem & {
 };
 
 const BasicInfo: React.FC = () => {
-  const { data, loading } = useRequest(getDeviceBasicInfo, {
+  const { data, loading, refresh } = useRequest(getDeviceBasicInfo, {
     formatResult: (
       res: DeviceBasicInfoResponse | { data: DeviceBasicInfoResponse },
     ) =>
       (res as { data?: DeviceBasicInfoResponse })?.data ??
       (res as DeviceBasicInfoResponse),
   });
-  const { data: statusData, loading: statusLoading } = useRequest(
-    getDeviceStatus,
-    {
-      formatResult: (
-        res: DeviceStatusResponse | { data: DeviceStatusResponse },
-      ) =>
-        (res as { data?: DeviceStatusResponse })?.data ??
-        (res as DeviceStatusResponse),
-    },
-  );
+  const {
+    data: statusData,
+    loading: statusLoading,
+    refresh: refreshStatus,
+  } = useRequest(getDeviceStatus, {
+    formatResult: (
+      res: DeviceStatusResponse | { data: DeviceStatusResponse },
+    ) =>
+      (res as { data?: DeviceStatusResponse })?.data ??
+      (res as DeviceStatusResponse),
+  });
+  const {
+    data: pointOptionsData,
+    loading: pointOptionsLoading,
+    refresh: refreshPointOptions,
+  } = useRequest(getPointOptions, {
+    formatResult: (res: PointOption[] | { data: PointOption[] }) =>
+      (res as { data?: PointOption[] })?.data ?? (res as PointOption[]),
+  });
 
-  const [initialized, setInitialized] = useState(false);
-  const [devices, setDevices] = useState<DeviceBasicInfoItem[]>([]);
   const [filters, setFilters] = useState<FilterState>({
     keyword: '',
     status: 'all',
@@ -95,34 +159,30 @@ const BasicInfo: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] =
     useState<DeviceBasicInfoItem | null>(null);
-  const [form] = Form.useForm<DeviceBasicInfoItem>();
+  const [saving, setSaving] = useState(false);
+  const [form] = Form.useForm<DeviceBasicInfoItem & { pointIds?: number[] }>();
   const [filterForm] = Form.useForm();
+  const pointOptions = pointOptionsData ?? [];
+  const pointSelectOptions = useMemo(
+    () =>
+      pointOptions.map((point) => {
+        const baseLabel = point.pointType === 'checkpoint' ? '卡口' : '场所';
+        const suffix = point.deviceName ? ` · 已绑定：${point.deviceName}` : '';
+        return {
+          label: `${point.name}（${baseLabel}${suffix}）`,
+          value: point.id,
+        };
+      }),
+    [pointOptions],
+  );
 
-  useEffect(() => {
-    if (data?.devices && !initialized) {
-      setDevices(data.devices);
-      setInitialized(true);
-    }
-  }, [data?.devices, initialized]);
-
-  const summary = useMemo(() => {
-    if (devices.length) {
-      return {
-        total: devices.length,
-        aiEdge: devices.filter((item) => item.type === 'AI 边缘计算设备')
-          .length,
-        online: devices.filter((item) => item.status === '在线').length,
-      };
-    }
-    return (
-      data?.summary ?? {
-        total: 0,
-        aiEdge: 0,
-        gateways: 0,
-        online: 0,
-      }
-    );
-  }, [data?.summary, devices]);
+  const devices = data?.devices ?? [];
+  const summary = data?.summary ?? {
+    total: 0,
+    aiEdge: 0,
+    gateways: 0,
+    online: 0,
+  };
 
   const statusList = statusData?.statuses ?? [];
   const statusMap = useMemo(() => {
@@ -134,7 +194,8 @@ const BasicInfo: React.FC = () => {
 
   const enrichedDevices = useMemo<EnrichedDevice[]>(() => {
     return devices.map((item) => {
-      const statusInfo = statusMap[item.id];
+      const statusKey = item.serialNumber ?? item.id;
+      const statusInfo = statusKey ? statusMap[statusKey] : undefined;
       return {
         ...item,
         realtimeStatus: statusInfo?.realtimeStatus,
@@ -148,13 +209,16 @@ const BasicInfo: React.FC = () => {
     const keyword = filters.keyword.trim().toLowerCase();
     return enrichedDevices.filter((item) => {
       const matchKeyword = keyword
-        ? [item.name, item.vendor, item.serialNumber]
+        ? [item.name, item.serialNumber]
             .filter(Boolean)
             .some((field) => field?.toLowerCase().includes(keyword))
         : true;
       const matchStatus =
         filters.status === 'all' || item.status === filters.status;
-      const matchType = filters.type === 'all' || item.type === filters.type;
+      const matchType =
+        filters.type === 'all' ||
+        item.deviceType === filters.type ||
+        (!item.deviceType && item.type === filters.type);
       return matchKeyword && matchStatus && matchType;
     });
   }, [enrichedDevices, filters.keyword, filters.status, filters.type]);
@@ -180,7 +244,8 @@ const BasicInfo: React.FC = () => {
     form.resetFields();
     form.setFieldsValue({
       status: '在线',
-      type: 'AI 边缘计算设备',
+      deviceType: 'pangu',
+      pointIds: [],
     });
     setModalVisible(true);
   }, [form]);
@@ -188,35 +253,47 @@ const BasicInfo: React.FC = () => {
   const handleEdit = useCallback(
     (record: DeviceBasicInfoItem) => {
       setEditingRecord(record);
-      form.setFieldsValue(record);
+      form.setFieldsValue({
+        ...record,
+        deviceType: record.deviceType ?? 'pangu',
+        pointIds: record.pointIds ?? [],
+      });
       setModalVisible(true);
     },
     [form],
   );
 
-  const handleDelete = useCallback((id: string) => {
-    setDevices((prev) => prev.filter((item) => item.id !== id));
-    message.success('删除成功');
-  }, []);
+  const handleDelete = useCallback(
+    async (id: string) => {
+      await deleteDevice(id);
+      message.success('删除成功');
+      refresh();
+      refreshStatus();
+      refreshPointOptions();
+    },
+    [refresh, refreshPointOptions, refreshStatus],
+  );
 
   const handleModalOk = useCallback(async () => {
-    const values = await form.validateFields();
-    if (editingRecord) {
-      setDevices((prev) =>
-        prev.map((item) => (item.id === editingRecord.id ? values : item)),
-      );
-      message.success('设备信息已更新');
-    } else {
-      const newDevice: DeviceBasicInfoItem = {
-        ...values,
-        id: values.id?.trim() ? values.id : `DEV-${Date.now()}`,
-        serialNumber: values.serialNumber ?? `SN-${Date.now()}`,
-      };
-      setDevices((prev) => [newDevice, ...prev]);
-      message.success('新建设备成功');
+    const values = (await form.validateFields()) as DeviceFormValues;
+    const payload = buildDevicePayload(values);
+    setSaving(true);
+    try {
+      if (editingRecord) {
+        await updateDevice(editingRecord.id, payload);
+        message.success('设备信息已更新');
+      } else {
+        await createDevice(payload);
+        message.success('新建设备成功');
+      }
+      setModalVisible(false);
+      refresh();
+      refreshStatus();
+      refreshPointOptions();
+    } finally {
+      setSaving(false);
     }
-    setModalVisible(false);
-  }, [editingRecord, form]);
+  }, [editingRecord, form, refresh, refreshPointOptions, refreshStatus]);
 
   const handleModalCancel = useCallback(() => {
     setModalVisible(false);
@@ -233,21 +310,23 @@ const BasicInfo: React.FC = () => {
       },
       {
         title: '设备类型 / 型号',
-        dataIndex: 'type',
+        dataIndex: 'deviceType',
         width: 220,
-        render: (value: DeviceBasicInfoItem['type'], record) => (
-          <div>
-            <div>{value}</div>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>
-              {record.model}
+        render: (_: string, record) => {
+          const label =
+            (record.deviceType && deviceTypeLabel[record.deviceType]) ||
+            record.type;
+          return (
+            <div>
+              <div>{label}</div>
+              <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>
+                {record.model}
+              </div>
             </div>
-          </div>
-        ),
+          );
+        },
       },
-      { title: '供应商', dataIndex: 'vendor', width: 160 },
       { title: '设备序列号', dataIndex: 'serialNumber', width: 200 },
-      { title: '安装时间', dataIndex: 'installDate', width: 140 },
-      { title: '质保期限', dataIndex: 'warrantyDate', width: 140 },
       {
         title: '设备状态',
         dataIndex: 'status',
@@ -264,7 +343,28 @@ const BasicInfo: React.FC = () => {
           value ? <Badge status={statusColor[value]} text={value} /> : '—',
       },
       { title: '最后心跳时间', dataIndex: 'lastHeartbeat', width: 200 },
-      { title: '异常提示', dataIndex: 'exception', width: 220 },
+      {
+        title: '关联点位',
+        dataIndex: 'points',
+        width: 220,
+        render: (points: DevicePointInfo[] | undefined) =>
+          points && points.length ? (
+            <Space size="small" wrap>
+              {points.map((point) => (
+                <Tag
+                  key={point.id}
+                  color={
+                    point.pointType === 'checkpoint' ? 'processing' : 'success'
+                  }
+                >
+                  {point.name}
+                </Tag>
+              ))}
+            </Space>
+          ) : (
+            '未关联'
+          ),
+      },
       { title: '备注', dataIndex: 'remark', width: 200 },
       {
         title: '操作',
@@ -384,10 +484,7 @@ const BasicInfo: React.FC = () => {
               style={{ width: 180 }}
               options={[
                 { value: 'all', label: '全部类型' },
-                ...deviceTypeOptions.map((type) => ({
-                  label: type,
-                  value: type,
-                })),
+                ...deviceTypeOptions,
               ]}
             />
           </Form.Item>
@@ -409,7 +506,7 @@ const BasicInfo: React.FC = () => {
         </Form>
         <Table<EnrichedDevice>
           rowKey="id"
-          loading={(loading && !initialized) || statusLoading}
+          loading={loading || statusLoading}
           columns={columns}
           dataSource={filteredDevices}
           pagination={{ pageSize: 8, showSizeChanger: false }}
@@ -423,6 +520,7 @@ const BasicInfo: React.FC = () => {
         onOk={handleModalOk}
         onCancel={handleModalCancel}
         okText="保存"
+        confirmLoading={saving}
         destroyOnClose
         width={720}
       >
@@ -443,14 +541,11 @@ const BasicInfo: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 label="设备类型"
-                name="type"
+                name="deviceType"
                 rules={[{ required: true, message: '请选择设备类型' }]}
               >
                 <Select
-                  options={deviceTypeOptions.map((type) => ({
-                    label: type,
-                    value: type,
-                  }))}
+                  options={deviceTypeOptions}
                   placeholder="请选择设备类型"
                 />
               </Form.Item>
@@ -467,57 +562,34 @@ const BasicInfo: React.FC = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item
-                label="供应商"
-                name="vendor"
-                rules={[{ required: true, message: '请输入供应商' }]}
-              >
-                <Input placeholder="请输入供应商" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
               <Form.Item label="设备序列号" name="serialNumber">
                 <Input placeholder="请输入设备序列号" />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item
-                label="设备状态"
-                name="status"
-                rules={[{ required: true, message: '请选择设备状态' }]}
-              >
-                <Select
-                  options={deviceStatusOptions.map((status) => ({
-                    label: status,
-                    value: status,
-                  }))}
-                  placeholder="请选择设备状态"
-                />
-              </Form.Item>
-            </Col>
           </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="安装时间"
-                name="installDate"
-                rules={[{ required: true, message: '请输入安装时间' }]}
-              >
-                <Input placeholder="示例：2024-08-01" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="质保期限"
-                name="warrantyDate"
-                rules={[{ required: true, message: '请输入质保期限' }]}
-              >
-                <Input placeholder="示例：2026-08-01" />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item
+            label="设备状态"
+            name="status"
+            rules={[{ required: true, message: '请选择设备状态' }]}
+          >
+            <Select
+              options={deviceStatusOptions.map((status) => ({
+                label: status,
+                value: status,
+              }))}
+              placeholder="请选择设备状态"
+            />
+          </Form.Item>
+          <Form.Item label="关联点位" name="pointIds">
+            <Select
+              mode="multiple"
+              allowClear
+              placeholder="请选择需要绑定的点位"
+              options={pointSelectOptions}
+              loading={pointOptionsLoading}
+              optionFilterProp="label"
+            />
+          </Form.Item>
           <Form.Item label="备注" name="remark">
             <Input.TextArea placeholder="可填写安装说明、维护记录等" rows={3} />
           </Form.Item>

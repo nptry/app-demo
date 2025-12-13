@@ -60,6 +60,7 @@ export default {
   'menu.device-management': '基础信息管理',
   'menu.device-management.basic-info': '设备管理',
   'menu.device-management.point-management': '点位管理',
+  'menu.device-management.region-management': '区域管理',
   'menu.operations-management': '运维管理',
   'menu.operations-management.infrastructure': '基础设施管理',
   'menu.operations-management.resources': '运维资源管理',

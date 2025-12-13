@@ -36,6 +36,11 @@ export default [
     icon: 'appstore',
     routes: [
       {
+        path: '/device-management/region-management',
+        name: 'region-management',
+        component: './DeviceManagement/RegionManagement',
+      },
+      {
         path: '/device-management/point-management',
         name: 'point-management',
         component: './DeviceManagement/PointManagement',

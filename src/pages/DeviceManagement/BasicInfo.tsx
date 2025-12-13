@@ -63,7 +63,7 @@ type FilterState = {
 
 type DeviceFormValues = DeviceBasicInfoItem & {
   deviceType?: string;
-  pointIds?: number[];
+  pointIds?: number;
 };
 
 const buildDevicePayload = (values: DeviceFormValues) => {
@@ -77,15 +77,10 @@ const buildDevicePayload = (values: DeviceFormValues) => {
 
   return {
     name: values.name,
-    model: values.model,
     device_type: values.deviceType,
     sn: values.serialNumber,
-    status: values.status ? mapStatusToApi(values.status) : undefined,
     metadata,
-    point_ids:
-      values.pointIds && values.pointIds.length > 0
-        ? values.pointIds
-        : undefined,
+    point_ids: values.pointIds ? [values.pointIds] : undefined,
   };
 };
 
@@ -243,9 +238,8 @@ const BasicInfo: React.FC = () => {
     setEditingRecord(null);
     form.resetFields();
     form.setFieldsValue({
-      status: '在线',
       deviceType: 'pangu',
-      pointIds: [],
+      pointIds: undefined,
     });
     setModalVisible(true);
   }, [form]);
@@ -256,7 +250,10 @@ const BasicInfo: React.FC = () => {
       form.setFieldsValue({
         ...record,
         deviceType: record.deviceType ?? 'pangu',
-        pointIds: record.pointIds ?? [],
+        pointIds:
+          record.pointIds && record.pointIds.length > 0
+            ? record.pointIds[0]
+            : undefined,
       });
       setModalVisible(true);
     },
@@ -551,38 +548,11 @@ const BasicInfo: React.FC = () => {
               </Form.Item>
             </Col>
           </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="设备型号"
-                name="model"
-                rules={[{ required: true, message: '请输入型号' }]}
-              >
-                <Input placeholder="请输入设备型号" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="设备序列号" name="serialNumber">
-                <Input placeholder="请输入设备序列号" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item
-            label="设备状态"
-            name="status"
-            rules={[{ required: true, message: '请选择设备状态' }]}
-          >
-            <Select
-              options={deviceStatusOptions.map((status) => ({
-                label: status,
-                value: status,
-              }))}
-              placeholder="请选择设备状态"
-            />
+          <Form.Item label="设备序列号" name="serialNumber">
+            <Input placeholder="请输入设备序列号" />
           </Form.Item>
           <Form.Item label="关联点位" name="pointIds">
             <Select
-              mode="multiple"
               allowClear
               placeholder="请选择需要绑定的点位"
               options={pointSelectOptions}

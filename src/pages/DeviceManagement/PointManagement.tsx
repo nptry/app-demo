@@ -43,9 +43,11 @@ import {
   updateCheckpointPoint,
   updateSitePoint,
 } from '@/services/point';
+import { getRegions } from '@/services/region';
 
 type TabKey = 'checkpoint' | 'site';
 type DeviceOption = { label: string; value: string };
+type RegionOption = { label: string; value: string };
 
 const deploymentStatusOptions = ['正常运行', '待调试', '已拆除'];
 const deviceTypeOptions = ['高清数字摄像机', 'AI 边缘计算设备'];
@@ -69,7 +71,23 @@ const useDeviceOptions = (): DeviceOption[] => {
   }, [data?.devices]);
 };
 
+const useRegionOptions = (type: 'checkpoint' | 'site'): RegionOption[] => {
+  const { data } = useRequest(() => getRegions({ region_type: type }), {
+    formatResult: (res) => res.data,
+  });
+
+  return useMemo(() => {
+    return (
+      data?.regions?.map((region) => ({
+        label: region.name,
+        value: region.id,
+      })) ?? []
+    );
+  }, [data?.regions]);
+};
+
 const CheckpointTab: React.FC = () => {
+  const regionOptions = useRegionOptions('checkpoint');
   const { data, loading, refresh } = useRequest(getCheckpointPoints, {
     formatResult: (
       res: CheckpointPointResponse | { data: CheckpointPointResponse },
@@ -190,10 +208,22 @@ const CheckpointTab: React.FC = () => {
       { title: '所属区域', dataIndex: 'region', width: 200 },
       {
         title: '关联设备',
-        dataIndex: 'deviceName',
+        dataIndex: 'devices',
         width: 220,
-        render: (value: string, record) =>
-          value ? `${value} (${record.deviceId})` : '未关联',
+        render: (devices: { id: string; name: string }[], record) => {
+          if (devices && devices.length > 0) {
+            return (
+              <Space direction="vertical" size={0}>
+                {devices.map((d) => (
+                  <div key={d.id}>{`${d.name} (${d.id})`}</div>
+                ))}
+              </Space>
+            );
+          }
+          return record.deviceName
+            ? `${record.deviceName} (${record.deviceId})`
+            : '未关联';
+        },
       },
       {
         title: '位置',
@@ -320,9 +350,19 @@ const CheckpointTab: React.FC = () => {
               <Form.Item
                 label="所属区域"
                 name="region"
-                rules={[{ required: true, message: '请输入所属区域' }]}
+                rules={[{ required: true, message: '请选择所属区域' }]}
               >
-                <Input placeholder="请输入所属区域" />
+                <Select
+                  options={regionOptions}
+                  placeholder="请选择所属区域"
+                  allowClear
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.label ?? '')
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -344,6 +384,7 @@ const CheckpointTab: React.FC = () => {
 const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
   deviceOptions,
 }) => {
+  const regionOptions = useRegionOptions('site');
   const { data, loading, refresh } = useRequest(getSitePoints, {
     formatResult: (res: SitePointResponse | { data: SitePointResponse }) =>
       (res as { data?: SitePointResponse })?.data ?? (res as SitePointResponse),
@@ -445,10 +486,22 @@ const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
       { title: '所属区域', dataIndex: 'region', width: 200 },
       {
         title: '关联设备',
-        dataIndex: 'deviceName',
+        dataIndex: 'devices',
         width: 220,
-        render: (value: string, record) =>
-          value ? `${value} (${record.deviceId})` : '未关联',
+        render: (devices: { id: string; name: string }[], record) => {
+          if (devices && devices.length > 0) {
+            return (
+              <Space direction="vertical" size={0}>
+                {devices.map((d) => (
+                  <div key={d.id}>{`${d.name} (${d.id})`}</div>
+                ))}
+              </Space>
+            );
+          }
+          return record.deviceName
+            ? `${record.deviceName} (${record.deviceId})`
+            : '未关联';
+        },
       },
       {
         title: '位置',
@@ -568,9 +621,19 @@ const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
               <Form.Item
                 label="所属区域"
                 name="region"
-                rules={[{ required: true, message: '请输入所属区域' }]}
+                rules={[{ required: true, message: '请选择所属区域' }]}
               >
-                <Input placeholder="请输入所属区域" />
+                <Select
+                  options={regionOptions}
+                  placeholder="请选择所属区域"
+                  allowClear
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.label ?? '')
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                />
               </Form.Item>
             </Col>
             <Col span={12}>

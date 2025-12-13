@@ -10,6 +10,7 @@ export type CheckpointPoint = {
   name: string;
   checkpointTypes: string[];
   region?: string;
+  regionId?: string;
   address?: string;
   coordinates?: string;
   laneCount?: number;
@@ -23,6 +24,7 @@ export type CheckpointPoint = {
   status: '启用' | '禁用';
   deviceId?: string;
   deviceName?: string;
+  devices?: { id: string; name: string }[];
   deploymentDeviceType?: string;
   lensFocal?: string;
   installDate?: string;
@@ -98,6 +100,7 @@ export type SitePoint = {
   name: string;
   siteType: string;
   region?: string;
+  regionId?: string;
   address?: string;
   coordinates?: string;
   areaSize?: number;
@@ -113,6 +116,7 @@ export type SitePoint = {
   status: '启用' | '禁用';
   deviceId?: string;
   deviceName?: string;
+  devices?: { id: string; name: string }[];
   deploymentStatus?: string;
   deploymentResult?: string;
   deploymentDeviceType?: string;
@@ -129,13 +133,10 @@ export type SitePointResponse = {
 };
 
 export async function getSitePoints(options?: Record<string, any>) {
-  return request<ApiResponse<SitePointResponse>>(
-    '/api/v1/admin/points/sites',
-    {
-      method: 'GET',
-      ...(options || {}),
-    },
-  );
+  return request<ApiResponse<SitePointResponse>>('/api/v1/admin/points/sites', {
+    method: 'GET',
+    ...(options || {}),
+  });
 }
 
 export async function createSitePoint(

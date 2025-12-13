@@ -1,4 +1,3 @@
-
 import { request } from '@umijs/max';
 
 type ApiResponse<T> = {
@@ -83,7 +82,7 @@ export type DeploymentItem = {
   siteName: string;
   zoneCode: string;
   zoneArea: number;
-  deviceType: '高清数字摄像机' | 'AI 边缘计算设备';
+  deviceType: '智能盒子';
   deviceId: string;
   deviceName: string;
   position: string;
@@ -98,10 +97,13 @@ export type KeyAreaDeploymentResponse = {
 };
 
 export async function getKeyAreaDeployments(options?: Record<string, any>) {
-  return request<ApiResponse<KeyAreaDeploymentResponse>>('/api/v1/admin/site/deployments', {
-    method: 'GET',
-    ...(options || {}),
-  });
+  return request<ApiResponse<KeyAreaDeploymentResponse>>(
+    '/api/v1/admin/site/deployments',
+    {
+      method: 'GET',
+      ...(options || {}),
+    },
+  );
 }
 
 export const getSiteDeployments = getKeyAreaDeployments;
@@ -110,11 +112,14 @@ export async function createSiteDeployment(
   body: Partial<DeploymentItem>,
   options?: Record<string, any>,
 ) {
-  return request<ApiResponse<DeploymentItem>>('/api/v1/admin/site/deployments', {
-    method: 'POST',
-    data: body,
-    ...(options || {}),
-  });
+  return request<ApiResponse<DeploymentItem>>(
+    '/api/v1/admin/site/deployments',
+    {
+      method: 'POST',
+      data: body,
+      ...(options || {}),
+    },
+  );
 }
 
 export async function updateSiteDeployment(

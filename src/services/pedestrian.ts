@@ -41,7 +41,7 @@ export type ChannelDeploymentItem = {
   id: string;
   channelId: string;
   channelName: string;
-  deviceType: '高清数字摄像机' | 'AI 边缘计算设备';
+  deviceType: '智能盒子';
   deviceId: string;
   deviceName: string;
   position: string;
@@ -58,10 +58,13 @@ export type ChannelDeploymentResponse = {
 };
 
 export async function getChannelDeployments(options?: Record<string, any>) {
-  return request<ApiResponse<ChannelDeploymentResponse>>('/api/pedestrian/deployments', {
-    method: 'GET',
-    ...(options || {}),
-  });
+  return request<ApiResponse<ChannelDeploymentResponse>>(
+    '/api/pedestrian/deployments',
+    {
+      method: 'GET',
+      ...(options || {}),
+    },
+  );
 }
 
 export type KeyPersonRecord = {
@@ -121,10 +124,13 @@ export type TrajectoryResponse = {
 };
 
 export async function getChannelTrajectories(options?: Record<string, any>) {
-  return request<ApiResponse<TrajectoryResponse>>('/api/pedestrian/trajectories', {
-    method: 'GET',
-    ...(options || {}),
-  });
+  return request<ApiResponse<TrajectoryResponse>>(
+    '/api/pedestrian/trajectories',
+    {
+      method: 'GET',
+      ...(options || {}),
+    },
+  );
 }
 
 export type CompanionMember = {

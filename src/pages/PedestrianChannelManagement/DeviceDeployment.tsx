@@ -29,10 +29,7 @@ type FilterState = {
   deviceType: ChannelDeploymentItem['deviceType'] | 'all';
 };
 
-const deviceTypeOptions: ChannelDeploymentItem['deviceType'][] = [
-  '高清数字摄像机',
-  'AI 边缘计算设备',
-];
+const deviceTypeOptions: ChannelDeploymentItem['deviceType'][] = ['智能盒子'];
 
 const DeviceDeployment: React.FC = () => {
   const { data, loading } = useRequest(getChannelDeployments, {
@@ -95,7 +92,7 @@ const DeviceDeployment: React.FC = () => {
     setEditingRecord(null);
     form.resetFields();
     form.setFieldsValue({
-      deviceType: '高清数字摄像机',
+      deviceType: '智能盒子',
     });
     setModalVisible(true);
   }, [form]);

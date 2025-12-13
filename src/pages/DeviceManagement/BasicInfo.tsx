@@ -84,12 +84,8 @@ const buildDevicePayload = (values: DeviceFormValues) => {
   };
 };
 
-const deviceTypeOptions = [
-  { label: 'AI 边缘计算设备', value: 'pangu' },
-  { label: '智能盒子', value: 'box' },
-];
+const deviceTypeOptions = [{ label: '智能盒子', value: 'box' }];
 const deviceTypeLabel: Record<string, string> = {
-  pangu: 'AI 边缘计算设备',
   box: '智能盒子',
 };
 const deviceStatusOptions: DeviceBasicInfoItem['status'][] = [
@@ -238,7 +234,7 @@ const BasicInfo: React.FC = () => {
     setEditingRecord(null);
     form.resetFields();
     form.setFieldsValue({
-      deviceType: 'pangu',
+      deviceType: 'box',
       pointIds: undefined,
     });
     setModalVisible(true);
@@ -249,7 +245,7 @@ const BasicInfo: React.FC = () => {
       setEditingRecord(record);
       form.setFieldsValue({
         ...record,
-        deviceType: record.deviceType ?? 'pangu',
+        deviceType: record.deviceType ?? 'box',
         pointIds:
           record.pointIds && record.pointIds.length > 0
             ? record.pointIds[0]

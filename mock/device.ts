@@ -11,7 +11,7 @@ const basicInfoData = {
     {
       id: 'DEV-AIE-001',
       name: 'AI 边缘节点-拉各斯 CBD',
-      type: 'AI 边缘计算设备',
+      type: '智能盒子',
       model: 'AIE-4000',
       vendor: 'Didikon',
       serialNumber: 'AIE4000-202405-001',
@@ -23,7 +23,7 @@ const basicInfoData = {
     {
       id: 'DEV-AIE-004',
       name: 'AI 边缘节点-港口堆场',
-      type: 'AI 边缘计算设备',
+      type: '智能盒子',
       model: 'AIE-4200',
       vendor: 'Didikon',
       serialNumber: 'AIE4200-202405-004',
@@ -34,7 +34,7 @@ const basicInfoData = {
     {
       id: 'DEV-AIE-006',
       name: 'AI 边缘节点-维多利亚路口',
-      type: 'AI 边缘计算设备',
+      type: '智能盒子',
       model: 'AIE-4200',
       vendor: 'Didikon',
       serialNumber: 'AIE4200-202405-006',
@@ -46,7 +46,7 @@ const basicInfoData = {
     {
       id: 'DEV-AIE-010',
       name: 'AI 边缘节点-人行通道一期',
-      type: 'AI 边缘计算设备',
+      type: '智能盒子',
       model: 'AIE-3800',
       vendor: 'Didikon',
       serialNumber: 'AIE3800-202403-010',
@@ -57,7 +57,7 @@ const basicInfoData = {
     {
       id: 'DEV-AIE-012',
       name: 'AI 边缘节点-商贸区北侧',
-      type: 'AI 边缘计算设备',
+      type: '智能盒子',
       model: 'AIE-4000',
       vendor: 'Didikon',
       serialNumber: 'AIE4000-202404-012',
@@ -79,7 +79,7 @@ const statusData = {
     {
       deviceId: 'DEV-AIE-001',
       deviceName: 'AI 边缘节点-拉各斯 CBD',
-      type: 'AI 边缘计算设备',
+      type: '智能盒子',
       realtimeStatus: '在线',
       cpuUsage: 58,
       memoryUsage: 61,
@@ -89,7 +89,7 @@ const statusData = {
     {
       deviceId: 'DEV-AIE-006',
       deviceName: 'AI 边缘节点-维多利亚路口',
-      type: 'AI 边缘计算设备',
+      type: '智能盒子',
       realtimeStatus: '维护中',
       cpuUsage: 32,
       memoryUsage: 40,
@@ -100,7 +100,7 @@ const statusData = {
     {
       deviceId: 'DEV-AIE-010',
       deviceName: 'AI 边缘节点-人行通道一期',
-      type: 'AI 边缘计算设备',
+      type: '智能盒子',
       realtimeStatus: '在线',
       cpuUsage: 63,
       memoryUsage: 58,

@@ -50,7 +50,7 @@ type DeviceOption = { label: string; value: string };
 type RegionOption = { label: string; value: string };
 
 const deploymentStatusOptions = ['正常运行', '待调试', '已拆除'];
-const deviceTypeOptions = ['高清数字摄像机', 'AI 边缘计算设备'];
+const deviceTypeOptions = ['智能盒子'];
 
 const useDeviceOptions = (): DeviceOption[] => {
   const { data } = useRequest(getDeviceBasicInfo, {

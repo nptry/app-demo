@@ -16,7 +16,7 @@ export type DevicePointInfo = {
 export type DeviceBasicInfoItem = {
   id: string;
   name: string;
-  type: 'AI 边缘计算设备' | string;
+  type: '智能盒子' | string;
   model?: string;
   vendor?: string;
   serialNumber?: string;
@@ -50,7 +50,7 @@ export type DeviceStatusMetrics = {
 export type DeviceStatusItem = {
   deviceId: string;
   deviceName: string;
-  type: 'AI 边缘计算设备';
+  type: '智能盒子';
   realtimeStatus: '在线' | '离线' | '故障' | '维护中';
   cpuUsage?: number;
   memoryUsage?: number;
@@ -66,17 +66,23 @@ export type DeviceStatusResponse = {
 };
 
 export async function getDeviceBasicInfo(options?: Record<string, any>) {
-  return request<ApiResponse<DeviceBasicInfoResponse>>('/api/v1/admin/devices/basic-info', {
-    method: 'GET',
-    ...(options || {}),
-  });
+  return request<ApiResponse<DeviceBasicInfoResponse>>(
+    '/api/v1/admin/devices/basic-info',
+    {
+      method: 'GET',
+      ...(options || {}),
+    },
+  );
 }
 
 export async function getDeviceStatus(options?: Record<string, any>) {
-  return request<ApiResponse<DeviceStatusResponse>>('/api/v1/admin/devices/status', {
-    method: 'GET',
-    ...(options || {}),
-  });
+  return request<ApiResponse<DeviceStatusResponse>>(
+    '/api/v1/admin/devices/status',
+    {
+      method: 'GET',
+      ...(options || {}),
+    },
+  );
 }
 
 type DevicePayload = {
@@ -90,7 +96,10 @@ type DevicePayload = {
   point_ids?: (string | number)[];
 };
 
-export async function createDevice(body: DevicePayload, options?: Record<string, any>) {
+export async function createDevice(
+  body: DevicePayload,
+  options?: Record<string, any>,
+) {
   return request<ApiResponse<DeviceBasicInfoItem>>('/api/v1/admin/devices', {
     method: 'POST',
     data: { device: body },

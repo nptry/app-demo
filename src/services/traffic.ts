@@ -31,10 +31,13 @@ export type TrafficCheckpointResponse = {
 };
 
 export async function getTrafficCheckpoints(options?: Record<string, any>) {
-  return request<ApiResponse<TrafficCheckpointResponse>>('/api/v1/admin/traffic/checkpoints', {
-    method: 'GET',
-    ...(options || {}),
-  });
+  return request<ApiResponse<TrafficCheckpointResponse>>(
+    '/api/v1/admin/traffic/checkpoints',
+    {
+      method: 'GET',
+      ...(options || {}),
+    },
+  );
 }
 
 export async function createTrafficCheckpoint(
@@ -83,7 +86,7 @@ export type TrafficDeploymentItem = {
   id: string;
   checkpointId: string;
   checkpointName: string;
-  deviceType: '高清数字摄像机' | 'AI 边缘计算设备';
+  deviceType: '智能盒子';
   deviceId: string;
   deviceName: string;
   lane: string;
@@ -100,10 +103,13 @@ export type TrafficDeploymentResponse = {
 };
 
 export async function getTrafficDeployments(options?: Record<string, any>) {
-  return request<ApiResponse<TrafficDeploymentResponse>>('/api/v1/admin/traffic/deployments', {
-    method: 'GET',
-    ...(options || {}),
-  });
+  return request<ApiResponse<TrafficDeploymentResponse>>(
+    '/api/v1/admin/traffic/deployments',
+    {
+      method: 'GET',
+      ...(options || {}),
+    },
+  );
 }
 
 export async function createTrafficDeployment(
@@ -170,10 +176,13 @@ export type LicenseRecordResponse = {
 };
 
 export async function getLicenseRecords(options?: Record<string, any>) {
-  return request<ApiResponse<LicenseRecordResponse>>('/api/traffic/license-records', {
-    method: 'GET',
-    ...(options || {}),
-  });
+  return request<ApiResponse<LicenseRecordResponse>>(
+    '/api/traffic/license-records',
+    {
+      method: 'GET',
+      ...(options || {}),
+    },
+  );
 }
 
 export type TrafficMonitoringRecord = {
@@ -198,10 +207,13 @@ export type TrafficMonitoringResponse = {
 };
 
 export async function getTrafficMonitoring(options?: Record<string, any>) {
-  return request<ApiResponse<TrafficMonitoringResponse>>('/api/traffic/monitoring', {
-    method: 'GET',
-    ...(options || {}),
-  });
+  return request<ApiResponse<TrafficMonitoringResponse>>(
+    '/api/traffic/monitoring',
+    {
+      method: 'GET',
+      ...(options || {}),
+    },
+  );
 }
 
 export type RedLightRecord = {
@@ -219,7 +231,11 @@ export type RedLightRecord = {
   alarm: {
     triggered: boolean;
     receiver?: string;
-    status?: '未处理' | '处理中（录入执法系统）' | '已处理（生成罚单）' | '误报';
+    status?:
+      | '未处理'
+      | '处理中（录入执法系统）'
+      | '已处理（生成罚单）'
+      | '误报';
     remark?: string;
   };
   deviceId: string;
@@ -279,8 +295,11 @@ export async function getRetrogradeViolations(options?: Record<string, any>) {
 }
 
 export async function getParkingViolations(options?: Record<string, any>) {
-  return request<ApiResponse<ParkingViolationRecord[]>>('/api/traffic/parking', {
-    method: 'GET',
-    ...(options || {}),
-  });
+  return request<ApiResponse<ParkingViolationRecord[]>>(
+    '/api/traffic/parking',
+    {
+      method: 'GET',
+      ...(options || {}),
+    },
+  );
 }

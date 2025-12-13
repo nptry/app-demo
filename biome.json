@@ -8,7 +8,6 @@
       "!**/.umi-production",
       "!**/.umi-test",
       "!**/.umi-test-production",
-      "!**/src/services",
       "!**/mock",
       "!**/dist",
       "!**/server",

@@ -1,4 +1,4 @@
-// @ts-ignore
+// @ts-expect-error
 /* eslint-disable */
 import { request } from '@umijs/max';
 
@@ -31,7 +31,7 @@ export async function outLogin(options?: { [key: string]: any }) {
   }
   try {
     await request<Record<string, any>>('/api/v1/admin/auth/logout', {
-      method: 'DELETE',
+      method: 'POST',
       ...(options || {}),
     });
   } finally {
@@ -42,7 +42,10 @@ export async function outLogin(options?: { [key: string]: any }) {
 }
 
 /** 登录接口 POST /api/login/account */
-export async function login(body: API.LoginParams, options?: { [key: string]: any }) {
+export async function login(
+  body: API.LoginParams,
+  options?: { [key: string]: any },
+) {
   try {
     const res = await request<{
       success: boolean;

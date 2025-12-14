@@ -1,7 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
-import type { ColumnsType } from 'antd/es/table';
+import { useRequest } from '@umijs/max';
 import {
   Button,
   Card,
@@ -10,6 +8,7 @@ import {
   Input,
   List,
   Modal,
+  message,
   Popconfirm,
   Row,
   Select,
@@ -17,9 +16,13 @@ import {
   Statistic,
   Table,
   Tag,
-  message,
 } from 'antd';
-import type { PermissionItem, PermissionResponse } from '@/services/userManagement';
+import type { ColumnsType } from 'antd/es/table';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import type {
+  PermissionItem,
+  PermissionResponse,
+} from '@/services/userManagement';
 import { getPermissions } from '@/services/userManagement';
 
 const typeColor: Record<PermissionItem['type'], string> = {
@@ -44,14 +47,21 @@ const statusOptions: PermissionItem['status'][] = ['启用', '禁用'];
 const Permission: React.FC = () => {
   const { data, loading } = useRequest(getPermissions, {
     formatResult: (res: PermissionResponse | { data: PermissionResponse }) =>
-      (res as { data?: PermissionResponse })?.data ?? (res as PermissionResponse),
+      (res as { data?: PermissionResponse })?.data ??
+      (res as PermissionResponse),
   });
 
   const [initialized, setInitialized] = useState(false);
   const [permissions, setPermissions] = useState<PermissionItem[]>([]);
-  const [filters, setFilters] = useState<FilterState>({ keyword: '', type: 'all', status: 'all' });
+  const [filters, setFilters] = useState<FilterState>({
+    keyword: '',
+    type: 'all',
+    status: 'all',
+  });
   const [modalVisible, setModalVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<PermissionItem | null>(null);
+  const [editingRecord, setEditingRecord] = useState<PermissionItem | null>(
+    null,
+  );
   const [form] = Form.useForm<PermissionItem>();
   const [filterForm] = Form.useForm();
 
@@ -66,7 +76,8 @@ const Permission: React.FC = () => {
     if (permissions.length) {
       return {
         total: permissions.length,
-        management: permissions.filter((item) => item.type === '管理权限').length,
+        management: permissions.filter((item) => item.type === '管理权限')
+          .length,
         usage: permissions.filter((item) => item.type === '使用权限').length,
         disabled: permissions.filter((item) => item.status === '禁用').length,
       };
@@ -90,7 +101,8 @@ const Permission: React.FC = () => {
             .some((field) => field?.toLowerCase().includes(keyword))
         : true;
       const matchType = filters.type === 'all' || item.type === filters.type;
-      const matchStatus = filters.status === 'all' || item.status === filters.status;
+      const matchStatus =
+        filters.status === 'all' || item.status === filters.status;
       return matchKeyword && matchType && matchStatus;
     });
   }, [filters.keyword, filters.status, filters.type, permissions]);
@@ -139,7 +151,11 @@ const Permission: React.FC = () => {
     const values = await form.validateFields();
     const modules = values.modules?.length ? values.modules : [];
     if (editingRecord) {
-      setPermissions((prev) => prev.map((item) => (item.id === editingRecord.id ? { ...values, modules } : item)));
+      setPermissions((prev) =>
+        prev.map((item) =>
+          item.id === editingRecord.id ? { ...values, modules } : item,
+        ),
+      );
       message.success('权限已更新');
     } else {
       const newItem: PermissionItem = {
@@ -168,7 +184,9 @@ const Permission: React.FC = () => {
         title: '权限类型',
         dataIndex: 'type',
         width: 140,
-        render: (value: PermissionItem['type']) => <Tag color={typeColor[value]}>{value}</Tag>,
+        render: (value: PermissionItem['type']) => (
+          <Tag color={typeColor[value]}>{value}</Tag>
+        ),
       },
       {
         title: '关联功能模块',
@@ -184,7 +202,9 @@ const Permission: React.FC = () => {
         title: '权限状态',
         dataIndex: 'status',
         width: 120,
-        render: (value: PermissionItem['status']) => <Tag color={statusColor[value]}>{value}</Tag>,
+        render: (value: PermissionItem['status']) => (
+          <Tag color={statusColor[value]}>{value}</Tag>
+        ),
       },
       { title: '创建时间', dataIndex: 'createdAt', width: 180 },
       { title: '最后修改人', dataIndex: 'updatedBy', width: 160 },
@@ -198,7 +218,12 @@ const Permission: React.FC = () => {
             <Button type="link" onClick={() => handleEdit(record)}>
               编辑
             </Button>
-            <Popconfirm title="确认删除该权限？" okText="确认" cancelText="取消" onConfirm={() => handleDelete(record.id)}>
+            <Popconfirm
+              title="确认删除该权限？"
+              okText="确认"
+              cancelText="取消"
+              onConfirm={() => handleDelete(record.id)}
+            >
               <Button type="link" danger>
                 删除
               </Button>
@@ -220,7 +245,11 @@ const Permission: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="管理权限" value={summary.management} suffix="项" />
+            <Statistic
+              title="管理权限"
+              value={summary.management}
+              suffix="项"
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
@@ -230,7 +259,12 @@ const Permission: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="禁用权限" value={summary.disabled} suffix="项" valueStyle={{ color: '#f5222d' }} />
+            <Statistic
+              title="禁用权限"
+              value={summary.disabled}
+              suffix="项"
+              valueStyle={{ color: '#f5222d' }}
+            />
           </Card>
         </Col>
       </Row>
@@ -253,18 +287,31 @@ const Permission: React.FC = () => {
           style={{ marginBottom: 16 }}
         >
           <Form.Item name="keyword">
-            <Input allowClear placeholder="搜索名称 / 模块 / 负责人" style={{ width: 260 }} />
+            <Input
+              allowClear
+              placeholder="搜索名称 / 模块 / 负责人"
+              style={{ width: 260 }}
+            />
           </Form.Item>
           <Form.Item name="type">
             <Select
               style={{ width: 180 }}
-              options={[{ value: 'all', label: '全部类型' }, ...typeOptions.map((type) => ({ label: type, value: type }))]}
+              options={[
+                { value: 'all', label: '全部类型' },
+                ...typeOptions.map((type) => ({ label: type, value: type })),
+              ]}
             />
           </Form.Item>
           <Form.Item name="status">
             <Select
               style={{ width: 160 }}
-              options={[{ value: 'all', label: '全部状态' }, ...statusOptions.map((status) => ({ label: status, value: status }))]}
+              options={[
+                { value: 'all', label: '全部状态' },
+                ...statusOptions.map((status) => ({
+                  label: status,
+                  value: status,
+                })),
+              ]}
             />
           </Form.Item>
           <Form.Item>
@@ -279,44 +326,6 @@ const Permission: React.FC = () => {
           pagination={{ pageSize: 6, showSizeChanger: false }}
           scroll={{ x: 1400 }}
         />
-      </Card>
-
-      <Card title="权限快照" style={{ marginTop: 24 }}>
-        <List
-          loading={loading && !initialized}
-          dataSource={filteredPermissions}
-          renderItem={(item) => (
-            <List.Item key={item.id}>
-              <List.Item.Meta
-                title={
-                  <span>
-                    {item.name}
-                    <Tag color={typeColor[item.type]} style={{ marginLeft: 8 }}>
-                      {item.type}
-                    </Tag>
-                  </span>
-                }
-                description={
-                  <span>
-                    权限 ID：{item.id} · 创建时间：{item.createdAt}
-                  </span>
-                }
-              />
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ marginBottom: 8 }}>
-                  {item.modules.map((module) => (
-                    <Tag key={module} color="purple">
-                      {module}
-                    </Tag>
-                  ))}
-                </div>
-                <Tag color={statusColor[item.status]}>{item.status}</Tag>
-                <span style={{ marginLeft: 12, color: 'rgba(0,0,0,0.45)' }}>负责人：{item.updatedBy}</span>
-              </div>
-            </List.Item>
-          )}
-        />
-        {!permissions.length && <div style={{ textAlign: 'center', padding: 16 }}>暂无权限数据</div>}
       </Card>
 
       <Modal
@@ -338,26 +347,56 @@ const Permission: React.FC = () => {
               <Input placeholder="不填写自动生成" />
             </Form.Item>
           )}
-          <Form.Item label="权限名称" name="name" rules={[{ required: true, message: '请输入权限名称' }]}>
+          <Form.Item
+            label="权限名称"
+            name="name"
+            rules={[{ required: true, message: '请输入权限名称' }]}
+          >
             <Input placeholder="请输入权限名称" />
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="权限类型" name="type" rules={[{ required: true, message: '请选择权限类型' }]}>
-                <Select options={typeOptions.map((type) => ({ label: type, value: type }))} placeholder="请选择类型" />
+              <Form.Item
+                label="权限类型"
+                name="type"
+                rules={[{ required: true, message: '请选择权限类型' }]}
+              >
+                <Select
+                  options={typeOptions.map((type) => ({
+                    label: type,
+                    value: type,
+                  }))}
+                  placeholder="请选择类型"
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="权限状态" name="status" rules={[{ required: true, message: '请选择权限状态' }]}>
-                <Select options={statusOptions.map((status) => ({ label: status, value: status }))} placeholder="请选择状态" />
+              <Form.Item
+                label="权限状态"
+                name="status"
+                rules={[{ required: true, message: '请选择权限状态' }]}
+              >
+                <Select
+                  options={statusOptions.map((status) => ({
+                    label: status,
+                    value: status,
+                  }))}
+                  placeholder="请选择状态"
+                />
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item label="关联功能模块" name="modules" rules={[{ required: true, message: '请选择关联模块' }]}>
+          <Form.Item
+            label="关联功能模块"
+            name="modules"
+            rules={[{ required: true, message: '请选择关联模块' }]}
+          >
             <Select
               mode="tags"
               placeholder="输入或选择功能模块"
-              options={Array.from(new Set(permissions.flatMap((item) => item.modules))).map((module) => ({
+              options={Array.from(
+                new Set(permissions.flatMap((item) => item.modules)),
+              ).map((module) => ({
                 label: module,
                 value: module,
               }))}
@@ -365,12 +404,20 @@ const Permission: React.FC = () => {
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="创建时间" name="createdAt" rules={[{ required: true, message: '请输入创建时间' }]}>
+              <Form.Item
+                label="创建时间"
+                name="createdAt"
+                rules={[{ required: true, message: '请输入创建时间' }]}
+              >
                 <Input placeholder="示例：2024-08-01 10:00" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="最后修改人" name="updatedBy" rules={[{ required: true, message: '请输入负责人' }]}>
+              <Form.Item
+                label="最后修改人"
+                name="updatedBy"
+                rules={[{ required: true, message: '请输入负责人' }]}
+              >
                 <Input placeholder="请输入负责人" />
               </Form.Item>
             </Col>

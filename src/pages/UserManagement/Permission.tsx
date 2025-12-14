@@ -13,7 +13,6 @@ import {
   Row,
   Select,
   Space,
-  Statistic,
   Table,
   Tag,
 } from 'antd';
@@ -30,19 +29,12 @@ const typeColor: Record<PermissionItem['type'], string> = {
   使用权限: 'blue',
 };
 
-const statusColor: Record<PermissionItem['status'], string> = {
-  启用: 'green',
-  禁用: 'red',
-};
-
 type FilterState = {
   keyword: string;
   type: PermissionItem['type'] | 'all';
-  status: PermissionItem['status'] | 'all';
 };
 
 const typeOptions: PermissionItem['type'][] = ['管理权限', '使用权限'];
-const statusOptions: PermissionItem['status'][] = ['启用', '禁用'];
 
 const Permission: React.FC = () => {
   const { data, loading } = useRequest(getPermissions, {
@@ -56,7 +48,6 @@ const Permission: React.FC = () => {
   const [filters, setFilters] = useState<FilterState>({
     keyword: '',
     type: 'all',
-    status: 'all',
   });
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<PermissionItem | null>(
@@ -72,47 +63,24 @@ const Permission: React.FC = () => {
     }
   }, [data?.permissions, initialized]);
 
-  const summary = useMemo(() => {
-    if (permissions.length) {
-      return {
-        total: permissions.length,
-        management: permissions.filter((item) => item.type === '管理权限')
-          .length,
-        usage: permissions.filter((item) => item.type === '使用权限').length,
-        disabled: permissions.filter((item) => item.status === '禁用').length,
-      };
-    }
-    return (
-      data?.summary ?? {
-        total: 0,
-        management: 0,
-        usage: 0,
-        disabled: 0,
-      }
-    );
-  }, [data?.summary, permissions]);
-
   const filteredPermissions = useMemo(() => {
     const keyword = filters.keyword.trim().toLowerCase();
     return permissions.filter((item) => {
       const matchKeyword = keyword
-        ? [item.name, item.updatedBy, ...(item.modules ?? [])]
+        ? [item.name, ...(item.modules ?? [])]
             .filter(Boolean)
             .some((field) => field?.toLowerCase().includes(keyword))
         : true;
       const matchType = filters.type === 'all' || item.type === filters.type;
-      const matchStatus =
-        filters.status === 'all' || item.status === filters.status;
-      return matchKeyword && matchType && matchStatus;
+      return matchKeyword && matchType;
     });
-  }, [filters.keyword, filters.status, filters.type, permissions]);
+  }, [filters.keyword, filters.type, permissions]);
 
   const handleFilterChange = useCallback(
     (_: unknown, values: Record<string, string>) => {
       setFilters({
         keyword: values.keyword ?? '',
         type: (values.type ?? 'all') as FilterState['type'],
-        status: (values.status ?? 'all') as FilterState['status'],
       });
     },
     [],
@@ -120,7 +88,7 @@ const Permission: React.FC = () => {
 
   const handleFilterReset = useCallback(() => {
     filterForm.resetFields();
-    setFilters({ keyword: '', type: 'all', status: 'all' });
+    setFilters({ keyword: '', type: 'all' });
   }, [filterForm]);
 
   const openCreateModal = useCallback(() => {
@@ -128,7 +96,6 @@ const Permission: React.FC = () => {
     form.resetFields();
     form.setFieldsValue({
       type: '管理权限',
-      status: '启用',
     });
     setModalVisible(true);
   }, [form]);
@@ -199,16 +166,6 @@ const Permission: React.FC = () => {
           )),
       },
       {
-        title: '权限状态',
-        dataIndex: 'status',
-        width: 120,
-        render: (value: PermissionItem['status']) => (
-          <Tag color={statusColor[value]}>{value}</Tag>
-        ),
-      },
-      { title: '创建时间', dataIndex: 'createdAt', width: 180 },
-      { title: '最后修改人', dataIndex: 'updatedBy', width: 160 },
-      {
         title: '操作',
         dataIndex: 'action',
         width: 160,
@@ -237,38 +194,6 @@ const Permission: React.FC = () => {
 
   return (
     <PageContainer header={{ title: '权限配置' }}>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="权限总数" value={summary.total} suffix="项" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic
-              title="管理权限"
-              value={summary.management}
-              suffix="项"
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="使用权限" value={summary.usage} suffix="项" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic
-              title="禁用权限"
-              value={summary.disabled}
-              suffix="项"
-              valueStyle={{ color: '#f5222d' }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
       <Card
         title="权限列表"
         style={{ marginTop: 24 }}
@@ -282,7 +207,7 @@ const Permission: React.FC = () => {
         <Form
           form={filterForm}
           layout="inline"
-          initialValues={{ keyword: '', type: 'all', status: 'all' }}
+          initialValues={{ keyword: '', type: 'all' }}
           onValuesChange={handleFilterChange}
           style={{ marginBottom: 16 }}
         >
@@ -299,18 +224,6 @@ const Permission: React.FC = () => {
               options={[
                 { value: 'all', label: '全部类型' },
                 ...typeOptions.map((type) => ({ label: type, value: type })),
-              ]}
-            />
-          </Form.Item>
-          <Form.Item name="status">
-            <Select
-              style={{ width: 160 }}
-              options={[
-                { value: 'all', label: '全部状态' },
-                ...statusOptions.map((status) => ({
-                  label: status,
-                  value: status,
-                })),
               ]}
             />
           </Form.Item>
@@ -338,15 +251,6 @@ const Permission: React.FC = () => {
         width={720}
       >
         <Form layout="vertical" form={form}>
-          {editingRecord ? (
-            <Form.Item label="权限 ID" name="id">
-              <Input disabled />
-            </Form.Item>
-          ) : (
-            <Form.Item label="权限 ID" name="id">
-              <Input placeholder="不填写自动生成" />
-            </Form.Item>
-          )}
           <Form.Item
             label="权限名称"
             name="name"
@@ -370,21 +274,6 @@ const Permission: React.FC = () => {
                 />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item
-                label="权限状态"
-                name="status"
-                rules={[{ required: true, message: '请选择权限状态' }]}
-              >
-                <Select
-                  options={statusOptions.map((status) => ({
-                    label: status,
-                    value: status,
-                  }))}
-                  placeholder="请选择状态"
-                />
-              </Form.Item>
-            </Col>
           </Row>
           <Form.Item
             label="关联功能模块"
@@ -402,26 +291,6 @@ const Permission: React.FC = () => {
               }))}
             />
           </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="创建时间"
-                name="createdAt"
-                rules={[{ required: true, message: '请输入创建时间' }]}
-              >
-                <Input placeholder="示例：2024-08-01 10:00" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="最后修改人"
-                name="updatedBy"
-                rules={[{ required: true, message: '请输入负责人' }]}
-              >
-                <Input placeholder="请输入负责人" />
-              </Form.Item>
-            </Col>
-          </Row>
         </Form>
       </Modal>
     </PageContainer>

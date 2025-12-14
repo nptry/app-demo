@@ -1,7 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
-import type { ColumnsType } from 'antd/es/table';
+import { useRequest } from '@umijs/max';
 import {
   Button,
   Card,
@@ -9,6 +7,7 @@ import {
   Form,
   Input,
   Modal,
+  message,
   Popconfirm,
   Row,
   Select,
@@ -16,8 +15,9 @@ import {
   Statistic,
   Table,
   Tag,
-  message,
 } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { RoleItem, RoleResponse } from '@/services/userManagement';
 import { getRoles } from '@/services/userManagement';
 
@@ -41,7 +41,10 @@ const Role: React.FC = () => {
 
   const [initialized, setInitialized] = useState(false);
   const [roles, setRoles] = useState<RoleItem[]>([]);
-  const [filters, setFilters] = useState<FilterState>({ keyword: '', status: 'all' });
+  const [filters, setFilters] = useState<FilterState>({
+    keyword: '',
+    status: 'all',
+  });
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<RoleItem | null>(null);
   const [form] = Form.useForm<RoleItem>();
@@ -82,7 +85,8 @@ const Role: React.FC = () => {
             .filter(Boolean)
             .some((field) => field?.toLowerCase().includes(keyword))
         : true;
-      const matchStatus = filters.status === 'all' || item.status === filters.status;
+      const matchStatus =
+        filters.status === 'all' || item.status === filters.status;
       return matchKeyword && matchStatus;
     });
   }, [filters.keyword, filters.status, roles]);
@@ -129,7 +133,11 @@ const Role: React.FC = () => {
     const values = await form.validateFields();
     const permissions = values.permissions ?? [];
     if (editingRecord) {
-      setRoles((prev) => prev.map((item) => (item.id === editingRecord.id ? { ...values, permissions } : item)));
+      setRoles((prev) =>
+        prev.map((item) =>
+          item.id === editingRecord.id ? { ...values, permissions } : item,
+        ),
+      );
       message.success('角色已更新');
     } else {
       const newItem: RoleItem = {
@@ -169,7 +177,9 @@ const Role: React.FC = () => {
         title: '角色状态',
         dataIndex: 'status',
         width: 120,
-        render: (value: RoleItem['status']) => <Tag color={statusColor[value]}>{value}</Tag>,
+        render: (value: RoleItem['status']) => (
+          <Tag color={statusColor[value]}>{value}</Tag>
+        ),
       },
       { title: '创建时间', dataIndex: 'createdAt', width: 180 },
       { title: '角色描述', dataIndex: 'description' },
@@ -183,7 +193,12 @@ const Role: React.FC = () => {
             <Button type="link" onClick={() => handleEdit(record)}>
               编辑
             </Button>
-            <Popconfirm title="确认删除该角色？" okText="确认" cancelText="取消" onConfirm={() => handleDelete(record.id)}>
+            <Popconfirm
+              title="确认删除该角色？"
+              okText="确认"
+              cancelText="取消"
+              onConfirm={() => handleDelete(record.id)}
+            >
               <Button type="link" danger>
                 删除
               </Button>
@@ -197,29 +212,6 @@ const Role: React.FC = () => {
 
   return (
     <PageContainer header={{ title: '角色管理' }}>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="角色总数" value={summary.total} suffix="个" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="启用角色" value={summary.enabled} suffix="个" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="禁用角色" value={summary.disabled} suffix="个" valueStyle={{ color: '#f5222d' }} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="覆盖部门" value={summary.departments} suffix="个" />
-          </Card>
-        </Col>
-      </Row>
-
       <Card
         title="角色列表"
         style={{ marginTop: 24 }}
@@ -238,12 +230,22 @@ const Role: React.FC = () => {
           style={{ marginBottom: 16 }}
         >
           <Form.Item name="keyword">
-            <Input allowClear placeholder="搜索角色 / 部门 / 描述" style={{ width: 260 }} />
+            <Input
+              allowClear
+              placeholder="搜索角色 / 部门 / 描述"
+              style={{ width: 260 }}
+            />
           </Form.Item>
           <Form.Item name="status">
             <Select
               style={{ width: 160 }}
-              options={[{ value: 'all', label: '全部状态' }, ...statusOptions.map((status) => ({ label: status, value: status }))]}
+              options={[
+                { value: 'all', label: '全部状态' },
+                ...statusOptions.map((status) => ({
+                  label: status,
+                  value: status,
+                })),
+              ]}
             />
           </Form.Item>
           <Form.Item>
@@ -281,21 +283,26 @@ const Role: React.FC = () => {
           )}
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="角色名称" name="name" rules={[{ required: true, message: '请输入角色名称' }]}>
+              <Form.Item
+                label="角色名称"
+                name="name"
+                rules={[{ required: true, message: '请输入角色名称' }]}
+              >
                 <Input placeholder="请输入角色名称" />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item label="所属部门" name="department" rules={[{ required: true, message: '请输入部门' }]}>
-                <Input placeholder="请输入所属部门" />
-              </Form.Item>
-            </Col>
           </Row>
-          <Form.Item label="关联权限列表" name="permissions" rules={[{ required: true, message: '请输入关联权限' }]}>
+          <Form.Item
+            label="关联权限列表"
+            name="permissions"
+            rules={[{ required: true, message: '请输入关联权限' }]}
+          >
             <Select
               mode="tags"
               placeholder="输入或选择关联权限"
-              options={Array.from(new Set(roles.flatMap((item) => item.permissions))).map((perm) => ({
+              options={Array.from(
+                new Set(roles.flatMap((item) => item.permissions)),
+              ).map((perm) => ({
                 label: perm,
                 value: perm,
               }))}
@@ -303,13 +310,18 @@ const Role: React.FC = () => {
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="角色状态" name="status" rules={[{ required: true, message: '请选择状态' }]}>
-                <Select options={statusOptions.map((status) => ({ label: status, value: status }))} placeholder="请选择状态" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="创建时间" name="createdAt" rules={[{ required: true, message: '请输入创建时间' }]}>
-                <Input placeholder="示例：2024-08-01 10:00" />
+              <Form.Item
+                label="角色状态"
+                name="status"
+                rules={[{ required: true, message: '请选择状态' }]}
+              >
+                <Select
+                  options={statusOptions.map((status) => ({
+                    label: status,
+                    value: status,
+                  }))}
+                  placeholder="请选择状态"
+                />
               </Form.Item>
             </Col>
           </Row>

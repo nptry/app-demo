@@ -1,407 +1,410 @@
-import { PageContainer } from '@ant-design/pro-components';
-import { useRequest } from '@umijs/max';
 import {
-  Badge,
+  DeleteOutlined,
+  EditOutlined,
+  KeyOutlined,
+  PlusOutlined,
+} from '@ant-design/icons';
+import { PageContainer } from '@ant-design/pro-components';
+import type { FormInstance } from 'antd';
+import {
   Button,
-  Card,
-  Col,
   Form,
   Input,
   Modal,
   message,
   Popconfirm,
-  Row,
   Select,
   Space,
-  Statistic,
   Table,
-  Tag,
+  Tooltip,
 } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import type { AccountItem, AccountResponse } from '@/services/userManagement';
-import { getAccounts } from '@/services/userManagement';
+import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type AdminItem,
+  type AdminParams,
+  type AdminQueryParams,
+  createAdmin,
+  deleteAdmin,
+  getAdmins,
+  resetAdminPassword,
+  updateAdmin,
+} from '@/services/api/admin';
+import { getRoles, type RoleItem } from '@/services/api/role';
 
-const statusColor: Record<AccountItem['status'], 'success' | 'error'> = {
-  启用: 'success',
-  禁用: 'error',
+const DEFAULT_PAGINATION = {
+  current: 1,
+  pageSize: 15,
+  total: 0,
 };
 
-type FilterState = {
-  keyword: string;
-  status: AccountItem['status'] | 'all';
-  department: string | 'all';
-};
-
-const statusOptions: AccountItem['status'][] = ['启用', '禁用'];
-
-const Account: React.FC = () => {
-  const { data, loading } = useRequest(getAccounts, {
-    formatResult: (res: AccountResponse | { data: AccountResponse }) =>
-      (res as { data?: AccountResponse })?.data ?? (res as AccountResponse),
-  });
-
-  const [initialized, setInitialized] = useState(false);
-  const [accounts, setAccounts] = useState<AccountItem[]>([]);
-  const [filters, setFilters] = useState<FilterState>({
-    keyword: '',
-    status: 'all',
-    department: 'all',
-  });
+const AccountPage: React.FC = () => {
+  const [loading, setLoading] = useState(false);
+  const [admins, setAdmins] = useState<AdminItem[]>([]);
+  const [roles, setRoles] = useState<RoleItem[]>([]);
+  const [pagination, setPagination] = useState(DEFAULT_PAGINATION);
   const [modalVisible, setModalVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<AccountItem | null>(null);
-  const [form] = Form.useForm<AccountItem>();
-  const [filterForm] = Form.useForm();
+  const [resetModalVisible, setResetModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState('新增管理员');
+  const [editingAdmin, setEditingAdmin] = useState<AdminItem | null>(null);
+  const [resetTarget, setResetTarget] = useState<AdminItem | null>(null);
+  const formRef = useRef<FormInstance<AdminParams>>(null);
+  const resetFormRef = useRef<FormInstance>(null);
 
-  useEffect(() => {
-    if (data?.accounts && !initialized) {
-      setAccounts(data.accounts);
-      setInitialized(true);
+  const currentAdmin = useMemo(() => {
+    if (typeof localStorage === 'undefined') return null;
+    try {
+      const raw = localStorage.getItem('current_admin');
+      return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+      console.error(error);
+      return null;
     }
-  }, [data?.accounts, initialized]);
-
-  const summary = useMemo(() => {
-    if (accounts.length) {
-      return {
-        total: accounts.length,
-        enabled: accounts.filter((item) => item.status === '启用').length,
-        disabled: accounts.filter((item) => item.status === '禁用').length,
-        pendingReset: accounts.filter((item) => item.passwordUpdatedAt === '')
-          .length,
-      };
-    }
-    return (
-      data?.summary ?? {
-        total: 0,
-        enabled: 0,
-        disabled: 0,
-        pendingReset: 0,
-      }
-    );
-  }, [accounts, data?.summary]);
-
-  const departmentOptions = useMemo(() => {
-    const source = accounts.length ? accounts : (data?.accounts ?? []);
-    return Array.from(new Set(source.map((item) => item.department)));
-  }, [accounts, data?.accounts]);
-
-  const filteredAccounts = useMemo(() => {
-    const keyword = filters.keyword.trim().toLowerCase();
-    return accounts.filter((item) => {
-      const matchKeyword = keyword
-        ? [item.username, item.realName, item.department, item.role]
-            .filter(Boolean)
-            .some((field) => field?.toLowerCase().includes(keyword))
-        : true;
-      const matchStatus =
-        filters.status === 'all' || item.status === filters.status;
-      const matchDept =
-        filters.department === 'all' || item.department === filters.department;
-      return matchKeyword && matchStatus && matchDept;
-    });
-  }, [accounts, filters.department, filters.keyword, filters.status]);
-
-  const handleFilterChange = useCallback(
-    (_: unknown, values: Record<string, string>) => {
-      setFilters({
-        keyword: values.keyword ?? '',
-        status: (values.status ?? 'all') as FilterState['status'],
-        department: (values.department ?? 'all') as FilterState['department'],
-      });
-    },
-    [],
-  );
-
-  const handleFilterReset = useCallback(() => {
-    filterForm.resetFields();
-    setFilters({ keyword: '', status: 'all', department: 'all' });
-  }, [filterForm]);
-
-  const openCreateModal = useCallback(() => {
-    setEditingRecord(null);
-    form.resetFields();
-    form.setFieldsValue({
-      status: '启用',
-    });
-    setModalVisible(true);
-  }, [form]);
-
-  const handleEdit = useCallback(
-    (record: AccountItem) => {
-      setEditingRecord(record);
-      form.setFieldsValue(record);
-      setModalVisible(true);
-    },
-    [form],
-  );
-
-  const handleDelete = useCallback((id: string) => {
-    setAccounts((prev) => prev.filter((item) => item.id !== id));
-    message.success('删除成功');
   }, []);
 
-  const handleModalOk = useCallback(async () => {
-    const values = await form.validateFields();
-    if (editingRecord) {
-      setAccounts((prev) =>
-        prev.map((item) => (item.id === editingRecord.id ? values : item)),
-      );
-      message.success('账号已更新');
-    } else {
-      const newItem: AccountItem = {
-        ...values,
-        id: values.id?.trim() ? values.id : `ACC-${Date.now()}`,
-      };
-      setAccounts((prev) => [newItem, ...prev]);
-      message.success('新建账号成功');
+  const isSuperAdmin = !!currentAdmin?.is_super_admin;
+
+  const fetchAdmins = async (params: AdminQueryParams = {}) => {
+    setLoading(true);
+    try {
+      const response = await getAdmins({
+        page: params.page ?? pagination.current,
+        per_page: params.per_page ?? pagination.pageSize,
+        ...params,
+      });
+
+      if (response?.records) {
+        setAdmins(response.records);
+        setPagination((prev) => ({
+          ...prev,
+          current: params.page ?? prev.current,
+          pageSize: params.per_page ?? prev.pageSize,
+          total: response.total ?? prev.total,
+        }));
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
-    setModalVisible(false);
-  }, [editingRecord, form]);
+  };
 
-  const handleModalCancel = useCallback(() => setModalVisible(false), []);
+  const fetchRoles = async () => {
+    try {
+      const response = await getRoles({ per_page: 100 });
+      setRoles(response?.records ?? []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-  const columns: ColumnsType<AccountItem> = useMemo(
-    () => [
-      { title: '账号 ID', dataIndex: 'id', width: 140 },
-      {
-        title: '登录账号',
-        dataIndex: 'username',
-        width: 160,
-        render: (value: string) => <strong>{value}</strong>,
-      },
-      {
-        title: '用户实名 / 岗位',
-        dataIndex: 'realName',
-        width: 220,
-        render: (value: string, record) => (
-          <div>
-            <div>{value}</div>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>
-              {record.position}
-            </div>
-          </div>
-        ),
-      },
-      { title: '所属部门', dataIndex: 'department', width: 220 },
-      {
-        title: '关联角色',
-        dataIndex: 'role',
-        width: 180,
-        render: (value: string) => <Tag color="blue">{value}</Tag>,
-      },
-      {
-        title: '联系方式',
-        dataIndex: 'phone',
-        width: 220,
-        render: (value: string, record) => (
-          <div>
-            <div>{value}</div>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>
-              {record.email}
-            </div>
-          </div>
-        ),
-      },
-      {
-        title: '账号状态',
-        dataIndex: 'status',
-        width: 140,
-        render: (value: AccountItem['status']) => (
-          <Badge status={statusColor[value]} text={value} />
-        ),
-      },
-      {
-        title: '操作',
-        dataIndex: 'action',
-        width: 160,
-        fixed: 'right',
-        render: (_, record) => (
-          <Space size="small">
-            <Button type="link" onClick={() => handleEdit(record)}>
-              编辑
-            </Button>
-            <Popconfirm
-              title="确认删除该账号？"
-              okText="确认"
-              cancelText="取消"
-              onConfirm={() => handleDelete(record.id)}
-            >
-              <Button type="link" danger>
-                删除
-              </Button>
-            </Popconfirm>
-          </Space>
-        ),
-      },
-    ],
-    [handleDelete, handleEdit],
-  );
+  useEffect(() => {
+    fetchAdmins();
+    fetchRoles();
+  }, []);
+
+  const handleTableChange = (pageInfo: TablePaginationConfig) => {
+    fetchAdmins({
+      page: pageInfo.current ?? 1,
+      per_page: pageInfo.pageSize ?? DEFAULT_PAGINATION.pageSize,
+    });
+  };
+
+  const handleAdd = () => {
+    setEditingAdmin(null);
+    setModalTitle('新增管理员');
+    setModalVisible(true);
+    formRef.current?.resetFields();
+  };
+
+  const handleEdit = (record: AdminItem) => {
+    setEditingAdmin(record);
+    setModalTitle('编辑管理员');
+    setModalVisible(true);
+
+    setTimeout(() => {
+      formRef.current?.setFieldsValue({
+        username: record.username,
+        mobile: record.mobile,
+        role_id: roles.find((role) => role.name === record.role_name)?.id,
+      });
+    }, 0);
+  };
+
+  const openResetPassword = (record: AdminItem) => {
+    setResetTarget(record);
+    setResetModalVisible(true);
+    setTimeout(() => resetFormRef.current?.resetFields(), 0);
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteAdmin(id);
+      message.success('删除成功');
+      fetchAdmins({
+        page: pagination.current,
+        per_page: pagination.pageSize,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const values = await formRef.current?.validateFields();
+      if (!values) return;
+
+      if (editingAdmin) {
+        const payload = { ...values };
+        if (editingAdmin.is_super_admin) {
+          delete payload.role_id;
+        }
+        await updateAdmin(editingAdmin.id, payload);
+        message.success('管理员已更新');
+      } else {
+        await createAdmin(values);
+        message.success('管理员已创建');
+      }
+
+      setModalVisible(false);
+      fetchAdmins({
+        page: pagination.current,
+        per_page: pagination.pageSize,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    try {
+      const values = await resetFormRef.current?.validateFields();
+      if (!resetTarget || !values) return;
+
+      const payload: any = {
+        id: resetTarget.id,
+        new_password: values.new_password,
+        new_password_confirmation: values.new_password_confirmation,
+      };
+
+      if (values.old_password) {
+        payload.old_password = values.old_password;
+      }
+
+      await resetAdminPassword(payload);
+      message.success('密码重置成功');
+      setResetModalVisible(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const getNonSuperAdminRoles = () =>
+    roles.filter((role) => !role.is_super_admin);
+
+  const columns: ColumnsType<AdminItem> = [
+    {
+      title: '用户名',
+      dataIndex: 'username',
+    },
+    {
+      title: '手机号',
+      dataIndex: 'mobile',
+    },
+    {
+      title: '角色',
+      dataIndex: 'role_name',
+    },
+    {
+      title: '操作',
+      dataIndex: 'action',
+      render: (_, record) => (
+        <Space size="middle">
+          <Tooltip title="编辑">
+            <a onClick={() => handleEdit(record)}>
+              <EditOutlined />
+            </a>
+          </Tooltip>
+          {isSuperAdmin && (
+            <Tooltip title="重置密码">
+              <a onClick={() => openResetPassword(record)}>
+                <KeyOutlined />
+              </a>
+            </Tooltip>
+          )}
+          {!record.is_super_admin && (
+            <Tooltip title="删除">
+              <Popconfirm
+                title="确定删除此管理员吗？"
+                okText="确定"
+                cancelText="取消"
+                onConfirm={() => handleDelete(record.id)}
+              >
+                <a>
+                  <DeleteOutlined style={{ color: '#ff4d4f' }} />
+                </a>
+              </Popconfirm>
+            </Tooltip>
+          )}
+        </Space>
+      ),
+    },
+  ];
 
   return (
-    <PageContainer header={{ title: '账号管理' }}>
-      <Card
-        title="账号列表"
-        style={{ marginTop: 24 }}
-        bodyStyle={{ paddingTop: 8 }}
-        extra={
-          <Button type="primary" onClick={openCreateModal}>
-            新建账号
-          </Button>
-        }
-      >
-        <Form
-          form={filterForm}
-          layout="inline"
-          initialValues={{ keyword: '', status: 'all', department: 'all' }}
-          onValuesChange={handleFilterChange}
-          style={{ marginBottom: 16 }}
-        >
-          <Form.Item name="keyword">
-            <Input
-              allowClear
-              placeholder="搜索账号 / 姓名 / 角色"
-              style={{ width: 260 }}
-            />
-          </Form.Item>
-          <Form.Item name="department">
-            <Select
-              style={{ width: 200 }}
-              options={[
-                { value: 'all', label: '全部部门' },
-                ...departmentOptions.map((dept) => ({
-                  label: dept,
-                  value: dept,
-                })),
-              ]}
-              placeholder="请选择部门"
-            />
-          </Form.Item>
-          <Form.Item name="status">
-            <Select
-              style={{ width: 160 }}
-              options={[
-                { value: 'all', label: '全部状态' },
-                ...statusOptions.map((status) => ({
-                  label: status,
-                  value: status,
-                })),
-              ]}
-            />
-          </Form.Item>
-          <Form.Item>
-            <Button onClick={handleFilterReset}>重置筛选</Button>
-          </Form.Item>
-        </Form>
-        <Table<AccountItem>
-          rowKey="id"
-          loading={loading && !initialized}
-          columns={columns}
-          dataSource={filteredAccounts}
-          pagination={{ pageSize: 6, showSizeChanger: false }}
-          scroll={{ x: 1600 }}
-        />
-      </Card>
+    <PageContainer header={{ title: '管理员账号管理' }}>
+      <div style={{ marginBottom: 16 }}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+          新增管理员
+        </Button>
+      </div>
+      <Table<AdminItem>
+        rowKey="id"
+        loading={loading}
+        columns={columns}
+        dataSource={admins}
+        pagination={{
+          ...pagination,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          pageSizeOptions: ['10', '15', '20', '50', '100'],
+          showTotal: (total, range) =>
+            `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+        }}
+        onChange={handleTableChange}
+      />
 
       <Modal
-        title={editingRecord ? '编辑账号' : '新建账号'}
+        title={modalTitle}
         open={modalVisible}
-        onOk={handleModalOk}
-        onCancel={handleModalCancel}
-        okText="保存"
         destroyOnClose
-        width={760}
+        onOk={handleSubmit}
+        onCancel={() => setModalVisible(false)}
       >
-        <Form layout="vertical" form={form}>
-          <Row gutter={16}>
-            <Col span={12}>
+        <Form layout="vertical" ref={formRef}>
+          {!editingAdmin?.is_super_admin && (
+            <Form.Item
+              name="role_id"
+              label="角色"
+              rules={[{ required: true, message: '请选择角色' }]}
+            >
+              <Select
+                placeholder="请选择角色"
+                options={getNonSuperAdminRoles().map((role) => ({
+                  label: role.name,
+                  value: role.id,
+                }))}
+              />
+            </Form.Item>
+          )}
+          <Form.Item
+            name="username"
+            label="用户名"
+            rules={[
+              { required: true, message: '请输入用户名' },
+              { min: 3, message: '用户名至少3个字符' },
+            ]}
+          >
+            <Input placeholder="请输入用户名" />
+          </Form.Item>
+          <Form.Item
+            name="mobile"
+            label="手机号"
+            rules={[
+              { required: true, message: '请输入手机号' },
+              { pattern: /^\d{11}$/, message: '请输入11位手机号码' },
+            ]}
+          >
+            <Input placeholder="请输入手机号" />
+          </Form.Item>
+          {!editingAdmin && (
+            <>
               <Form.Item
-                label="登录账号"
-                name="username"
-                rules={[{ required: true, message: '请输入登录账号' }]}
+                name="password"
+                label="密码"
+                rules={[
+                  { required: true, message: '请输入密码' },
+                  { min: 6, message: '密码至少6个字符' },
+                ]}
               >
-                <Input placeholder="请输入登录账号" />
+                <Input.Password placeholder="请输入密码" />
               </Form.Item>
-            </Col>
-            <Col span={12}>
               <Form.Item
-                label="真实姓名"
-                name="realName"
-                rules={[{ required: true, message: '请输入真实姓名' }]}
+                name="password_confirmation"
+                label="确认密码"
+                dependencies={['password']}
+                rules={[
+                  { required: true, message: '请确认密码' },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value || getFieldValue('password') === value) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error('两次输入的密码不一致'));
+                    },
+                  }),
+                ]}
               >
-                <Input placeholder="请输入真实姓名" />
+                <Input.Password placeholder="请确认密码" />
               </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="所属部门"
-                name="department"
-                rules={[{ required: true, message: '请输入部门' }]}
-              >
-                <Input placeholder="请输入所属部门" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="岗位"
-                name="position"
-                rules={[{ required: true, message: '请输入岗位' }]}
-              >
-                <Input placeholder="请输入岗位" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="关联角色"
-                name="role"
-                rules={[{ required: true, message: '请输入关联角色' }]}
-              >
-                <Input placeholder="请输入关联角色" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="账号状态"
-                name="status"
-                rules={[{ required: true, message: '请选择账号状态' }]}
-              >
-                <Select
-                  options={statusOptions.map((status) => ({
-                    label: status,
-                    value: status,
-                  }))}
-                  placeholder="请选择状态"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="联系电话"
-                name="phone"
-                rules={[{ required: true, message: '请输入联系电话' }]}
-              >
-                <Input placeholder="请输入联系电话" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="邮箱"
-                name="email"
-                rules={[{ required: true, message: '请输入邮箱' }]}
-              >
-                <Input placeholder="请输入邮箱" />
-              </Form.Item>
-            </Col>
-          </Row>
+            </>
+          )}
+        </Form>
+      </Modal>
+
+      <Modal
+        title={resetTarget ? `重置密码：${resetTarget.username}` : '重置密码'}
+        open={resetModalVisible}
+        destroyOnClose
+        onOk={handleResetPassword}
+        onCancel={() => setResetModalVisible(false)}
+      >
+        <Form layout="vertical" ref={resetFormRef}>
+          <Form.Item label="用户名">
+            <Input value={resetTarget?.username} disabled />
+          </Form.Item>
+          {!isSuperAdmin && (
+            <Form.Item
+              name="old_password"
+              label="旧密码"
+              rules={[{ required: true, message: '请输入旧密码' }]}
+            >
+              <Input.Password placeholder="请输入旧密码" />
+            </Form.Item>
+          )}
+          <Form.Item
+            name="new_password"
+            label="新密码"
+            rules={[
+              { required: true, message: '请输入新密码' },
+              { min: 6, message: '新密码长度不能少于6位' },
+            ]}
+          >
+            <Input.Password placeholder="请输入新密码" />
+          </Form.Item>
+          <Form.Item
+            name="new_password_confirmation"
+            label="确认新密码"
+            dependencies={['new_password']}
+            rules={[
+              { required: true, message: '请再次输入新密码' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('new_password') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('两次输入的新密码不一致'));
+                },
+              }),
+            ]}
+          >
+            <Input.Password placeholder="请再次输入新密码" />
+          </Form.Item>
         </Form>
       </Modal>
     </PageContainer>
   );
 };
 
-export default Account;
+export default AccountPage;

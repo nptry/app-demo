@@ -163,12 +163,7 @@ export default [
     routes: [
       {
         path: '/user-management',
-        redirect: '/user-management/permission',
-      },
-      {
-        path: '/user-management/permission',
-        name: 'permission',
-        component: './UserManagement/Permission',
+        redirect: '/user-management/account',
       },
       {
         path: '/user-management/role',

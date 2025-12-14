@@ -324,7 +324,7 @@ export default {
   'GET /api/user/accounts': (req: Request, res: Response) => {
     res.json({ success: true, data: accountData });
   },
-  'GET /api/user/operation-logs': (req: Request, res: Response) => {
+  'GET /api/user/action-logs': (req: Request, res: Response) => {
     res.json({ success: true, data: logData });
   },
   'GET /api/user/key-persons': (req: Request, res: Response) => {

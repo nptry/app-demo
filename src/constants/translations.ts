@@ -13,7 +13,7 @@ const moduleTranslations: Record<string, string> = {
   person_event_log: '摄像头日志',
   access_log: '日志查看',
   system_config: '系统配置',
-  action_log: '操作日志',
+  action_log: '行为日志',
   alarm_event_log: '预警事件日志',
   dashboard: '仪表盘',
   setting: '设置',

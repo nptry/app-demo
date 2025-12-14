@@ -96,7 +96,7 @@ export async function getAccounts(options?: Record<string, any>) {
   });
 }
 
-export type OperationLogItem = {
+export type ActionLogItem = {
   id: string;
   account: string;
   realName: string;
@@ -109,12 +109,12 @@ export type OperationLogItem = {
   failReason?: string;
 };
 
-export type OperationLogResponse = {
-  logs: OperationLogItem[];
+export type ActionLogResponse = {
+  logs: ActionLogItem[];
 };
 
-export async function getOperationLogs(options?: Record<string, any>) {
-  return request<ApiResponse<OperationLogResponse>>('/api/user/operation-logs', {
+export async function getActionLogs(options?: Record<string, any>) {
+  return request<ApiResponse<ActionLogResponse>>('/api/user/action-logs', {
     method: 'GET',
     ...(options || {}),
   });

@@ -175,11 +175,11 @@ export default [
         name: 'account',
         component: './UserManagement/Account',
       },
-      {
-        path: '/user-management/operation-log',
-        name: 'operation-log',
-        component: './UserManagement/OperationLog',
-      },
+      // {
+      //   path: '/user-management/action-log',
+      //   name: 'action-log',
+      //   component: './UserManagement/ActionLog',
+      // },
     ],
   },
   {

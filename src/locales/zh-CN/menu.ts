@@ -52,7 +52,7 @@ export default {
   'menu.user-management': '用户管理',
   'menu.user-management.role': '角色与权限',
   'menu.user-management.account': '管理员账号',
-  'menu.user-management.operation-log': '操作日志',
+  'menu.user-management.action-log': '行为日志',
   'menu.key-personnel-management': '重点人员管理',
   'menu.key-personnel-management.key-personnel-list': '重点人员清单',
   'menu.key-personnel-management.key-personnel-monitoring': '重点人员监控',

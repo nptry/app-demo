@@ -52,7 +52,7 @@ export default {
   'menu.user-management': 'User Management',
   'menu.user-management.role': 'Roles & Permissions',
   'menu.user-management.account': 'Admin Accounts',
-  'menu.user-management.operation-log': 'Operation Log',
+  'menu.user-management.action-log': 'Action Log',
   'menu.key-personnel-management': 'Key Personnel Management',
   'menu.key-personnel-management.key-personnel-list': 'Key Personnel List',
   'menu.key-personnel-management.key-personnel-monitoring':

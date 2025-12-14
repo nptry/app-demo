@@ -1,20 +1,23 @@
-import React from 'react';
-import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
-import type { ColumnsType } from 'antd/es/table';
+import { useRequest } from '@umijs/max';
 import { Badge, Card, Table, Tag } from 'antd';
-import type { OperationLogItem, OperationLogResponse } from '@/services/userManagement';
-import { getOperationLogs } from '@/services/userManagement';
+import type { ColumnsType } from 'antd/es/table';
+import React from 'react';
+import type {
+  ActionLogItem,
+  ActionLogResponse,
+} from '@/services/userManagement';
+import { getActionLogs } from '@/services/userManagement';
 
-const OperationLog: React.FC = () => {
-  const { data, loading } = useRequest(getOperationLogs, {
-    formatResult: (res: OperationLogResponse | { data: OperationLogResponse }) =>
-      (res as { data?: OperationLogResponse })?.data ?? (res as OperationLogResponse),
+const ActionLog: React.FC = () => {
+  const { data, loading } = useRequest(getActionLogs, {
+    formatResult: (res: ActionLogResponse | { data: ActionLogResponse }) =>
+      (res as { data?: ActionLogResponse })?.data ?? (res as ActionLogResponse),
   });
 
   const logs = data?.logs ?? [];
 
-  const columns: ColumnsType<OperationLogItem> = [
+  const columns: ColumnsType<ActionLogItem> = [
     { title: '日志 ID', dataIndex: 'id', width: 160 },
     { title: '操作时间', dataIndex: 'time', width: 180 },
     {
@@ -24,7 +27,9 @@ const OperationLog: React.FC = () => {
       render: (value: string, record) => (
         <div>
           <div>{value}</div>
-          <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.realName}</div>
+          <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>
+            {record.realName}
+          </div>
         </div>
       ),
     },
@@ -41,7 +46,7 @@ const OperationLog: React.FC = () => {
       title: '操作结果',
       dataIndex: 'result',
       width: 140,
-      render: (value: OperationLogItem['result']) => (
+      render: (value: ActionLogItem['result']) => (
         <Badge status={value === '成功' ? 'success' : 'error'} text={value} />
       ),
     },
@@ -50,14 +55,14 @@ const OperationLog: React.FC = () => {
       dataIndex: 'failReason',
       width: 200,
       render: (value: string | undefined, record) =>
-        record.result === '失败' ? value ?? '—' : '—',
+        record.result === '失败' ? (value ?? '—') : '—',
     },
   ];
 
   return (
-    <PageContainer header={{ title: '操作日志' }}>
-      <Card title="日志记录" bodyStyle={{ paddingTop: 8 }}>
-        <Table<OperationLogItem>
+    <PageContainer header={{ title: '行为日志' }}>
+      <Card title="行为日志记录" bodyStyle={{ paddingTop: 8 }}>
+        <Table<ActionLogItem>
           rowKey="id"
           loading={loading}
           columns={columns}
@@ -65,10 +70,12 @@ const OperationLog: React.FC = () => {
           pagination={{ pageSize: 8, showSizeChanger: false }}
           scroll={{ x: 1400 }}
         />
-        {!logs.length && <div style={{ textAlign: 'center', padding: 16 }}>暂无日志</div>}
+        {!logs.length && (
+          <div style={{ textAlign: 'center', padding: 16 }}>暂无日志</div>
+        )}
       </Card>
     </PageContainer>
   );
 };
 
-export default OperationLog;
+export default ActionLog;

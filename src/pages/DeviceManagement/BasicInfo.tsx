@@ -205,7 +205,8 @@ const BasicInfo: React.FC = () => {
             .some((field) => field?.toLowerCase().includes(keyword))
         : true;
       const matchStatus =
-        filters.status === 'all' || item.status === filters.status;
+        filters.status === 'all' ||
+        (item.realtimeStatus ?? item.status) === filters.status;
       const matchType =
         filters.type === 'all' ||
         item.deviceType === filters.type ||
@@ -322,14 +323,6 @@ const BasicInfo: React.FC = () => {
       { title: '设备序列号', dataIndex: 'serialNumber', width: 200 },
       {
         title: '设备状态',
-        dataIndex: 'status',
-        width: 140,
-        render: (value: DeviceBasicInfoItem['status']) => (
-          <Badge status={statusBadge[value]} text={value} />
-        ),
-      },
-      {
-        title: '实时状态',
         dataIndex: 'realtimeStatus',
         width: 150,
         render: (value: DeviceStatusItem['realtimeStatus']) =>

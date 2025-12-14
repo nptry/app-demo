@@ -393,26 +393,10 @@ const BasicInfo: React.FC = () => {
             <Statistic title="在册设备" value={summary.total} suffix="台" />
           </Card>
         </Col>
+
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="AI 边缘计算" value={summary.aiEdge} suffix="台" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="当前在线" value={summary.online} suffix="台" />
-          </Card>
-        </Col>
-      </Row>
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic
-              title="在线率"
-              value={metrics.onlineRate}
-              precision={1}
-              suffix="%"
-            />
+            <Statistic title="在线设备" value={summary.online} suffix="台" />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
@@ -422,21 +406,6 @@ const BasicInfo: React.FC = () => {
               value={metrics.offlineDevices}
               suffix="台"
             />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic
-              title="故障设备"
-              value={metrics.faultDevices}
-              suffix="台"
-              valueStyle={{ color: '#f5222d' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic title="状态同步时间" value={metrics.lastSync} />
           </Card>
         </Col>
       </Row>

@@ -154,35 +154,140 @@ export async function deleteTrafficDeployment(
   );
 }
 
+type BoxAlarmEventRecord = {
+  id: string;
+  major_type?: string;
+  minor_type?: string;
+  timestamp?: string;
+  plate_number?: string;
+  vehicle_class?: string;
+  vehicle_color?: string;
+  vehicle_brand?: string;
+  vehicle_sub_brand?: string;
+  capture_image_urls?: string[];
+  person_identifiers?: string[];
+  plate_recognition?: boolean;
+  raw_person_id_list?: string;
+  capture_image_count?: number;
+};
+
+type BackendLicenseRecordResponse = {
+  total: number;
+  current_page: number;
+  total_pages: number;
+  per_page: number;
+  records: BoxAlarmEventRecord[];
+};
+
 export type LicenseRecordItem = {
   id: string;
-  checkpointName: string;
-  lane: string;
-  captureTime: string;
-  plateNumber: string;
-  plateColor: string;
-  vehicleColor: string;
-  vehicleType: string;
-  speed: number;
-  photos: string[];
-  accuracy: number;
-  abnormal: boolean;
-  reason?: string;
-  deviceId: string;
+  majorType?: string;
+  minorType?: string;
+  timestamp?: string;
+  plateNumber?: string;
+  vehicleClass?: string;
+  vehicleColor?: string;
+  vehicleBrand?: string;
+  vehicleSubBrand?: string;
+  captureImageUrls: string[];
+  personIdentifiers: string[];
+  plateRecognition: boolean;
+  rawPersonIdList?: string;
+  captureImageCount?: number;
 };
 
 export type LicenseRecordResponse = {
+  total: number;
+  currentPage: number;
+  totalPages: number;
+  perPage: number;
   records: LicenseRecordItem[];
 };
 
-export async function getLicenseRecords(options?: Record<string, any>) {
-  return request<ApiResponse<LicenseRecordResponse>>(
-    '/api/traffic/license-records',
+export type LicenseRecordParams = {
+  page?: number;
+  per_page?: number;
+  start_time?: string;
+  end_time?: string;
+  plate_number?: string;
+  vehicle_class?: string;
+  vehicle_color?: string;
+  major_type?: string;
+  minor_type?: string;
+};
+
+const transformLicenseRecord = (
+  record: BoxAlarmEventRecord,
+): LicenseRecordItem => ({
+  id: record.id,
+  majorType: record.major_type,
+  minorType: record.minor_type,
+  timestamp: record.timestamp,
+  plateNumber: record.plate_number,
+  vehicleClass: record.vehicle_class,
+  vehicleColor: record.vehicle_color,
+  vehicleBrand: record.vehicle_brand,
+  vehicleSubBrand: record.vehicle_sub_brand,
+  captureImageUrls: record.capture_image_urls ?? [],
+  personIdentifiers: record.person_identifiers ?? [],
+  plateRecognition: Boolean(record.plate_recognition),
+  rawPersonIdList: record.raw_person_id_list,
+  captureImageCount: record.capture_image_count,
+});
+
+export async function getLicenseRecords(
+  params?: LicenseRecordParams,
+  options?: Record<string, any>,
+) {
+  const resp = await request<ApiResponse<BackendLicenseRecordResponse>>(
+    '/api/v1/admin/box_alarm_events',
+    {
+      method: 'GET',
+      params,
+      ...(options || {}),
+    },
+  );
+
+  const payload = resp.data;
+
+  if (!payload) {
+    return resp as ApiResponse<LicenseRecordResponse>;
+  }
+
+  return {
+    ...resp,
+    data: {
+      total: payload.total,
+      currentPage: payload.current_page,
+      totalPages: payload.total_pages,
+      perPage: payload.per_page,
+      records: (payload.records || []).map(transformLicenseRecord),
+    },
+  };
+}
+
+export type LicenseRecordDetail = LicenseRecordItem;
+
+export async function getLicenseRecordDetail(
+  id: string,
+  options?: Record<string, any>,
+) {
+  const resp = await request<ApiResponse<BoxAlarmEventRecord>>(
+    `/api/v1/admin/box_alarm_events/${id}`,
     {
       method: 'GET',
       ...(options || {}),
     },
   );
+
+  if (!resp.data) {
+    return resp as ApiResponse<LicenseRecordDetail>;
+  }
+
+  return {
+    ...resp,
+    data: transformLicenseRecord(resp.data),
+  };
 }
 
 export type TrafficMonitoringRecord = {

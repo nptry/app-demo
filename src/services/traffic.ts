@@ -325,6 +325,24 @@ export async function getRetrogradeViolationDetail(
   return fetchBoxAlarmEventDetail(id, options);
 }
 
+export type ParkingViolationItem = BoxAlarmEventItem;
+export type ParkingViolationResponse = BoxAlarmEventResponse;
+export type ParkingViolationDetail = BoxAlarmEventItem;
+
+export async function getParkingViolations(
+  params?: BoxAlarmEventParams,
+  options?: Record<string, any>,
+) {
+  return fetchBoxAlarmEvents(params, options);
+}
+
+export async function getParkingViolationDetail(
+  id: string,
+  options?: Record<string, any>,
+) {
+  return fetchBoxAlarmEventDetail(id, options);
+}
+
 export type TrafficMonitoringRecord = {
   id: string;
   checkpointName: string;
@@ -382,39 +400,9 @@ export type RedLightRecord = {
   accuracy: number;
 };
 
-export type ParkingViolationRecord = {
-  id: string;
-  checkpointName: string;
-  area: string;
-  rule: string;
-  startTime: string;
-  duration: string;
-  threshold: number;
-  plateNumber: string;
-  vehicleType: string;
-  photos: string[];
-  video: string;
-  specialVehicle: boolean;
-  specialReason?: string;
-  alarmStatus: string;
-  remark?: string;
-  deviceId: string;
-  accuracy: number;
-};
-
 export async function getRedLightViolations(options?: Record<string, any>) {
   return request<ApiResponse<RedLightRecord[]>>('/api/traffic/red-light', {
     method: 'GET',
     ...(options || {}),
   });
-}
-
-export async function getParkingViolations(options?: Record<string, any>) {
-  return request<ApiResponse<ParkingViolationRecord[]>>(
-    '/api/traffic/parking',
-    {
-      method: 'GET',
-      ...(options || {}),
-    },
-  );
 }

@@ -343,6 +343,24 @@ export async function getParkingViolationDetail(
   return fetchBoxAlarmEventDetail(id, options);
 }
 
+export type CrowdDensityItem = BoxAlarmEventItem;
+export type CrowdDensityResponse = BoxAlarmEventResponse;
+export type CrowdDensityDetail = BoxAlarmEventItem;
+
+export async function getCrowdDensityEvents(
+  params?: BoxAlarmEventParams,
+  options?: Record<string, any>,
+) {
+  return fetchBoxAlarmEvents(params, options);
+}
+
+export async function getCrowdDensityEventDetail(
+  id: string,
+  options?: Record<string, any>,
+) {
+  return fetchBoxAlarmEventDetail(id, options);
+}
+
 export type TrafficMonitoringRecord = {
   id: string;
   checkpointName: string;

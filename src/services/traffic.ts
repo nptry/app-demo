@@ -179,7 +179,7 @@ type BackendLicenseRecordResponse = {
   records: BoxAlarmEventRecord[];
 };
 
-export type LicenseRecordItem = {
+export type BoxAlarmEventItem = {
   id: string;
   majorType?: string;
   minorType?: string;
@@ -196,15 +196,15 @@ export type LicenseRecordItem = {
   captureImageCount?: number;
 };
 
-export type LicenseRecordResponse = {
+export type BoxAlarmEventResponse = {
   total: number;
   currentPage: number;
   totalPages: number;
   perPage: number;
-  records: LicenseRecordItem[];
+  records: BoxAlarmEventItem[];
 };
 
-export type LicenseRecordParams = {
+export type BoxAlarmEventParams = {
   page?: number;
   per_page?: number;
   start_time?: string;
@@ -216,9 +216,9 @@ export type LicenseRecordParams = {
   minor_type?: string;
 };
 
-const transformLicenseRecord = (
+const transformBoxAlarmRecord = (
   record: BoxAlarmEventRecord,
-): LicenseRecordItem => ({
+): BoxAlarmEventItem => ({
   id: record.id,
   majorType: record.major_type,
   minorType: record.minor_type,
@@ -235,8 +235,8 @@ const transformLicenseRecord = (
   captureImageCount: record.capture_image_count,
 });
 
-export async function getLicenseRecords(
-  params?: LicenseRecordParams,
+async function fetchBoxAlarmEvents(
+  params?: BoxAlarmEventParams,
   options?: Record<string, any>,
 ) {
   const resp = await request<ApiResponse<BackendLicenseRecordResponse>>(
@@ -251,7 +251,7 @@ export async function getLicenseRecords(
   const payload = resp.data;
 
   if (!payload) {
-    return resp as ApiResponse<LicenseRecordResponse>;
+    return resp as ApiResponse<BoxAlarmEventResponse>;
   }
 
   return {
@@ -261,14 +261,12 @@ export async function getLicenseRecords(
       currentPage: payload.current_page,
       totalPages: payload.total_pages,
       perPage: payload.per_page,
-      records: (payload.records || []).map(transformLicenseRecord),
+      records: (payload.records || []).map(transformBoxAlarmRecord),
     },
   };
 }
 
-export type LicenseRecordDetail = LicenseRecordItem;
-
-export async function getLicenseRecordDetail(
+async function fetchBoxAlarmEventDetail(
   id: string,
   options?: Record<string, any>,
 ) {
@@ -281,13 +279,50 @@ export async function getLicenseRecordDetail(
   );
 
   if (!resp.data) {
-    return resp as ApiResponse<LicenseRecordDetail>;
+    return resp as ApiResponse<BoxAlarmEventItem>;
   }
 
   return {
     ...resp,
-    data: transformLicenseRecord(resp.data),
+    data: transformBoxAlarmRecord(resp.data),
   };
+}
+
+export type LicenseRecordItem = BoxAlarmEventItem;
+export type LicenseRecordResponse = BoxAlarmEventResponse;
+export type LicenseRecordParams = BoxAlarmEventParams;
+export type LicenseRecordDetail = LicenseRecordItem;
+
+export async function getLicenseRecords(
+  params?: LicenseRecordParams,
+  options?: Record<string, any>,
+) {
+  return fetchBoxAlarmEvents(params, options);
+}
+
+export async function getLicenseRecordDetail(
+  id: string,
+  options?: Record<string, any>,
+) {
+  return fetchBoxAlarmEventDetail(id, options);
+}
+
+export type RetrogradeViolationItem = BoxAlarmEventItem;
+export type RetrogradeViolationResponse = BoxAlarmEventResponse;
+export type RetrogradeViolationDetail = BoxAlarmEventItem;
+
+export async function getRetrogradeViolations(
+  params?: BoxAlarmEventParams,
+  options?: Record<string, any>,
+) {
+  return fetchBoxAlarmEvents(params, options);
+}
+
+export async function getRetrogradeViolationDetail(
+  id: string,
+  options?: Record<string, any>,
+) {
+  return fetchBoxAlarmEventDetail(id, options);
 }
 
 export type TrafficMonitoringRecord = {
@@ -347,24 +382,6 @@ export type RedLightRecord = {
   accuracy: number;
 };
 
-export type RetrogradeRecord = {
-  id: string;
-  checkpointName: string;
-  lane: string;
-  directionRule: string;
-  violationTime: string;
-  plateNumber: string;
-  vehicleType: string;
-  photos: string[];
-  video: string;
-  distance: number;
-  speed: number;
-  alarmStatus: string;
-  remark?: string;
-  deviceId: string;
-  accuracy: number;
-};
-
 export type ParkingViolationRecord = {
   id: string;
   checkpointName: string;
@@ -387,13 +404,6 @@ export type ParkingViolationRecord = {
 
 export async function getRedLightViolations(options?: Record<string, any>) {
   return request<ApiResponse<RedLightRecord[]>>('/api/traffic/red-light', {
-    method: 'GET',
-    ...(options || {}),
-  });
-}
-
-export async function getRetrogradeViolations(options?: Record<string, any>) {
-  return request<ApiResponse<RetrogradeRecord[]>>('/api/traffic/retrograde', {
     method: 'GET',
     ...(options || {}),
   });

@@ -1,15 +1,21 @@
-import React, { useMemo } from 'react';
-import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
-import type { ColumnsType } from 'antd/es/table';
+import { useRequest } from '@umijs/max';
 import { Card, Col, Row, Statistic, Table, Tag } from 'antd';
-import type { LicenseRecordItem, LicenseRecordResponse } from '@/services/traffic';
+import type { ColumnsType } from 'antd/es/table';
+import React, { useMemo } from 'react';
+import type {
+  LicenseRecordItem,
+  LicenseRecordResponse,
+} from '@/services/traffic';
 import { getLicenseRecords } from '@/services/traffic';
 
 const LicenseRecords: React.FC = () => {
   const { data, loading } = useRequest(getLicenseRecords, {
-    formatResult: (res: LicenseRecordResponse | { data: LicenseRecordResponse }) =>
-      (res as { data?: LicenseRecordResponse })?.data ?? (res as LicenseRecordResponse),
+    formatResult: (
+      res: LicenseRecordResponse | { data: LicenseRecordResponse },
+    ) =>
+      (res as { data?: LicenseRecordResponse })?.data ??
+      (res as LicenseRecordResponse),
   });
 
   const records = data?.records ?? [];
@@ -27,18 +33,15 @@ const LicenseRecords: React.FC = () => {
       {
         title: '车辆特征',
         dataIndex: 'vehicleType',
-        render: (value: string, record) => `${value} / ${record.vehicleColor} / ${record.plateColor}`,
+        render: (value: string, record) =>
+          `${value} / ${record.vehicleColor} / ${record.plateColor}`,
       },
-      {
-        title: '告警',
-        dataIndex: 'abnormal',
-        render: (value: boolean, record) =>
-          value ? <Tag color="orange">{record.reason ?? '异常'}</Tag> : <Tag color="green">正常</Tag>,
-      },
+
       {
         title: '抓拍图片',
         dataIndex: 'photos',
-        render: (value: string[]) => (value.length ? <a>查看({value.length})</a> : '—'),
+        render: (value: string[]) =>
+          value.length ? <a>查看({value.length})</a> : '—',
       },
       { title: '采集设备', dataIndex: 'deviceId' },
     ],
@@ -60,7 +63,11 @@ const LicenseRecords: React.FC = () => {
         </Col>
       </Row>
 
-      <Card title="抓拍记录" style={{ marginTop: 24 }} bodyStyle={{ paddingTop: 8 }}>
+      <Card
+        title="抓拍记录"
+        style={{ marginTop: 24 }}
+        bodyStyle={{ paddingTop: 8 }}
+      >
         <Table<LicenseRecordItem>
           rowKey="id"
           loading={loading}

@@ -67,38 +67,6 @@ export async function getChannelDeployments(options?: Record<string, any>) {
   );
 }
 
-export type KeyPersonRecord = {
-  id: string;
-  channelId: string;
-  channelName: string;
-  personId: string;
-  personName: string;
-  personType: string;
-  captureTime: string;
-  photos: string[];
-  video: string;
-  accuracy: number;
-  behavior: string;
-  withCompanion: boolean;
-  companionCount?: number;
-  alarmStatus: string;
-  alarmChannels: string[];
-  receiver: string;
-  resultRemark?: string;
-  deviceId: string;
-};
-
-export type KeyPersonResponse = {
-  records: KeyPersonRecord[];
-};
-
-export async function getChannelWatch(options?: Record<string, any>) {
-  return request<ApiResponse<KeyPersonResponse>>('/api/pedestrian/watch', {
-    method: 'GET',
-    ...(options || {}),
-  });
-}
-
 export type TrajectoryPoint = {
   channelId: string;
   channelName: string;

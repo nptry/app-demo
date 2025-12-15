@@ -152,9 +152,142 @@ export type KeyPersonResponse = {
   persons: KeyPersonItem[];
 };
 
+type BackendKeyPerson = {
+  id: number | string;
+  name: string;
+  gender?: string;
+  birthDate?: string;
+  idNumber?: string;
+  personType: KeyPersonItem['personType'];
+  reason?: string;
+  controlAreas?: string[];
+  startTime?: string;
+  endTime?: string;
+  faceLibrary?: string;
+  contactName?: string;
+  contactPhone?: string;
+  status: KeyPersonItem['status'];
+  statusUpdatedAt?: string;
+  operator?: string;
+  remark?: string;
+};
+
+const transformKeyPerson = (person: BackendKeyPerson): KeyPersonItem => ({
+  id: person.id.toString(),
+  name: person.name,
+  gender: (person.gender as KeyPersonItem['gender']) || '未知',
+  birthDate: person.birthDate || '',
+  idNumber: person.idNumber || '',
+  personType: person.personType,
+  reason: person.reason || '',
+  controlAreas: person.controlAreas || [],
+  startTime: person.startTime || '',
+  endTime: person.endTime || '',
+  faceLibrary: person.faceLibrary || '',
+  contactName: person.contactName,
+  contactPhone: person.contactPhone,
+  status: person.status,
+  statusUpdatedAt: person.statusUpdatedAt || '',
+  operator: person.operator || '',
+  remark: person.remark,
+});
+
+const buildKeyPersonPayload = (person: Partial<KeyPersonItem>) => ({
+  key_person: {
+    name: person.name,
+    gender: person.gender,
+    birth_date: person.birthDate,
+    id_number: person.idNumber,
+    person_type: person.personType,
+    reason: person.reason,
+    control_areas: person.controlAreas,
+    start_time: person.startTime,
+    end_time: person.endTime,
+    face_library: person.faceLibrary,
+    contact_name: person.contactName,
+    contact_phone: person.contactPhone,
+    status: person.status,
+    status_updated_at: person.statusUpdatedAt,
+    operator: person.operator,
+    remark: person.remark,
+  },
+});
+
 export async function getKeyPersons(options?: Record<string, any>) {
-  return request<ApiResponse<KeyPersonResponse>>('/api/user/key-persons', {
-    method: 'GET',
-    ...(options || {}),
-  });
+  const resp = await request<ApiResponse<KeyPersonResponse>>(
+    '/api/v1/admin/key_people',
+    {
+      method: 'GET',
+      ...(options || {}),
+    },
+  );
+
+  const payload = resp.data;
+  if (!payload) {
+    return resp as ApiResponse<KeyPersonResponse>;
+  }
+
+  const summary = payload.summary || {
+    total: 0,
+    in_control: 0,
+    expired: 0,
+    high_risk: 0,
+  };
+
+  return {
+    ...resp,
+    data: {
+      summary: {
+        total: summary.total,
+        inControl: summary.in_control,
+        expired: summary.expired,
+        highRisk: summary.high_risk,
+      },
+      persons: (payload.persons || []).map(transformKeyPerson),
+    },
+  };
+}
+
+export async function createKeyPerson(
+  body: Partial<KeyPersonItem>,
+  options?: Record<string, any>,
+) {
+  const resp = await request<ApiResponse<BackendKeyPerson>>(
+    '/api/v1/admin/key_people',
+    {
+      method: 'POST',
+      data: buildKeyPersonPayload(body),
+      ...(options || {}),
+    },
+  );
+  return transformKeyPerson(resp.data as BackendKeyPerson);
+}
+
+export async function updateKeyPerson(
+  id: string,
+  body: Partial<KeyPersonItem>,
+  options?: Record<string, any>,
+) {
+  const resp = await request<ApiResponse<BackendKeyPerson>>(
+    `/api/v1/admin/key_people/${id}`,
+    {
+      method: 'PATCH',
+      data: buildKeyPersonPayload(body),
+      ...(options || {}),
+    },
+  );
+  return transformKeyPerson(resp.data as BackendKeyPerson);
+}
+
+export async function deleteKeyPerson(
+  id: string,
+  options?: Record<string, any>,
+) {
+  return request<ApiResponse<Record<string, never>>>(
+    `/api/v1/admin/key_people/${id}`,
+    {
+      method: 'DELETE',
+      ...(options || {}),
+    },
+  );
 }

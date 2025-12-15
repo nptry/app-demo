@@ -16,6 +16,7 @@ const moduleTranslations: Record<string, string> = {
   action_log: '行为日志',
   alarm_event_log: '预警事件日志',
   box_alarm_event: '车牌识别与记录',
+  key_person: '重点人员管理',
   dashboard: '仪表盘',
   setting: '设置',
 };

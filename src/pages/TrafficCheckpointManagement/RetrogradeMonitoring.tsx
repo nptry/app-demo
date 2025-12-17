@@ -143,7 +143,10 @@ const RetrogradeMonitoring: React.FC = () => {
       {
         title: '抓拍图片',
         dataIndex: 'captureImageUrls',
-        render: (value: string[]) =>
+        render: (
+          value: string[] | undefined,
+          record: RetrogradeViolationItem,
+        ) =>
           value?.length ? (
             <Image.PreviewGroup>
               <Space size={8} wrap>

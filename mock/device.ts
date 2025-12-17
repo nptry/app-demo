@@ -110,14 +110,59 @@ const statusData = {
   ],
 };
 
+const toApiStatus = (status: string) => {
+  switch (status) {
+    case '在线':
+      return 'online';
+    case '离线':
+      return 'offline';
+    case '故障':
+      return 'fault';
+    default:
+      return 'maintenance';
+  }
+};
+
+const deviceRecords = basicInfoData.devices.map((device, index) => ({
+  id: index + 1,
+  name: device.name,
+  sn: device.serialNumber,
+  model: device.model,
+  status: toApiStatus(device.status),
+  device_type: 'box',
+  metadata: {
+    remark: device.remark,
+    vendor: device.vendor,
+    install_date: device.installDate,
+    warranty_date: device.warrantyDate,
+  },
+  point_ids: [],
+  points: [],
+  created_at: device.installDate,
+  updated_at: device.installDate,
+}));
+
 export default {
-  'GET /api/device/basic-info': (req: Request, res: Response) => {
+  'GET /api/v1/admin/devices': (req: Request, res: Response) => {
+    const page = Number(req.query?.page ?? 1);
+    const perPage = Number(req.query?.per_page ?? deviceRecords.length);
+    const start = (page - 1) * perPage;
+    const pagedRecords = deviceRecords.slice(start, start + perPage);
+    const pages = Math.max(1, Math.ceil(deviceRecords.length / perPage));
+
     res.json({
       success: true,
-      data: basicInfoData,
+      data: {
+        summary: basicInfoData.summary,
+        records: pagedRecords,
+        total: deviceRecords.length,
+        page,
+        per_page: perPage,
+        pages,
+      },
     });
   },
-  'GET /api/device/status': (req: Request, res: Response) => {
+  'GET /api/v1/admin/devices/status': (req: Request, res: Response) => {
     res.json({
       success: true,
       data: statusData,

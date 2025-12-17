@@ -23,10 +23,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import React, { useCallback, useMemo, useState } from 'react';
-import {
-  type DeviceBasicInfoResponse,
-  getDeviceBasicInfo,
-} from '@/services/device';
+import { type DeviceListResponse, getDevices } from '@/services/device';
 import type {
   CheckpointPoint,
   CheckpointPointResponse,
@@ -52,23 +49,26 @@ type RegionOption = { label: string; value: string };
 const deploymentStatusOptions = ['正常运行', '待调试', '已拆除'];
 const deviceTypeOptions = ['智能盒子'];
 
+const DEVICE_OPTION_FETCH_SIZE = 500;
+
 const useDeviceOptions = (): DeviceOption[] => {
-  const { data } = useRequest(getDeviceBasicInfo, {
-    formatResult: (
-      res: DeviceBasicInfoResponse | { data: DeviceBasicInfoResponse },
-    ) =>
-      (res as { data?: DeviceBasicInfoResponse })?.data ??
-      (res as DeviceBasicInfoResponse),
-  });
+  const { data } = useRequest(
+    () => getDevices({ page: 1, per_page: DEVICE_OPTION_FETCH_SIZE }),
+    {
+      formatResult: (res: DeviceListResponse | { data: DeviceListResponse }) =>
+        (res as { data?: DeviceListResponse })?.data ??
+        (res as DeviceListResponse),
+    },
+  );
 
   return useMemo(() => {
     return (
-      data?.devices?.map((device) => ({
+      data?.records?.map((device) => ({
         label: `${device.name} (${device.id})`,
-        value: device.id,
+        value: device.id.toString(),
       })) ?? []
     );
-  }, [data?.devices]);
+  }, [data?.records]);
 };
 
 const useRegionOptions = (type: 'checkpoint' | 'site'): RegionOption[] => {

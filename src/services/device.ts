@@ -13,31 +13,45 @@ export type DevicePointInfo = {
   deviceId?: number;
 };
 
-export type DeviceBasicInfoItem = {
-  id: string;
+export type DeviceRecord = {
+  id: number;
   name: string;
-  type: '智能盒子' | string;
-  model?: string;
-  vendor?: string;
-  serialNumber?: string;
-  installDate?: string;
-  warrantyDate?: string;
-  status: '在线' | '离线' | '故障' | '维护中';
-  remark?: string;
-  pointIds?: number[];
-  points?: DevicePointInfo[];
   sn?: string;
-  deviceType?: string;
+  model?: string;
+  status?: 'online' | 'offline' | 'fault' | 'maintenance';
+  device_type?: string;
+  ip_address?: string;
+  device_identifier?: string;
+  metadata?: Record<string, any>;
+  point_ids?: number[];
+  points?: DevicePointInfo[];
+  created_at?: string;
+  updated_at?: string;
 };
 
-export type DeviceBasicInfoResponse = {
-  summary: {
-    total: number;
-    aiEdge: number;
-    gateways: number;
-    online: number;
-  };
-  devices: DeviceBasicInfoItem[];
+export type DeviceSummary = {
+  total: number;
+  aiEdge: number;
+  gateways: number;
+  online: number;
+};
+
+export type DeviceListResponse = {
+  summary: DeviceSummary;
+  records: DeviceRecord[];
+  total: number;
+  page: number;
+  per_page: number;
+  pages: number;
+};
+
+export type DeviceListParams = {
+  page?: number;
+  per_page?: number;
+  query?: string;
+  status?: 'online' | 'offline' | 'fault' | 'maintenance';
+  device_type?: string;
+  refresh_status?: string;
 };
 
 export type DeviceStatusMetrics = {
@@ -65,14 +79,11 @@ export type DeviceStatusResponse = {
   statuses: DeviceStatusItem[];
 };
 
-export async function getDeviceBasicInfo(options?: Record<string, any>) {
-  return request<ApiResponse<DeviceBasicInfoResponse>>(
-    '/api/v1/admin/devices/basic-info',
-    {
-      method: 'GET',
-      ...(options || {}),
-    },
-  );
+export async function getDevices(params?: DeviceListParams) {
+  return request<ApiResponse<DeviceListResponse>>('/api/v1/admin/devices', {
+    method: 'GET',
+    params,
+  });
 }
 
 export async function getDeviceStatus(options?: Record<string, any>) {
@@ -100,7 +111,7 @@ export async function createDevice(
   body: DevicePayload,
   options?: Record<string, any>,
 ) {
-  return request<ApiResponse<DeviceBasicInfoItem>>('/api/v1/admin/devices', {
+  return request<ApiResponse<DeviceRecord>>('/api/v1/admin/devices', {
     method: 'POST',
     data: { device: body },
     ...(options || {}),
@@ -112,14 +123,11 @@ export async function updateDevice(
   body: DevicePayload,
   options?: Record<string, any>,
 ) {
-  return request<ApiResponse<DeviceBasicInfoItem>>(
-    `/api/v1/admin/devices/${id}`,
-    {
-      method: 'PATCH',
-      data: { device: body },
-      ...(options || {}),
-    },
-  );
+  return request<ApiResponse<DeviceRecord>>(`/api/v1/admin/devices/${id}`, {
+    method: 'PATCH',
+    data: { device: body },
+    ...(options || {}),
+  });
 }
 
 export async function deleteDevice(id: string, options?: Record<string, any>) {

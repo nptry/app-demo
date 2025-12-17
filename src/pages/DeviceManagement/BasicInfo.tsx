@@ -18,19 +18,19 @@ import {
   Tag,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import type {
-  DeviceBasicInfoItem,
-  DeviceBasicInfoResponse,
+  DeviceListResponse,
   DevicePointInfo,
+  DeviceRecord,
   DeviceStatusItem,
   DeviceStatusResponse,
 } from '@/services/device';
 import {
   createDevice,
   deleteDevice,
-  getDeviceBasicInfo,
   getDeviceStatus,
+  getDevices,
   updateDevice,
 } from '@/services/device';
 import { getPointOptions, type PointOption } from '@/services/point';
@@ -53,6 +53,23 @@ const statusColor: Record<
   维护中: 'warning',
   故障: 'error',
   离线: 'default',
+};
+
+type DeviceBasicInfoItem = {
+  id: string;
+  name: string;
+  type: '智能盒子' | string;
+  model?: string;
+  vendor?: string;
+  serialNumber?: string;
+  installDate?: string;
+  warrantyDate?: string;
+  status: '在线' | '离线' | '故障' | '维护中';
+  remark?: string;
+  pointIds?: number[];
+  points?: DevicePointInfo[];
+  sn?: string;
+  deviceType?: string;
 };
 
 type FilterState = {
@@ -94,19 +111,73 @@ const deviceStatusOptions: DeviceBasicInfoItem['status'][] = [
   '故障',
   '维护中',
 ];
-const statusToApiMap: Record<
-  DeviceBasicInfoItem['status'],
-  'online' | 'offline' | 'fault' | 'maintenance'
+
+const apiStatusMap: Record<
+  Exclude<DeviceRecord['status'], undefined>,
+  DeviceBasicInfoItem['status']
 > = {
-  在线: 'online',
-  离线: 'offline',
-  故障: 'fault',
-  维护中: 'maintenance',
+  online: '在线',
+  offline: '离线',
+  fault: '故障',
+  maintenance: '维护中',
 };
-const mapStatusToApi = (
-  status: DeviceBasicInfoItem['status'],
-): 'online' | 'offline' | 'fault' | 'maintenance' =>
-  statusToApiMap[status] ?? 'offline';
+
+const mapApiStatusToDisplay = (
+  status?: DeviceRecord['status'],
+): DeviceBasicInfoItem['status'] => {
+  if (!status) {
+    return '维护中';
+  }
+  return apiStatusMap[status] ?? '维护中';
+};
+
+const metadataValue = (
+  metadata: Record<string, any> | undefined,
+  keys: string[],
+): string | undefined => {
+  if (!metadata) return undefined;
+  for (const key of keys) {
+    if (metadata[key] !== undefined && metadata[key] !== null) {
+      return String(metadata[key]);
+    }
+  }
+  return undefined;
+};
+
+const transformDeviceRecord = (record: DeviceRecord): DeviceBasicInfoItem => {
+  const metadata = record.metadata ?? {};
+  const remark = metadataValue(metadata, ['remark', 'Remark']);
+  const vendor = metadataValue(metadata, ['vendor', 'Vendor']);
+  const installDate =
+    metadataValue(metadata, ['install_date', 'installDate']) ??
+    (record.created_at ? record.created_at.slice(0, 10) : undefined);
+  const warrantyDate = metadataValue(metadata, [
+    'warranty_date',
+    'warrantyDate',
+  ]);
+  const pointIds = (record.point_ids ?? [])
+    .map((id) => Number(id))
+    .filter((id) => !Number.isNaN(id));
+
+  return {
+    id: String(record.id),
+    name: record.name,
+    type: 'AI 边缘计算设备',
+    model: record.model,
+    vendor,
+    serialNumber: record.sn,
+    installDate,
+    warrantyDate,
+    status: mapApiStatusToDisplay(record.status),
+    remark,
+    pointIds,
+    points: record.points,
+    sn: record.sn,
+    deviceType: record.device_type,
+  };
+};
+
+const DEFAULT_DEVICE_FETCH_SIZE = 500;
 
 type EnrichedDevice = DeviceBasicInfoItem & {
   realtimeStatus?: DeviceStatusItem['realtimeStatus'];
@@ -115,13 +186,14 @@ type EnrichedDevice = DeviceBasicInfoItem & {
 };
 
 const BasicInfo: React.FC = () => {
-  const { data, loading, refresh } = useRequest(getDeviceBasicInfo, {
-    formatResult: (
-      res: DeviceBasicInfoResponse | { data: DeviceBasicInfoResponse },
-    ) =>
-      (res as { data?: DeviceBasicInfoResponse })?.data ??
-      (res as DeviceBasicInfoResponse),
-  });
+  const { data, loading, refresh } = useRequest(
+    () => getDevices({ page: 1, per_page: DEFAULT_DEVICE_FETCH_SIZE }),
+    {
+      formatResult: (res: DeviceListResponse | { data: DeviceListResponse }) =>
+        (res as { data?: DeviceListResponse })?.data ??
+        (res as DeviceListResponse),
+    },
+  );
   const {
     data: statusData,
     loading: statusLoading,
@@ -167,7 +239,10 @@ const BasicInfo: React.FC = () => {
     [pointOptions],
   );
 
-  const devices = data?.devices ?? [];
+  const rawDevices = data?.records ?? [];
+  const devices = useMemo(() => {
+    return rawDevices.map((record) => transformDeviceRecord(record));
+  }, [rawDevices]);
   const summary = data?.summary ?? {
     total: 0,
     aiEdge: 0,

@@ -1,5 +1,5 @@
 import { PageContainer } from '@ant-design/pro-components';
-import { useRequest } from '@umijs/max';
+import { useIntl, useRequest } from '@umijs/max';
 import {
   Button,
   Card,
@@ -36,6 +36,20 @@ const PLATE_RECOGNITION_FILTER = {
 const LicenseRecords: React.FC = () => {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
   const [detailVisible, setDetailVisible] = useState(false);
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
+  const personSeparator = useMemo(
+    () => (intl.locale?.startsWith('zh') ? '、' : ', '),
+    [intl.locale],
+  );
+  const recordUnitLabel = t('pages.common.unit.records');
+  const noLinkedPersonsText = t('pages.common.text.noLinkedPersons');
+  const unknownLabel = t('pages.common.text.unknown');
+  const noneText = t('pages.common.text.none');
 
   const { data, loading, run } = useRequest(
     ({ page = pagination.current, pageSize = pagination.pageSize } = {}) =>
@@ -90,55 +104,55 @@ const LicenseRecords: React.FC = () => {
   const columns: ColumnsType<LicenseRecordItem> = useMemo(
     () => [
       {
-        title: '抓拍时间',
+        title: t('pages.licenseRecords.columns.captureTime'),
         dataIndex: 'timestamp',
         width: 180,
         render: (value: string | undefined) =>
           value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '—',
       },
       {
-        title: '车牌号',
+        title: t('pages.licenseRecords.columns.plateNumber'),
         dataIndex: 'plateNumber',
         width: 140,
         render: (value: string | undefined) =>
           value ? <strong>{value}</strong> : '—',
       },
       {
-        title: '事件类型',
+        title: t('pages.licenseRecords.columns.eventType'),
         dataIndex: 'plateRecognition',
         width: 140,
         render: (_: boolean, record) => (
           <Tag color={record.plateRecognition ? 'blue' : 'default'}>
             {record.plateRecognition
-              ? '车牌识别'
+              ? t('pages.licenseRecords.tag.plateRecognition')
               : `${record.majorType ?? ''}/${record.minorType ?? ''}`}
           </Tag>
         ),
       },
       {
-        title: '车辆信息',
+        title: t('pages.licenseRecords.columns.vehicleInfo'),
         render: (_: unknown, record) => (
           <>
             <div>
-              {record.vehicleBrand || '未知'}
+              {record.vehicleBrand || unknownLabel}
               {record.vehicleSubBrand ? `/${record.vehicleSubBrand}` : ''}
             </div>
             <div>
-              {record.vehicleClass || '未知'}
+              {record.vehicleClass || unknownLabel}
               {record.vehicleColor ? `/${record.vehicleColor}` : ''}
             </div>
           </>
         ),
       },
       {
-        title: '关联人员',
+        title: t('pages.licenseRecords.columns.linkedPersons'),
         dataIndex: 'personIdentifiers',
         width: 200,
         render: (value: string[]) =>
-          value?.length ? value.join('、') : '无关联人员',
+          value?.length ? value.join(personSeparator) : noLinkedPersonsText,
       },
       {
-        title: '抓拍图片',
+        title: t('pages.licenseRecords.columns.captureImages'),
         dataIndex: 'captureImageUrls',
         render: (value: string[]) =>
           value?.length ? (
@@ -166,36 +180,44 @@ const LicenseRecords: React.FC = () => {
           ),
       },
       {
-        title: '操作',
+        title: t('pages.licenseRecords.columns.action'),
         dataIndex: 'action',
         width: 120,
         render: (_: unknown, record) => (
           <Button type="link" onClick={() => handleViewDetail(record.id)}>
-            查看详情
+            {t('pages.common.actions.viewDetail')}
           </Button>
         ),
       },
     ],
-    [handleViewDetail],
+    [handleViewDetail, noLinkedPersonsText, personSeparator, t, unknownLabel],
   );
 
   return (
-    <PageContainer header={{ title: '车牌识别与记录' }}>
+    <PageContainer header={{ title: t('pages.licenseRecords.pageTitle') }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="记录条数" value={totalRecords} suffix="条" />
+            <Statistic
+              title={t('pages.licenseRecords.stat.totalRecords')}
+              value={totalRecords}
+              suffix={recordUnitLabel}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="关联人员" value={abnormalCount} suffix="条" />
+            <Statistic
+              title={t('pages.licenseRecords.stat.taggedRecords')}
+              value={abnormalCount}
+              suffix={recordUnitLabel}
+            />
           </Card>
         </Col>
       </Row>
 
       <Card
-        title="抓拍记录"
+        title={t('pages.licenseRecords.table.title')}
         style={{ marginTop: 24 }}
         bodyStyle={{ paddingTop: 8 }}
       >
@@ -214,14 +236,14 @@ const LicenseRecords: React.FC = () => {
                 current: page,
                 pageSize: pageSize || pagination.pageSize,
               }),
-            showTotal: (total) => `共 ${total} 条`,
+            showTotal: (total) => t('pages.common.table.total', { total }),
           }}
           scroll={{ x: 1000 }}
         />
       </Card>
 
       <Drawer
-        title="识别详情"
+        title={t('pages.licenseRecords.drawer.title')}
         width={520}
         open={detailVisible}
         onClose={closeDetail}
@@ -234,15 +256,21 @@ const LicenseRecords: React.FC = () => {
         ) : detail ? (
           <>
             <Descriptions bordered size="small" column={1}>
-              <Descriptions.Item label="抓拍时间">
+              <Descriptions.Item
+                label={t('pages.licenseRecords.fields.captureTime')}
+              >
                 {detail.timestamp
                   ? dayjs(detail.timestamp).format('YYYY-MM-DD HH:mm:ss')
                   : '—'}
               </Descriptions.Item>
-              <Descriptions.Item label="车牌号">
+              <Descriptions.Item
+                label={t('pages.licenseRecords.fields.plateNumber')}
+              >
                 {detail.plateNumber || '—'}
               </Descriptions.Item>
-              <Descriptions.Item label="车辆信息">
+              <Descriptions.Item
+                label={t('pages.licenseRecords.fields.vehicleInfo')}
+              >
                 {[detail.vehicleBrand, detail.vehicleSubBrand]
                   .filter(Boolean)
                   .join('/')}
@@ -251,15 +279,21 @@ const LicenseRecords: React.FC = () => {
                   .filter(Boolean)
                   .join('/')}
               </Descriptions.Item>
-              <Descriptions.Item label="关联人员">
+              <Descriptions.Item
+                label={t('pages.licenseRecords.fields.linkedPersons')}
+              >
                 {detail.personIdentifiers.length
-                  ? detail.personIdentifiers.join('、')
-                  : '无'}
+                  ? detail.personIdentifiers.join(personSeparator)
+                  : noneText}
               </Descriptions.Item>
-              <Descriptions.Item label="原始人员ID">
+              <Descriptions.Item
+                label={t('pages.licenseRecords.fields.rawPersonIds')}
+              >
                 {detail.rawPersonIdList || '—'}
               </Descriptions.Item>
-              <Descriptions.Item label="抓拍图片数量">
+              <Descriptions.Item
+                label={t('pages.licenseRecords.fields.captureImageCount')}
+              >
                 {detail.captureImageCount ?? detail.captureImageUrls.length}
               </Descriptions.Item>
             </Descriptions>
@@ -283,12 +317,15 @@ const LicenseRecords: React.FC = () => {
             ) : (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="暂无抓拍图片"
+                description={t('pages.common.empty.noImages')}
               />
             )}
           </>
         ) : (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={t('pages.common.empty.noData')}
+          />
         )}
       </Drawer>
     </PageContainer>

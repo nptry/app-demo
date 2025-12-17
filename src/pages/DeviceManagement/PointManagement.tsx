@@ -1,6 +1,6 @@
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import { useRequest } from '@umijs/max';
+import { useIntl, useRequest } from '@umijs/max';
 import {
   Button,
   Card,
@@ -46,9 +46,6 @@ type TabKey = 'checkpoint' | 'site';
 type DeviceOption = { label: string; value: string };
 type RegionOption = { label: string; value: string };
 
-const deploymentStatusOptions = ['正常运行', '待调试', '已拆除'];
-const deviceTypeOptions = ['智能盒子'];
-
 const DEVICE_OPTION_FETCH_SIZE = 500;
 
 const useDeviceOptions = (): DeviceOption[] => {
@@ -87,6 +84,12 @@ const useRegionOptions = (type: 'checkpoint' | 'site'): RegionOption[] => {
 };
 
 const CheckpointTab: React.FC = () => {
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
   const regionOptions = useRegionOptions('checkpoint');
   const { data, loading, refresh } = useRequest(getCheckpointPoints, {
     formatResult: (
@@ -109,6 +112,9 @@ const CheckpointTab: React.FC = () => {
   );
   const [form] = Form.useForm<CheckpointPoint>();
   const [filterForm] = Form.useForm();
+  const checkpointUnitLabel = t('pages.deviceManagement.point.unit.count');
+  const laneUnitLabel = t('pages.deviceManagement.point.unit.lane');
+  const unboundText = t('pages.deviceManagement.point.text.unbound');
 
   const typeOptions = useMemo(() => {
     return Array.from(
@@ -169,10 +175,10 @@ const CheckpointTab: React.FC = () => {
   const handleDelete = useCallback(
     async (id: string) => {
       await deleteCheckpointPoint(id);
-      message.success('删除成功');
+      message.success(t('pages.common.messages.deleteSuccess'));
       refresh();
     },
-    [refresh],
+    [refresh, t],
   );
 
   const handleModalOk = useCallback(async () => {
@@ -180,20 +186,28 @@ const CheckpointTab: React.FC = () => {
     const payload = { ...values };
     if (editingRecord) {
       await updateCheckpointPoint(editingRecord.id, payload);
-      message.success('卡口点位信息已更新');
+      message.success(
+        t('pages.deviceManagement.point.checkpoint.messages.updateSuccess'),
+      );
     } else {
       await createCheckpointPoint(payload);
-      message.success('新建卡口点位成功');
+      message.success(
+        t('pages.deviceManagement.point.checkpoint.messages.createSuccess'),
+      );
     }
     setModalVisible(false);
     refresh();
-  }, [editingRecord, form, refresh]);
+  }, [editingRecord, form, refresh, t]);
 
   const columns: ColumnsType<CheckpointPoint> = useMemo(
     () => [
-      { title: '点位 ID', dataIndex: 'id', width: 140 },
       {
-        title: '点位名称',
+        title: t('pages.deviceManagement.point.columns.id'),
+        dataIndex: 'id',
+        width: 140,
+      },
+      {
+        title: t('pages.deviceManagement.point.columns.name'),
         dataIndex: 'name',
         width: 220,
         render: (value: string, record) => (
@@ -205,9 +219,13 @@ const CheckpointTab: React.FC = () => {
           </div>
         ),
       },
-      { title: '所属区域', dataIndex: 'region', width: 200 },
       {
-        title: '关联设备',
+        title: t('pages.deviceManagement.point.columns.region'),
+        dataIndex: 'region',
+        width: 200,
+      },
+      {
+        title: t('pages.deviceManagement.point.columns.devices'),
         dataIndex: 'devices',
         width: 220,
         render: (devices: { id: string; name: string }[], record) => {
@@ -222,40 +240,44 @@ const CheckpointTab: React.FC = () => {
           }
           return record.deviceName
             ? `${record.deviceName} (${record.deviceId})`
-            : '未关联';
+            : unboundText;
         },
       },
       {
-        title: '位置',
+        title: t('pages.deviceManagement.point.columns.position'),
         dataIndex: 'positionDescription',
         width: 220,
       },
-      { title: '车道编号', dataIndex: 'laneName', width: 140 },
       {
-        title: '操作',
+        title: t('pages.deviceManagement.point.columns.lane'),
+        dataIndex: 'laneName',
+        width: 140,
+      },
+      {
+        title: t('pages.deviceManagement.point.columns.action'),
         dataIndex: 'action',
         width: 160,
         fixed: 'right',
         render: (_, record) => (
           <Space size="small">
             <Button type="link" onClick={() => handleEdit(record)}>
-              编辑
+              {t('pages.common.actions.edit')}
             </Button>
             <Popconfirm
-              title="确认删除该点位？"
-              okText="确认"
-              cancelText="取消"
+              title={t('pages.deviceManagement.point.popconfirm.deleteTitle')}
+              okText={t('pages.common.actions.confirm')}
+              cancelText={t('pages.common.actions.cancel')}
               onConfirm={() => handleDelete(record.id)}
             >
               <Button type="link" danger icon={<DeleteOutlined />}>
-                删除
+                {t('pages.common.actions.delete')}
               </Button>
             </Popconfirm>
           </Space>
         ),
       },
     ],
-    [handleDelete, handleEdit],
+    [handleDelete, handleEdit, t, unboundText],
   );
 
   return (
@@ -263,23 +285,31 @@ const CheckpointTab: React.FC = () => {
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12}>
           <Card bordered={false}>
-            <Statistic title="卡口点位总数" value={summary.total} suffix="个" />
+            <Statistic
+              title={t('pages.deviceManagement.point.checkpoint.card.total')}
+              value={summary.total}
+              suffix={checkpointUnitLabel}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12}>
           <Card bordered={false}>
-            <Statistic title="覆盖车道" value={summary.laneCount} suffix="条" />
+            <Statistic
+              title={t('pages.deviceManagement.point.checkpoint.card.lane')}
+              value={summary.laneCount}
+              suffix={laneUnitLabel}
+            />
           </Card>
         </Col>
       </Row>
 
       <Card
-        title="卡口点位"
+        title={t('pages.deviceManagement.point.checkpoint.table.title')}
         style={{ marginTop: 24 }}
         bodyStyle={{ paddingTop: 8 }}
         extra={
           <Button type="primary" onClick={openCreateModal}>
-            新建卡口点位
+            {t('pages.deviceManagement.point.checkpoint.button.create')}
           </Button>
         }
       >
@@ -293,7 +323,9 @@ const CheckpointTab: React.FC = () => {
           <Form.Item name="keyword">
             <Input
               allowClear
-              placeholder="搜索点位 / 区域 / 地址"
+              placeholder={t(
+                'pages.deviceManagement.point.checkpoint.filter.keyword',
+              )}
               style={{ width: 240 }}
             />
           </Form.Item>
@@ -302,14 +334,23 @@ const CheckpointTab: React.FC = () => {
               allowClear={false}
               style={{ width: 200 }}
               options={[
-                { label: '全部类型', value: 'all' },
+                {
+                  label: t(
+                    'pages.deviceManagement.point.checkpoint.filter.type.all',
+                  ),
+                  value: 'all',
+                },
                 ...typeOptions.map((item) => ({ label: item, value: item })),
               ]}
-              placeholder="卡口类型"
+              placeholder={t(
+                'pages.deviceManagement.point.checkpoint.filter.type.placeholder',
+              )}
             />
           </Form.Item>
           <Form.Item>
-            <Button onClick={handleFilterReset}>重置筛选</Button>
+            <Button onClick={handleFilterReset}>
+              {t('pages.common.buttons.resetFilters')}
+            </Button>
           </Form.Item>
         </Form>
 
@@ -324,37 +365,67 @@ const CheckpointTab: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingRecord ? '编辑卡口点位' : '新建卡口点位'}
+        title={
+          editingRecord
+            ? t('pages.deviceManagement.point.checkpoint.modal.editTitle')
+            : t('pages.deviceManagement.point.checkpoint.modal.createTitle')
+        }
         open={modalVisible}
         onOk={handleModalOk}
         onCancel={() => setModalVisible(false)}
-        okText="保存"
+        okText={t('pages.common.actions.save')}
         destroyOnClose
         width={800}
       >
         <Form layout="vertical" form={form}>
-          <Form.Item label="点位 ID" name="id">
-            <Input placeholder="不填写则自动生成" disabled={!!editingRecord} />
+          <Form.Item
+            label={t('pages.deviceManagement.point.form.labels.id')}
+            name="id"
+          >
+            <Input
+              placeholder={t('pages.common.form.placeholder.autoGenerate')}
+              disabled={!!editingRecord}
+            />
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="点位名称"
+                label={t('pages.deviceManagement.point.form.labels.name')}
                 name="name"
-                rules={[{ required: true, message: '请输入点位名称' }]}
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.deviceManagement.point.form.validations.name',
+                    ),
+                  },
+                ]}
               >
-                <Input placeholder="请输入点位名称" />
+                <Input
+                  placeholder={t(
+                    'pages.deviceManagement.point.form.placeholders.name',
+                  )}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label="所属区域"
+                label={t('pages.deviceManagement.point.form.labels.region')}
                 name="region"
-                rules={[{ required: true, message: '请选择所属区域' }]}
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.deviceManagement.point.form.validations.region',
+                    ),
+                  },
+                ]}
               >
                 <Select
                   options={regionOptions}
-                  placeholder="请选择所属区域"
+                  placeholder={t(
+                    'pages.deviceManagement.point.form.placeholders.region',
+                  )}
                   allowClear
                   showSearch
                   filterOption={(input, option) =>
@@ -366,14 +437,36 @@ const CheckpointTab: React.FC = () => {
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item label="车道编号" name="laneName">
-            <Input placeholder="请输入车道编号" />
+          <Form.Item
+            label={t('pages.deviceManagement.point.form.labels.lane')}
+            name="laneName"
+          >
+            <Input
+              placeholder={t(
+                'pages.deviceManagement.point.form.placeholders.lane',
+              )}
+            />
           </Form.Item>
-          <Form.Item label="位置" name="positionDescription">
-            <Input placeholder="请输入点位位置" />
+          <Form.Item
+            label={t('pages.deviceManagement.point.form.labels.position')}
+            name="positionDescription"
+          >
+            <Input
+              placeholder={t(
+                'pages.deviceManagement.point.form.placeholders.position',
+              )}
+            />
           </Form.Item>
-          <Form.Item label="备注" name="remark">
-            <Input.TextArea rows={3} placeholder="请输入备注信息" />
+          <Form.Item
+            label={t('pages.deviceManagement.point.form.labels.remark')}
+            name="remark"
+          >
+            <Input.TextArea
+              rows={3}
+              placeholder={t(
+                'pages.deviceManagement.point.form.placeholders.remark',
+              )}
+            />
           </Form.Item>
         </Form>
       </Modal>
@@ -384,6 +477,12 @@ const CheckpointTab: React.FC = () => {
 const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
   deviceOptions,
 }) => {
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
   const regionOptions = useRegionOptions('site');
   const { data, loading, refresh } = useRequest(getSitePoints, {
     formatResult: (res: SitePointResponse | { data: SitePointResponse }) =>
@@ -402,6 +501,9 @@ const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
   const [editingRecord, setEditingRecord] = useState<SitePoint | null>(null);
   const [form] = Form.useForm<SitePoint>();
   const [filterForm] = Form.useForm();
+  const siteUnitLabel = t('pages.deviceManagement.point.unit.site');
+  const areaUnitLabel = t('pages.deviceManagement.point.unit.area');
+  const unboundText = t('pages.deviceManagement.point.text.unbound');
 
   const filteredSites = useMemo(() => {
     const keyword = filters.keyword.trim().toLowerCase();
@@ -447,10 +549,10 @@ const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
   const handleDelete = useCallback(
     async (id: string) => {
       await deleteSitePoint(id);
-      message.success('删除成功');
+      message.success(t('pages.common.messages.deleteSuccess'));
       refresh();
     },
-    [refresh],
+    [refresh, t],
   );
 
   const handleModalOk = useCallback(async () => {
@@ -458,20 +560,28 @@ const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
     const payload = { ...values };
     if (editingRecord) {
       await updateSitePoint(editingRecord.id, payload);
-      message.success('场所点位信息已更新');
+      message.success(
+        t('pages.deviceManagement.point.site.messages.updateSuccess'),
+      );
     } else {
       await createSitePoint(payload);
-      message.success('新建场所点位成功');
+      message.success(
+        t('pages.deviceManagement.point.site.messages.createSuccess'),
+      );
     }
     setModalVisible(false);
     refresh();
-  }, [editingRecord, form, refresh]);
+  }, [editingRecord, form, refresh, t]);
 
   const columns: ColumnsType<SitePoint> = useMemo(
     () => [
-      { title: '点位 ID', dataIndex: 'id', width: 140 },
       {
-        title: '点位名称',
+        title: t('pages.deviceManagement.point.columns.id'),
+        dataIndex: 'id',
+        width: 140,
+      },
+      {
+        title: t('pages.deviceManagement.point.columns.name'),
         dataIndex: 'name',
         width: 220,
         render: (value: string, record) => (
@@ -483,9 +593,13 @@ const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
           </div>
         ),
       },
-      { title: '所属区域', dataIndex: 'region', width: 200 },
       {
-        title: '关联设备',
+        title: t('pages.deviceManagement.point.columns.region'),
+        dataIndex: 'region',
+        width: 200,
+      },
+      {
+        title: t('pages.deviceManagement.point.columns.devices'),
         dataIndex: 'devices',
         width: 220,
         render: (devices: { id: string; name: string }[], record) => {
@@ -500,39 +614,39 @@ const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
           }
           return record.deviceName
             ? `${record.deviceName} (${record.deviceId})`
-            : '未关联';
+            : unboundText;
         },
       },
       {
-        title: '位置',
+        title: t('pages.deviceManagement.point.columns.position'),
         dataIndex: 'positionDescription',
         width: 220,
       },
       {
-        title: '操作',
+        title: t('pages.deviceManagement.point.columns.action'),
         dataIndex: 'action',
         width: 160,
         fixed: 'right',
         render: (_, record) => (
           <Space size="small">
             <Button type="link" onClick={() => handleEdit(record)}>
-              编辑
+              {t('pages.common.actions.edit')}
             </Button>
             <Popconfirm
-              title="确认删除该点位？"
-              okText="确认"
-              cancelText="取消"
+              title={t('pages.deviceManagement.point.popconfirm.deleteTitle')}
+              okText={t('pages.common.actions.confirm')}
+              cancelText={t('pages.common.actions.cancel')}
               onConfirm={() => handleDelete(record.id)}
             >
               <Button type="link" danger icon={<DeleteOutlined />}>
-                删除
+                {t('pages.common.actions.delete')}
               </Button>
             </Popconfirm>
           </Space>
         ),
       },
     ],
-    [handleDelete, handleEdit],
+    [handleDelete, handleEdit, t, unboundText],
   );
 
   return (
@@ -541,30 +655,30 @@ const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
         <Col xs={24} sm={12}>
           <Card bordered={false}>
             <Statistic
-              title="场所点位总数"
+              title={t('pages.deviceManagement.point.site.card.total')}
               value={summary.totalSites}
-              suffix="处"
+              suffix={siteUnitLabel}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12}>
           <Card bordered={false}>
             <Statistic
-              title="覆盖总面积"
+              title={t('pages.deviceManagement.point.site.card.area')}
               value={summary.totalAreaSqm}
-              suffix="㎡"
+              suffix={areaUnitLabel}
             />
           </Card>
         </Col>
       </Row>
 
       <Card
-        title="场所点位"
+        title={t('pages.deviceManagement.point.site.table.title')}
         style={{ marginTop: 24 }}
         bodyStyle={{ paddingTop: 8 }}
         extra={
           <Button type="primary" onClick={openCreateModal}>
-            新建场所点位
+            {t('pages.deviceManagement.point.site.button.create')}
           </Button>
         }
       >
@@ -578,12 +692,16 @@ const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
           <Form.Item name="keyword">
             <Input
               allowClear
-              placeholder="搜索场所 / 区域 / 地址"
+              placeholder={t(
+                'pages.deviceManagement.point.site.filter.keyword',
+              )}
               style={{ width: 240 }}
             />
           </Form.Item>
           <Form.Item>
-            <Button onClick={handleFilterReset}>重置筛选</Button>
+            <Button onClick={handleFilterReset}>
+              {t('pages.common.buttons.resetFilters')}
+            </Button>
           </Form.Item>
         </Form>
         <Table<SitePoint>
@@ -597,35 +715,65 @@ const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
       </Card>
 
       <Modal
-        title={editingRecord ? '编辑场所点位' : '新建场所点位'}
+        title={
+          editingRecord
+            ? t('pages.deviceManagement.point.site.modal.editTitle')
+            : t('pages.deviceManagement.point.site.modal.createTitle')
+        }
         open={modalVisible}
         onOk={handleModalOk}
         onCancel={() => setModalVisible(false)}
-        okText="保存"
+        okText={t('pages.common.actions.save')}
         destroyOnClose
         width={780}
       >
         <Form layout="vertical" form={form}>
-          <Form.Item label="点位 ID" name="id">
-            <Input placeholder="不填写则自动生成" disabled={!!editingRecord} />
+          <Form.Item
+            label={t('pages.deviceManagement.point.form.labels.id')}
+            name="id"
+          >
+            <Input
+              placeholder={t('pages.common.form.placeholder.autoGenerate')}
+              disabled={!!editingRecord}
+            />
           </Form.Item>
           <Form.Item
-            label="点位名称"
+            label={t('pages.deviceManagement.point.form.labels.name')}
             name="name"
-            rules={[{ required: true, message: '请输入点位名称' }]}
+            rules={[
+              {
+                required: true,
+                message: t(
+                  'pages.deviceManagement.point.form.validations.name',
+                ),
+              },
+            ]}
           >
-            <Input placeholder="请输入点位名称" />
+            <Input
+              placeholder={t(
+                'pages.deviceManagement.point.form.placeholders.name',
+              )}
+            />
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="所属区域"
+                label={t('pages.deviceManagement.point.form.labels.region')}
                 name="region"
-                rules={[{ required: true, message: '请选择所属区域' }]}
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.deviceManagement.point.form.validations.region',
+                    ),
+                  },
+                ]}
               >
                 <Select
                   options={regionOptions}
-                  placeholder="请选择所属区域"
+                  placeholder={t(
+                    'pages.deviceManagement.point.form.placeholders.region',
+                  )}
                   allowClear
                   showSearch
                   filterOption={(input, option) =>
@@ -637,19 +785,29 @@ const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="面积（㎡）" name="areaSize">
+              <Form.Item
+                label={t('pages.deviceManagement.point.form.labels.area')}
+                name="areaSize"
+              >
                 <InputNumber
                   min={1}
                   style={{ width: '100%' }}
-                  placeholder="请输入场所面积"
+                  placeholder={t(
+                    'pages.deviceManagement.point.form.placeholders.area',
+                  )}
                 />
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item label="关联设备" name="deviceId">
+          <Form.Item
+            label={t('pages.deviceManagement.point.form.labels.device')}
+            name="deviceId"
+          >
             <Select
               options={deviceOptions}
-              placeholder="请选择关联设备"
+              placeholder={t(
+                'pages.deviceManagement.point.form.placeholders.device',
+              )}
               allowClear
               showSearch
               filterOption={(input, option) =>
@@ -659,11 +817,26 @@ const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
               }
             />
           </Form.Item>
-          <Form.Item label="位置" name="positionDescription">
-            <Input placeholder="请输入点位位置" />
+          <Form.Item
+            label={t('pages.deviceManagement.point.form.labels.position')}
+            name="positionDescription"
+          >
+            <Input
+              placeholder={t(
+                'pages.deviceManagement.point.form.placeholders.position',
+              )}
+            />
           </Form.Item>
-          <Form.Item label="备注" name="remark">
-            <Input.TextArea rows={3} placeholder="请输入备注信息" />
+          <Form.Item
+            label={t('pages.deviceManagement.point.form.labels.remark')}
+            name="remark"
+          >
+            <Input.TextArea
+              rows={3}
+              placeholder={t(
+                'pages.deviceManagement.point.form.placeholders.remark',
+              )}
+            />
           </Form.Item>
         </Form>
       </Modal>
@@ -672,11 +845,19 @@ const SiteTab: React.FC<{ deviceOptions: DeviceOption[] }> = ({
 };
 
 const PointManagement: React.FC = () => {
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
   const deviceOptions = useDeviceOptions();
   const [activeKey, setActiveKey] = useState<TabKey>('checkpoint');
 
   return (
-    <PageContainer header={{ title: '点位管理' }}>
+    <PageContainer
+      header={{ title: t('pages.deviceManagement.point.pageTitle') }}
+    >
       <Tabs
         activeKey={activeKey}
         onChange={(key) => setActiveKey(key as TabKey)}
@@ -684,12 +865,12 @@ const PointManagement: React.FC = () => {
         items={[
           {
             key: 'checkpoint',
-            label: '卡口点位',
+            label: t('pages.deviceManagement.point.tabs.checkpoint'),
             children: <CheckpointTab />,
           },
           {
             key: 'site',
-            label: '场所点位',
+            label: t('pages.deviceManagement.point.tabs.site'),
             children: <SiteTab deviceOptions={deviceOptions} />,
           },
         ]}

@@ -1,6 +1,6 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import { useRequest } from '@umijs/max';
+import { useIntl, useRequest } from '@umijs/max';
 import {
   Button,
   Card,
@@ -26,7 +26,24 @@ import {
   updateRegion,
 } from '@/services/region';
 
+const REGION_TYPE_OPTIONS = [
+  {
+    value: 'checkpoint',
+    labelId: 'pages.deviceManagement.region.types.checkpoint',
+  },
+  {
+    value: 'site',
+    labelId: 'pages.deviceManagement.region.types.site',
+  },
+] as const;
+
 const RegionManagement: React.FC = () => {
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
   const [form] = Form.useForm();
   const [filterForm] = Form.useForm();
   const [modalVisible, setModalVisible] = useState(false);
@@ -85,13 +102,13 @@ const RegionManagement: React.FC = () => {
     async (id: string) => {
       try {
         await deleteRegion(id);
-        message.success('删除成功');
+        message.success(t('pages.common.messages.deleteSuccess'));
         refresh();
       } catch (error) {
-        message.error('删除失败，请确保该区域下没有关联点位');
+        message.error(t('pages.deviceManagement.region.messages.deleteFailed'));
       }
     },
-    [refresh],
+    [refresh, t],
   );
 
   const handleModalOk = useCallback(async () => {
@@ -99,43 +116,70 @@ const RegionManagement: React.FC = () => {
       const values = await form.validateFields();
       if (editingRecord) {
         await updateRegion(editingRecord.id, values);
-        message.success('区域信息已更新');
+        message.success(
+          t('pages.deviceManagement.region.messages.updateSuccess'),
+        );
       } else {
         await createRegion(values);
-        message.success('新建区域成功');
+        message.success(
+          t('pages.deviceManagement.region.messages.createSuccess'),
+        );
       }
       setModalVisible(false);
       refresh();
     } catch (error) {
       // Form validation error or API error
     }
-  }, [editingRecord, form, refresh]);
+  }, [editingRecord, form, refresh, t]);
+
+  const regionTypeOptions = useMemo(
+    () =>
+      REGION_TYPE_OPTIONS.map((option) => ({
+        value: option.value,
+        label: t(option.labelId),
+        color: option.value === 'checkpoint' ? 'blue' : 'green',
+      })),
+    [t],
+  );
 
   const columns: ColumnsType<Region> = useMemo(
     () => [
-      { title: '区域 ID', dataIndex: 'id', width: 100 },
-      { title: '区域名称', dataIndex: 'name', width: 200 },
       {
-        title: '区域类型',
+        title: t('pages.deviceManagement.region.table.columns.id'),
+        dataIndex: 'id',
+        width: 100,
+      },
+      {
+        title: t('pages.deviceManagement.region.table.columns.name'),
+        dataIndex: 'name',
+        width: 200,
+      },
+      {
+        title: t('pages.deviceManagement.region.table.columns.type'),
         dataIndex: 'region_type',
         width: 120,
-        render: (type: string) => (
-          <Tag color={type === 'checkpoint' ? 'blue' : 'green'}>
-            {type === 'checkpoint' ? '卡口区域' : '场所区域'}
-          </Tag>
-        ),
+        render: (type: string) => {
+          const option = regionTypeOptions.find((item) => item.value === type);
+          return (
+            <Tag color={option?.color ?? 'blue'}>{option?.label ?? type}</Tag>
+          );
+        },
       },
-      { title: '描述', dataIndex: 'description', ellipsis: true },
       {
-        title: '包含点位数量',
+        title: t('pages.deviceManagement.region.table.columns.description'),
+        dataIndex: 'description',
+        ellipsis: true,
+      },
+      {
+        title: t('pages.deviceManagement.region.table.columns.pointCount'),
         dataIndex: 'point_count',
         width: 120,
         align: 'center',
       },
       {
-        title: '操作',
+        title: t('pages.deviceManagement.region.table.columns.action'),
         key: 'action',
-        width: 160,
+        width: 180,
         render: (_, record) => (
           <Space size="small">
             <Button
@@ -143,28 +187,32 @@ const RegionManagement: React.FC = () => {
               icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
             >
-              编辑
+              {t('pages.common.actions.edit')}
             </Button>
             <Popconfirm
-              title="确认删除该区域？"
-              description="删除区域前请确保该区域下没有关联的点位。"
+              title={t('pages.deviceManagement.region.popconfirm.deleteTitle')}
+              description={t(
+                'pages.deviceManagement.region.popconfirm.deleteDesc',
+              )}
               onConfirm={() => handleDelete(record.id)}
-              okText="确认"
-              cancelText="取消"
+              okText={t('pages.common.actions.confirm')}
+              cancelText={t('pages.common.actions.cancel')}
             >
               <Button type="link" danger icon={<DeleteOutlined />}>
-                删除
+                {t('pages.common.actions.delete')}
               </Button>
             </Popconfirm>
           </Space>
         ),
       },
     ],
-    [handleDelete, handleEdit],
+    [handleDelete, handleEdit, regionTypeOptions, t],
   );
 
   return (
-    <PageContainer header={{ title: '区域管理' }}>
+    <PageContainer
+      header={{ title: t('pages.deviceManagement.region.pageTitle') }}
+    >
       <Card bordered={false}>
         <div
           style={{
@@ -181,23 +229,32 @@ const RegionManagement: React.FC = () => {
           >
             <Form.Item name="keyword">
               <Input
-                placeholder="搜索区域名称 / 描述"
+                placeholder={t(
+                  'pages.deviceManagement.region.filter.keyword.placeholder',
+                )}
                 allowClear
                 style={{ width: 240 }}
               />
             </Form.Item>
             <Form.Item name="type">
               <Select
-                style={{ width: 120 }}
+                style={{ width: 160 }}
                 options={[
-                  { label: '全部类型', value: 'all' },
-                  { label: '卡口区域', value: 'checkpoint' },
-                  { label: '场所区域', value: 'site' },
+                  {
+                    label: t('pages.deviceManagement.region.filter.type.all'),
+                    value: 'all',
+                  },
+                  ...regionTypeOptions.map((option) => ({
+                    label: option.label,
+                    value: option.value,
+                  })),
                 ]}
               />
             </Form.Item>
             <Form.Item>
-              <Button onClick={handleFilterReset}>重置</Button>
+              <Button onClick={handleFilterReset}>
+                {t('pages.common.buttons.resetFilters')}
+              </Button>
             </Form.Item>
           </Form>
           <Button
@@ -205,7 +262,7 @@ const RegionManagement: React.FC = () => {
             icon={<PlusOutlined />}
             onClick={openCreateModal}
           >
-            新建区域
+            {t('pages.deviceManagement.region.button.create')}
           </Button>
         </div>
 
@@ -218,13 +275,17 @@ const RegionManagement: React.FC = () => {
             total,
             pageSize: 10,
             showSizeChanger: false,
-            showTotal: (t) => `共 ${t} 条记录`,
+            showTotal: (t) => t('pages.common.table.total', { total: t }),
           }}
         />
       </Card>
 
       <Modal
-        title={editingRecord ? '编辑区域' : '新建区域'}
+        title={
+          editingRecord
+            ? t('pages.deviceManagement.region.modal.editTitle')
+            : t('pages.deviceManagement.region.modal.createTitle')
+        }
         open={modalVisible}
         onOk={handleModalOk}
         onCancel={() => setModalVisible(false)}
@@ -232,27 +293,55 @@ const RegionManagement: React.FC = () => {
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            label="区域名称"
+            label={t('pages.deviceManagement.region.form.labels.name')}
             name="name"
-            rules={[{ required: true, message: '请输入区域名称' }]}
+            rules={[
+              {
+                required: true,
+                message: t(
+                  'pages.deviceManagement.region.form.validations.name',
+                ),
+              },
+            ]}
           >
-            <Input placeholder="请输入区域名称" />
-          </Form.Item>
-          <Form.Item
-            label="区域类型"
-            name="region_type"
-            rules={[{ required: true, message: '请选择区域类型' }]}
-          >
-            <Select
-              placeholder="请选择区域类型"
-              options={[
-                { label: '卡口区域', value: 'checkpoint' },
-                { label: '场所区域', value: 'site' },
-              ]}
+            <Input
+              placeholder={t(
+                'pages.deviceManagement.region.form.placeholders.name',
+              )}
             />
           </Form.Item>
-          <Form.Item label="描述" name="description">
-            <Input.TextArea rows={4} placeholder="请输入区域描述" />
+          <Form.Item
+            label={t('pages.deviceManagement.region.form.labels.type')}
+            name="region_type"
+            rules={[
+              {
+                required: true,
+                message: t(
+                  'pages.deviceManagement.region.form.validations.type',
+                ),
+              },
+            ]}
+          >
+            <Select
+              placeholder={t(
+                'pages.deviceManagement.region.form.placeholders.type',
+              )}
+              options={regionTypeOptions.map((option) => ({
+                label: option.label,
+                value: option.value,
+              }))}
+            />
+          </Form.Item>
+          <Form.Item
+            label={t('pages.deviceManagement.region.form.labels.description')}
+            name="description"
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder={t(
+                'pages.deviceManagement.region.form.placeholders.description',
+              )}
+            />
           </Form.Item>
         </Form>
       </Modal>

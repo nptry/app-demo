@@ -1,5 +1,5 @@
 import { PageContainer } from '@ant-design/pro-components';
-import { useRequest } from '@umijs/max';
+import { useIntl, useRequest } from '@umijs/max';
 import {
   Button,
   Card,
@@ -39,6 +39,20 @@ const PARKING_FILTER = {
 const ParkingViolation: React.FC = () => {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
   const [detailVisible, setDetailVisible] = useState(false);
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
+  const personSeparator = useMemo(
+    () => (intl.locale?.startsWith('zh') ? '、' : ', '),
+    [intl.locale],
+  );
+  const recordUnitLabel = t('pages.common.unit.records');
+  const noLinkedPersonsText = t('pages.common.text.noLinkedPersons');
+  const unknownLabel = t('pages.common.text.unknown');
+  const noneText = t('pages.common.text.none');
 
   const { data, loading, run } = useRequest(
     ({ page = pagination.current, pageSize = pagination.pageSize } = {}) =>
@@ -95,51 +109,55 @@ const ParkingViolation: React.FC = () => {
   const columns: ColumnsType<ParkingViolationItem> = useMemo(
     () => [
       {
-        title: '抓拍时间',
+        title: t('pages.parkingViolation.columns.captureTime'),
         dataIndex: 'timestamp',
         width: 180,
         render: (value: string | undefined) =>
           value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '—',
       },
       {
-        title: '车牌号',
+        title: t('pages.parkingViolation.columns.plateNumber'),
         dataIndex: 'plateNumber',
         width: 140,
         render: (value: string | undefined) =>
           value ? <strong>{value}</strong> : '—',
       },
       {
-        title: '车辆信息',
+        title: t('pages.parkingViolation.columns.vehicleInfo'),
         render: (_: unknown, record) => (
           <>
             <div>
-              {record.vehicleBrand || '未知'}
+              {record.vehicleBrand || unknownLabel}
               {record.vehicleSubBrand ? `/${record.vehicleSubBrand}` : ''}
             </div>
             <div>
-              {record.vehicleClass || '未知'}
+              {record.vehicleClass || unknownLabel}
               {record.vehicleColor ? `/${record.vehicleColor}` : ''}
             </div>
           </>
         ),
       },
       {
-        title: '事件类型',
+        title: t('pages.parkingViolation.columns.eventType'),
         dataIndex: 'minorType',
         width: 160,
         render: (_: string | undefined, record) => (
-          <Tag color="orange">违规停车/{record.minorType || 'PARK'}</Tag>
+          <Tag color="orange">
+            {t('pages.parkingViolation.tag.label', {
+              type: record.minorType || 'PARK',
+            })}
+          </Tag>
         ),
       },
       {
-        title: '关联人员',
+        title: t('pages.parkingViolation.columns.linkedPersons'),
         dataIndex: 'personIdentifiers',
         width: 220,
         render: (value: string[]) =>
-          value?.length ? value.join('、') : '无关联人员',
+          value?.length ? value.join(personSeparator) : noLinkedPersonsText,
       },
       {
-        title: '抓拍图片',
+        title: t('pages.parkingViolation.columns.captureImages'),
         dataIndex: 'captureImageUrls',
         render: (value: string[], record) =>
           value?.length ? (
@@ -167,30 +185,38 @@ const ParkingViolation: React.FC = () => {
           ),
       },
       {
-        title: '操作',
+        title: t('pages.parkingViolation.columns.action'),
         dataIndex: 'action',
         width: 120,
         render: (_: unknown, record) => (
           <Button type="link" onClick={() => handleViewDetail(record.id)}>
-            查看详情
+            {t('pages.common.actions.viewDetail')}
           </Button>
         ),
       },
     ],
-    [handleViewDetail],
+    [handleViewDetail, noLinkedPersonsText, personSeparator, t, unknownLabel],
   );
 
   return (
-    <PageContainer header={{ title: '违规停车' }}>
+    <PageContainer header={{ title: t('pages.parkingViolation.pageTitle') }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="违规记录" value={totalRecords} suffix="条" />
+            <Statistic
+              title={t('pages.parkingViolation.stat.totalRecords')}
+              value={totalRecords}
+              suffix={recordUnitLabel}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="关联人员" value={taggedRecords} suffix="条" />
+            <Statistic
+              title={t('pages.parkingViolation.stat.taggedRecords')}
+              value={taggedRecords}
+              suffix={recordUnitLabel}
+            />
           </Card>
         </Col>
       </Row>
@@ -198,7 +224,7 @@ const ParkingViolation: React.FC = () => {
       <Card
         style={{ marginTop: 24 }}
         bodyStyle={{ paddingTop: 8 }}
-        title="违规停车记录"
+        title={t('pages.parkingViolation.table.title')}
       >
         <Table<ParkingViolationItem>
           rowKey="id"
@@ -215,14 +241,14 @@ const ParkingViolation: React.FC = () => {
                 current: page,
                 pageSize: pageSize || pagination.pageSize,
               }),
-            showTotal: (total) => `共 ${total} 条`,
+            showTotal: (total) => t('pages.common.table.total', { total }),
           }}
           scroll={{ x: 1200 }}
         />
       </Card>
 
       <Drawer
-        title="违规停车详情"
+        title={t('pages.parkingViolation.drawer.title')}
         width={520}
         open={detailVisible}
         onClose={closeDetail}
@@ -235,15 +261,21 @@ const ParkingViolation: React.FC = () => {
         ) : detail ? (
           <>
             <Descriptions bordered size="small" column={1}>
-              <Descriptions.Item label="抓拍时间">
+              <Descriptions.Item
+                label={t('pages.parkingViolation.fields.captureTime')}
+              >
                 {detail.timestamp
                   ? dayjs(detail.timestamp).format('YYYY-MM-DD HH:mm:ss')
                   : '—'}
               </Descriptions.Item>
-              <Descriptions.Item label="车牌号">
+              <Descriptions.Item
+                label={t('pages.parkingViolation.fields.plateNumber')}
+              >
                 {detail.plateNumber || '—'}
               </Descriptions.Item>
-              <Descriptions.Item label="车辆信息">
+              <Descriptions.Item
+                label={t('pages.parkingViolation.fields.vehicleInfo')}
+              >
                 {[detail.vehicleBrand, detail.vehicleSubBrand]
                   .filter(Boolean)
                   .join('/')}
@@ -252,15 +284,21 @@ const ParkingViolation: React.FC = () => {
                   .filter(Boolean)
                   .join('/')}
               </Descriptions.Item>
-              <Descriptions.Item label="关联人员">
+              <Descriptions.Item
+                label={t('pages.parkingViolation.fields.linkedPersons')}
+              >
                 {detail.personIdentifiers.length
-                  ? detail.personIdentifiers.join('、')
-                  : '无'}
+                  ? detail.personIdentifiers.join(personSeparator)
+                  : noneText}
               </Descriptions.Item>
-              <Descriptions.Item label="事件类型">
+              <Descriptions.Item
+                label={t('pages.parkingViolation.fields.eventType')}
+              >
                 {`${detail.majorType || ''}/${detail.minorType || ''}`}
               </Descriptions.Item>
-              <Descriptions.Item label="抓拍图片数量">
+              <Descriptions.Item
+                label={t('pages.parkingViolation.fields.captureImageCount')}
+              >
                 {detail.captureImageCount ?? detail.captureImageUrls.length}
               </Descriptions.Item>
             </Descriptions>
@@ -284,12 +322,15 @@ const ParkingViolation: React.FC = () => {
             ) : (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="暂无抓拍图片"
+                description={t('pages.common.empty.noImages')}
               />
             )}
           </>
         ) : (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={t('pages.common.empty.noData')}
+          />
         )}
       </Drawer>
     </PageContainer>

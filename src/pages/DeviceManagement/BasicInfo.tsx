@@ -1,5 +1,5 @@
 import { PageContainer } from '@ant-design/pro-components';
-import { useRequest } from '@umijs/max';
+import { useIntl, useRequest } from '@umijs/max';
 import {
   Badge,
   Button,
@@ -101,16 +101,31 @@ const buildDevicePayload = (values: DeviceFormValues) => {
   };
 };
 
-const deviceTypeOptions = [{ label: '智能盒子', value: 'box' }];
-const deviceTypeLabel: Record<string, string> = {
-  box: '智能盒子',
+const DEVICE_TYPE_DEFINITIONS = [
+  {
+    value: 'box',
+    labelId: 'pages.deviceManagement.basicInfo.deviceTypes.box',
+  },
+] as const;
+
+const DEVICE_TYPE_LABEL_IDS: Record<string, string> = {
+  box: 'pages.deviceManagement.basicInfo.deviceTypes.box',
+  'AI 边缘计算设备': 'pages.deviceManagement.basicInfo.deviceTypes.aiEdge',
 };
-const deviceStatusOptions: DeviceBasicInfoItem['status'][] = [
+
+const DEVICE_STATUS_VALUES: DeviceBasicInfoItem['status'][] = [
   '在线',
   '离线',
   '故障',
   '维护中',
 ];
+
+const STATUS_LABEL_IDS: Record<DeviceBasicInfoItem['status'], string> = {
+  在线: 'pages.deviceManagement.basicInfo.status.online',
+  离线: 'pages.deviceManagement.basicInfo.status.offline',
+  故障: 'pages.deviceManagement.basicInfo.status.fault',
+  维护中: 'pages.deviceManagement.basicInfo.status.maintenance',
+};
 
 const apiStatusMap: Record<
   Exclude<DeviceRecord['status'], undefined>,
@@ -186,6 +201,49 @@ type EnrichedDevice = DeviceBasicInfoItem & {
 };
 
 const BasicInfo: React.FC = () => {
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
+  const deviceTypeOptions = useMemo(
+    () =>
+      DEVICE_TYPE_DEFINITIONS.map((option) => ({
+        value: option.value,
+        label: t(option.labelId),
+      })),
+    [t],
+  );
+  const deviceStatusOptions = useMemo(
+    () =>
+      DEVICE_STATUS_VALUES.map((status) => ({
+        value: status,
+        label: t(STATUS_LABEL_IDS[status]),
+      })),
+    [t],
+  );
+  const deviceUnitLabel = t('pages.deviceManagement.basicInfo.unit.device');
+  const getDeviceTypeLabel = useCallback(
+    (type?: string) => {
+      if (!type) return undefined;
+      const labelId = DEVICE_TYPE_LABEL_IDS[type];
+      return labelId ? t(labelId) : type;
+    },
+    [t],
+  );
+  const formatStatusText = useCallback(
+    (
+      status?:
+        | DeviceStatusItem['realtimeStatus']
+        | DeviceBasicInfoItem['status'],
+    ) => {
+      if (!status) return undefined;
+      const labelId = STATUS_LABEL_IDS[status as DeviceBasicInfoItem['status']];
+      return labelId ? t(labelId) : status;
+    },
+    [t],
+  );
   const { data, loading, refresh } = useRequest(
     () => getDevices({ page: 1, per_page: DEFAULT_DEVICE_FETCH_SIZE }),
     {
@@ -229,14 +287,26 @@ const BasicInfo: React.FC = () => {
   const pointSelectOptions = useMemo(
     () =>
       pointOptions.map((point) => {
-        const baseLabel = point.pointType === 'checkpoint' ? '卡口' : '场所';
-        const suffix = point.deviceName ? ` · 已绑定：${point.deviceName}` : '';
+        const typeLabel = t(
+          point.pointType === 'checkpoint'
+            ? 'pages.deviceManagement.basicInfo.point.type.checkpoint'
+            : 'pages.deviceManagement.basicInfo.point.type.site',
+        );
+        const suffix = point.deviceName
+          ? t('pages.deviceManagement.basicInfo.point.boundSuffix', {
+              name: point.deviceName,
+            })
+          : '';
         return {
-          label: `${point.name}（${baseLabel}${suffix}）`,
+          label: t('pages.deviceManagement.basicInfo.point.optionLabel', {
+            name: point.name,
+            type: typeLabel,
+            suffix,
+          }),
           value: point.id,
         };
       }),
-    [pointOptions],
+    [pointOptions, t],
   );
 
   const rawDevices = data?.records ?? [];
@@ -335,12 +405,12 @@ const BasicInfo: React.FC = () => {
   const handleDelete = useCallback(
     async (id: string) => {
       await deleteDevice(id);
-      message.success('删除成功');
+      message.success(t('pages.common.messages.deleteSuccess'));
       refresh();
       refreshStatus();
       refreshPointOptions();
     },
-    [refresh, refreshPointOptions, refreshStatus],
+    [refresh, refreshPointOptions, refreshStatus, t],
   );
 
   const handleModalOk = useCallback(async () => {
@@ -350,10 +420,14 @@ const BasicInfo: React.FC = () => {
     try {
       if (editingRecord) {
         await updateDevice(editingRecord.id, payload);
-        message.success('设备信息已更新');
+        message.success(
+          t('pages.deviceManagement.basicInfo.messages.updateSuccess'),
+        );
       } else {
         await createDevice(payload);
-        message.success('新建设备成功');
+        message.success(
+          t('pages.deviceManagement.basicInfo.messages.createSuccess'),
+        );
       }
       setModalVisible(false);
       refresh();
@@ -362,7 +436,7 @@ const BasicInfo: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  }, [editingRecord, form, refresh, refreshPointOptions, refreshStatus]);
+  }, [editingRecord, form, refresh, refreshPointOptions, refreshStatus, t]);
 
   const handleModalCancel = useCallback(() => {
     setModalVisible(false);
@@ -370,20 +444,25 @@ const BasicInfo: React.FC = () => {
 
   const columns: ColumnsType<EnrichedDevice> = useMemo(
     () => [
-      { title: '设备 ID', dataIndex: 'id', width: 150 },
       {
-        title: '设备名称',
+        title: t('pages.deviceManagement.basicInfo.table.columns.id'),
+        dataIndex: 'id',
+        width: 150,
+      },
+      {
+        title: t('pages.deviceManagement.basicInfo.table.columns.deviceName'),
         dataIndex: 'name',
         width: 220,
         render: (value: string) => <strong>{value}</strong>,
       },
       {
-        title: '设备类型 / 型号',
+        title: t('pages.deviceManagement.basicInfo.table.columns.deviceType'),
         dataIndex: 'deviceType',
         width: 220,
         render: (_: string, record) => {
           const label =
-            (record.deviceType && deviceTypeLabel[record.deviceType]) ||
+            getDeviceTypeLabel(record.deviceType) ??
+            getDeviceTypeLabel(record.type) ??
             record.type;
           return (
             <div>
@@ -395,17 +474,31 @@ const BasicInfo: React.FC = () => {
           );
         },
       },
-      { title: '设备序列号', dataIndex: 'serialNumber', width: 200 },
       {
-        title: '设备状态',
+        title: t('pages.deviceManagement.basicInfo.table.columns.serialNumber'),
+        dataIndex: 'serialNumber',
+        width: 200,
+      },
+      {
+        title: t('pages.deviceManagement.basicInfo.table.columns.status'),
         dataIndex: 'realtimeStatus',
         width: 150,
         render: (value: DeviceStatusItem['realtimeStatus']) =>
-          value ? <Badge status={statusColor[value]} text={value} /> : '—',
+          value ? (
+            <Badge status={statusColor[value]} text={formatStatusText(value)} />
+          ) : (
+            '—'
+          ),
       },
-      { title: '最后心跳时间', dataIndex: 'lastHeartbeat', width: 200 },
       {
-        title: '关联点位',
+        title: t(
+          'pages.deviceManagement.basicInfo.table.columns.lastHeartbeat',
+        ),
+        dataIndex: 'lastHeartbeat',
+        width: 200,
+      },
+      {
+        title: t('pages.deviceManagement.basicInfo.table.columns.points'),
         dataIndex: 'points',
         width: 220,
         render: (points: DevicePointInfo[] | undefined) =>
@@ -423,35 +516,41 @@ const BasicInfo: React.FC = () => {
               ))}
             </Space>
           ) : (
-            '未关联'
+            t('pages.deviceManagement.basicInfo.text.unbound')
           ),
       },
-      { title: '备注', dataIndex: 'remark', width: 200 },
       {
-        title: '操作',
+        title: t('pages.deviceManagement.basicInfo.table.columns.remark'),
+        dataIndex: 'remark',
+        width: 200,
+      },
+      {
+        title: t('pages.deviceManagement.basicInfo.table.columns.action'),
         dataIndex: 'action',
         width: 160,
         fixed: 'right',
         render: (_, record) => (
           <Space size="small">
             <Button type="link" onClick={() => handleEdit(record)}>
-              编辑
+              {t('pages.common.actions.edit')}
             </Button>
             <Popconfirm
-              title="确认删除该设备？"
-              okText="确认"
-              cancelText="取消"
+              title={t(
+                'pages.deviceManagement.basicInfo.popconfirm.deleteTitle',
+              )}
+              okText={t('pages.common.actions.confirm')}
+              cancelText={t('pages.common.actions.cancel')}
               onConfirm={() => handleDelete(record.id)}
             >
               <Button type="link" danger>
-                删除
+                {t('pages.common.actions.delete')}
               </Button>
             </Popconfirm>
           </Space>
         ),
       },
     ],
-    [handleDelete, handleEdit],
+    [formatStatusText, getDeviceTypeLabel, handleDelete, handleEdit, t],
   );
   const metrics = statusData?.metrics ?? {
     onlineRate: 0,
@@ -461,37 +560,47 @@ const BasicInfo: React.FC = () => {
   };
 
   return (
-    <PageContainer header={{ title: '设备管理' }}>
+    <PageContainer
+      header={{ title: t('pages.deviceManagement.basicInfo.pageTitle') }}
+    >
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="在册设备" value={summary.total} suffix="台" />
+            <Statistic
+              title={t('pages.deviceManagement.basicInfo.card.total')}
+              value={summary.total}
+              suffix={deviceUnitLabel}
+            />
           </Card>
         </Col>
 
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="在线设备" value={summary.online} suffix="台" />
+            <Statistic
+              title={t('pages.deviceManagement.basicInfo.card.online')}
+              value={summary.online}
+              suffix={deviceUnitLabel}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
             <Statistic
-              title="离线设备"
+              title={t('pages.deviceManagement.basicInfo.card.offline')}
               value={metrics.offlineDevices}
-              suffix="台"
+              suffix={deviceUnitLabel}
             />
           </Card>
         </Col>
       </Row>
 
       <Card
-        title="设备清单"
+        title={t('pages.deviceManagement.basicInfo.table.title')}
         style={{ marginTop: 24 }}
         bodyStyle={{ paddingTop: 8 }}
         extra={
           <Button type="primary" onClick={openCreateModal}>
-            新建设备
+            {t('pages.deviceManagement.basicInfo.button.create')}
           </Button>
         }
       >
@@ -505,7 +614,9 @@ const BasicInfo: React.FC = () => {
           <Form.Item name="keyword">
             <Input
               allowClear
-              placeholder="搜索名称 / 厂商 / 序列号"
+              placeholder={t(
+                'pages.deviceManagement.basicInfo.filter.keyword.placeholder',
+              )}
               style={{ width: 240 }}
             />
           </Form.Item>
@@ -513,7 +624,10 @@ const BasicInfo: React.FC = () => {
             <Select
               style={{ width: 180 }}
               options={[
-                { value: 'all', label: '全部类型' },
+                {
+                  value: 'all',
+                  label: t('pages.deviceManagement.basicInfo.filter.type.all'),
+                },
                 ...deviceTypeOptions,
               ]}
             />
@@ -522,16 +636,20 @@ const BasicInfo: React.FC = () => {
             <Select
               style={{ width: 180 }}
               options={[
-                { value: 'all', label: '全部状态' },
-                ...deviceStatusOptions.map((status) => ({
-                  label: status,
-                  value: status,
-                })),
+                {
+                  value: 'all',
+                  label: t(
+                    'pages.deviceManagement.basicInfo.filter.status.all',
+                  ),
+                },
+                ...deviceStatusOptions,
               ]}
             />
           </Form.Item>
           <Form.Item>
-            <Button onClick={handleFilterReset}>重置筛选</Button>
+            <Button onClick={handleFilterReset}>
+              {t('pages.common.buttons.resetFilters')}
+            </Button>
           </Form.Item>
         </Form>
         <Table<EnrichedDevice>
@@ -545,56 +663,108 @@ const BasicInfo: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingRecord ? '编辑设备' : '新建设备'}
+        title={
+          editingRecord
+            ? t('pages.deviceManagement.basicInfo.modal.editTitle')
+            : t('pages.deviceManagement.basicInfo.modal.createTitle')
+        }
         open={modalVisible}
         onOk={handleModalOk}
         onCancel={handleModalCancel}
-        okText="保存"
+        okText={t('pages.common.actions.save')}
         confirmLoading={saving}
         destroyOnClose
         width={720}
       >
         <Form layout="vertical" form={form}>
-          <Form.Item label="设备 ID" name="id">
-            <Input placeholder="不填写则自动生成" disabled={!!editingRecord} />
+          <Form.Item
+            label={t('pages.deviceManagement.basicInfo.form.labels.id')}
+            name="id"
+          >
+            <Input
+              placeholder={t('pages.common.form.placeholder.autoGenerate')}
+              disabled={!!editingRecord}
+            />
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="设备名称"
+                label={t('pages.deviceManagement.basicInfo.form.labels.name')}
                 name="name"
-                rules={[{ required: true, message: '请输入设备名称' }]}
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.deviceManagement.basicInfo.form.validations.name',
+                    ),
+                  },
+                ]}
               >
-                <Input placeholder="请输入设备名称" />
+                <Input
+                  placeholder={t(
+                    'pages.deviceManagement.basicInfo.form.placeholders.name',
+                  )}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label="设备类型"
+                label={t('pages.deviceManagement.basicInfo.form.labels.type')}
                 name="deviceType"
-                rules={[{ required: true, message: '请选择设备类型' }]}
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.deviceManagement.basicInfo.form.validations.type',
+                    ),
+                  },
+                ]}
               >
                 <Select
                   options={deviceTypeOptions}
-                  placeholder="请选择设备类型"
+                  placeholder={t(
+                    'pages.deviceManagement.basicInfo.form.placeholders.type',
+                  )}
                 />
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item label="设备序列号" name="serialNumber">
-            <Input placeholder="请输入设备序列号" />
+          <Form.Item
+            label={t(
+              'pages.deviceManagement.basicInfo.form.labels.serialNumber',
+            )}
+            name="serialNumber"
+          >
+            <Input
+              placeholder={t(
+                'pages.deviceManagement.basicInfo.form.placeholders.serialNumber',
+              )}
+            />
           </Form.Item>
-          <Form.Item label="关联点位" name="pointIds">
+          <Form.Item
+            label={t('pages.deviceManagement.basicInfo.form.labels.points')}
+            name="pointIds"
+          >
             <Select
               allowClear
-              placeholder="请选择需要绑定的点位"
+              placeholder={t(
+                'pages.deviceManagement.basicInfo.form.placeholders.points',
+              )}
               options={pointSelectOptions}
               loading={pointOptionsLoading}
               optionFilterProp="label"
             />
           </Form.Item>
-          <Form.Item label="备注" name="remark">
-            <Input.TextArea placeholder="可填写安装说明、维护记录等" rows={3} />
+          <Form.Item
+            label={t('pages.deviceManagement.basicInfo.form.labels.remark')}
+            name="remark"
+          >
+            <Input.TextArea
+              placeholder={t(
+                'pages.deviceManagement.basicInfo.form.placeholders.remark',
+              )}
+              rows={3}
+            />
           </Form.Item>
         </Form>
       </Modal>

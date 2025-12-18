@@ -45,10 +45,6 @@ const DensityMonitoring: React.FC = () => {
       intl.formatMessage({ id }, values),
     [intl],
   );
-  const personSeparator = useMemo(
-    () => (intl.locale?.startsWith('zh') ? '、' : ', '),
-    [intl.locale],
-  );
   const recordUnitLabel = t('pages.common.unit.records');
   const personCountLabel = useCallback(
     (count: number) => t('pages.keyArea.density.personCount', { count }),
@@ -132,25 +128,6 @@ const DensityMonitoring: React.FC = () => {
         ),
       },
       {
-        title: t('pages.keyArea.density.columns.linkedPersons'),
-        dataIndex: 'personIdentifiers',
-        width: 260,
-        render: (value: string[]) =>
-          value?.length ? (
-            <Paragraph
-              ellipsis={{
-                rows: 2,
-                expandable: true,
-                symbol: t('pages.common.actions.expand'),
-              }}
-            >
-              {value.join(personSeparator)}
-            </Paragraph>
-          ) : (
-            t('pages.common.text.noLinkedPersons')
-          ),
-      },
-      {
         title: t('pages.keyArea.density.columns.captureImages'),
         dataIndex: 'captureImageUrls',
         render: (value: string[], record) =>
@@ -196,7 +173,7 @@ const DensityMonitoring: React.FC = () => {
         ),
       },
     ],
-    [handleViewDetail, personSeparator, personCountLabel, t],
+    [handleViewDetail, personCountLabel, t],
   );
 
   return (
@@ -275,13 +252,6 @@ const DensityMonitoring: React.FC = () => {
                 {detail.timestamp
                   ? dayjs(detail.timestamp).format('YYYY-MM-DD HH:mm:ss')
                   : '—'}
-              </Descriptions.Item>
-              <Descriptions.Item
-                label={t('pages.keyArea.density.fields.linkedPersons')}
-              >
-                {detail.personIdentifiers.length
-                  ? detail.personIdentifiers.join(personSeparator)
-                  : t('pages.common.text.noLinkedPersons')}
               </Descriptions.Item>
               <Descriptions.Item
                 label={t('pages.keyArea.density.fields.eventType')}

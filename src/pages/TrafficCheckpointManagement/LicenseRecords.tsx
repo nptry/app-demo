@@ -42,14 +42,8 @@ const LicenseRecords: React.FC = () => {
       intl.formatMessage({ id }, values),
     [intl],
   );
-  const personSeparator = useMemo(
-    () => (intl.locale?.startsWith('zh') ? '、' : ', '),
-    [intl.locale],
-  );
   const recordUnitLabel = t('pages.common.unit.records');
-  const noLinkedPersonsText = t('pages.common.text.noLinkedPersons');
   const unknownLabel = t('pages.common.text.unknown');
-  const noneText = t('pages.common.text.none');
 
   const { data, loading, run } = useRequest(
     ({ page = pagination.current, pageSize = pagination.pageSize } = {}) =>
@@ -96,9 +90,6 @@ const LicenseRecords: React.FC = () => {
   }, []);
 
   const records = data?.records ?? [];
-  const abnormalCount = records.filter(
-    (record) => record.personIdentifiers.length > 0,
-  ).length;
   const totalRecords = data?.total ?? 0;
 
   const columns: ColumnsType<LicenseRecordItem> = useMemo(
@@ -145,13 +136,6 @@ const LicenseRecords: React.FC = () => {
         ),
       },
       {
-        title: t('pages.licenseRecords.columns.linkedPersons'),
-        dataIndex: 'personIdentifiers',
-        width: 200,
-        render: (value: string[]) =>
-          value?.length ? value.join(personSeparator) : noLinkedPersonsText,
-      },
-      {
         title: t('pages.licenseRecords.columns.captureImages'),
         dataIndex: 'captureImageUrls',
         render: (value: string[]) =>
@@ -190,7 +174,7 @@ const LicenseRecords: React.FC = () => {
         ),
       },
     ],
-    [handleViewDetail, noLinkedPersonsText, personSeparator, t, unknownLabel],
+    [handleViewDetail, t, unknownLabel],
   );
 
   return (
@@ -201,15 +185,6 @@ const LicenseRecords: React.FC = () => {
             <Statistic
               title={t('pages.licenseRecords.stat.totalRecords')}
               value={totalRecords}
-              suffix={recordUnitLabel}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic
-              title={t('pages.licenseRecords.stat.taggedRecords')}
-              value={abnormalCount}
               suffix={recordUnitLabel}
             />
           </Card>
@@ -278,13 +253,6 @@ const LicenseRecords: React.FC = () => {
                 {[detail.vehicleClass, detail.vehicleColor]
                   .filter(Boolean)
                   .join('/')}
-              </Descriptions.Item>
-              <Descriptions.Item
-                label={t('pages.licenseRecords.fields.linkedPersons')}
-              >
-                {detail.personIdentifiers.length
-                  ? detail.personIdentifiers.join(personSeparator)
-                  : noneText}
               </Descriptions.Item>
               <Descriptions.Item
                 label={t('pages.licenseRecords.fields.rawPersonIds')}

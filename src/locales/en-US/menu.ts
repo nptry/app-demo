@@ -60,6 +60,7 @@ export default {
   'menu.device-management': 'Basic Information Management',
   'menu.device-management.basic-info': 'Device Management',
   'menu.device-management.point-management': 'Point Management',
+  'menu.device-management.region-management': 'Region Management',
   'menu.operations-management': 'Operations Management',
   'menu.operations-management.infrastructure': 'Infrastructure Management',
   'menu.operations-management.resources': 'Operations Resource Management',

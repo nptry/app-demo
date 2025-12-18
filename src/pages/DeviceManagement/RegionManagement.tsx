@@ -4,13 +4,11 @@ import { useIntl, useRequest } from '@umijs/max';
 import {
   Button,
   Card,
-  Col,
   Form,
   Input,
   Modal,
   message,
   Popconfirm,
-  Row,
   Select,
   Space,
   Table,
@@ -104,7 +102,7 @@ const RegionManagement: React.FC = () => {
         await deleteRegion(id);
         message.success(t('pages.common.messages.deleteSuccess'));
         refresh();
-      } catch (error) {
+      } catch (_error) {
         message.error(t('pages.deviceManagement.region.messages.deleteFailed'));
       }
     },
@@ -127,7 +125,7 @@ const RegionManagement: React.FC = () => {
       }
       setModalVisible(false);
       refresh();
-    } catch (error) {
+    } catch (_error) {
       // Form validation error or API error
     }
   }, [editingRecord, form, refresh, t]);
@@ -157,7 +155,7 @@ const RegionManagement: React.FC = () => {
       {
         title: t('pages.deviceManagement.region.table.columns.type'),
         dataIndex: 'region_type',
-        width: 120,
+        width: 150,
         render: (type: string) => {
           const option = regionTypeOptions.find((item) => item.value === type);
           return (
@@ -275,7 +273,8 @@ const RegionManagement: React.FC = () => {
             total,
             pageSize: 10,
             showSizeChanger: false,
-            showTotal: (t) => t('pages.common.table.total', { total: t }),
+            showTotal: (count) =>
+              t('pages.common.table.total', { total: count }),
           }}
         />
       </Card>

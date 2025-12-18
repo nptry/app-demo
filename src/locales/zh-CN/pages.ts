@@ -910,7 +910,6 @@ export default {
   'pages.userManagement.keyPersonnel.form.labels.startTime': '布控开始时间',
   'pages.userManagement.keyPersonnel.form.labels.endTime': '布控结束时间',
   'pages.userManagement.keyPersonnel.form.labels.reason': '布控原因',
-  'pages.userManagement.keyPersonnel.form.labels.faceLibrary': '人脸特征库',
   'pages.userManagement.keyPersonnel.form.labels.contactName': '联系人',
   'pages.userManagement.keyPersonnel.form.labels.contactPhone': '联系电话',
   'pages.userManagement.keyPersonnel.form.labels.status': '人员状态',
@@ -934,8 +933,6 @@ export default {
     '示例：2024-08-31 23:59',
   'pages.userManagement.keyPersonnel.form.placeholders.reason':
     '请输入布控原因',
-  'pages.userManagement.keyPersonnel.form.placeholders.faceLibrary':
-    '请输入人脸特征库',
   'pages.userManagement.keyPersonnel.form.placeholders.contactName':
     '请输入联系人',
   'pages.userManagement.keyPersonnel.form.placeholders.contactPhone':
@@ -962,8 +959,6 @@ export default {
   'pages.userManagement.keyPersonnel.form.validations.endTime':
     '请输入结束时间',
   'pages.userManagement.keyPersonnel.form.validations.reason': '请输入布控原因',
-  'pages.userManagement.keyPersonnel.form.validations.faceLibrary':
-    '请输入人脸特征库',
   'pages.userManagement.keyPersonnel.form.validations.status': '请选择状态',
   'pages.userManagement.keyPersonnel.form.validations.statusUpdatedAt':
     '请输入更新时间',

@@ -137,7 +137,8 @@ export type KeyPersonItem = {
   controlAreas: string[];
   startTime: string;
   endTime: string;
-  faceLibrary: string;
+  facePhotoUrl?: string;
+  facePhoto?: string | null;
   contactName?: string;
   contactPhone?: string;
   status: '在控' | '失控' | '已解除';
@@ -162,7 +163,7 @@ type BackendKeyPerson = {
   controlAreas?: string[];
   startTime?: string;
   endTime?: string;
-  faceLibrary?: string;
+  facePhotoUrl?: string;
   contactName?: string;
   contactPhone?: string;
   status: KeyPersonItem['status'];
@@ -182,7 +183,7 @@ const transformKeyPerson = (person: BackendKeyPerson): KeyPersonItem => ({
   controlAreas: person.controlAreas || [],
   startTime: person.startTime || '',
   endTime: person.endTime || '',
-  faceLibrary: person.faceLibrary || '',
+  facePhotoUrl: person.facePhotoUrl,
   contactName: person.contactName,
   contactPhone: person.contactPhone,
   status: person.status,
@@ -200,6 +201,7 @@ const buildKeyPersonPayload = (person: Partial<KeyPersonItem>) => ({
     contact_name: person.contactName,
     contact_phone: person.contactPhone,
     remark: person.remark,
+    face_photo: person.facePhoto,
   },
 });
 

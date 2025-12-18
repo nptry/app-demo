@@ -1,3 +1,4 @@
+import { DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { useIntl, useRequest } from '@umijs/max';
 import {
@@ -5,6 +6,7 @@ import {
   Card,
   Col,
   Form,
+  Image,
   Input,
   Modal,
   message,
@@ -15,6 +17,7 @@ import {
   Statistic,
   Table,
   Tag,
+  Upload,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -78,6 +81,10 @@ const KeyPersonnel: React.FC = () => {
   );
   const [form] = Form.useForm<KeyPersonItem>();
   const [filterForm] = Form.useForm();
+  const [facePhotoPreview, setFacePhotoPreview] = useState<string | null>(null);
+  const [facePhotoValue, setFacePhotoValue] = useState<
+    string | null | undefined
+  >(undefined);
   const typeLabelMap = useMemo(
     () => ({
       黑名单人员: t('pages.userManagement.keyPersonnel.personTypes.blacklist'),
@@ -193,19 +200,28 @@ const KeyPersonnel: React.FC = () => {
     setFilters({ keyword: '', personType: 'all', status: 'all' });
   }, [filterForm]);
 
+  const resetFacePhoto = useCallback(() => {
+    setFacePhotoPreview(null);
+    setFacePhotoValue(undefined);
+    form.setFieldsValue({ facePhoto: undefined });
+  }, [form]);
+
   const openCreateModal = useCallback(() => {
     setEditingRecord(null);
     form.resetFields();
     form.setFieldsValue({
       gender: '未知',
     });
+    resetFacePhoto();
     setModalVisible(true);
-  }, [form]);
+  }, [form, resetFacePhoto]);
 
   const handleEdit = useCallback(
     (record: KeyPersonItem) => {
       setEditingRecord(record);
       form.setFieldsValue(record);
+      setFacePhotoPreview(record.facePhotoUrl ?? null);
+      setFacePhotoValue(undefined);
       setModalVisible(true);
     },
     [form],
@@ -230,6 +246,7 @@ const KeyPersonnel: React.FC = () => {
     const values = await form.validateFields();
     const payload: Partial<KeyPersonItem> = {
       ...values,
+      facePhoto: facePhotoValue === undefined ? undefined : facePhotoValue,
     };
     try {
       if (editingRecord) {
@@ -245,12 +262,48 @@ const KeyPersonnel: React.FC = () => {
       }
       setModalVisible(false);
       refresh();
+      resetFacePhoto();
     } catch (_error) {
       message.error(t('pages.userManagement.keyPersonnel.messages.saveError'));
     }
-  }, [editingRecord, form, refresh, t]);
+  }, [editingRecord, facePhotoValue, form, refresh, resetFacePhoto, t]);
 
-  const handleModalCancel = useCallback(() => setModalVisible(false), []);
+  const handleModalCancel = useCallback(() => {
+    setModalVisible(false);
+    resetFacePhoto();
+  }, [resetFacePhoto]);
+
+  const handleFacePhotoUpload = useCallback(
+    (file: File) => {
+      if (file.size > 500 * 1024) {
+        message.error('人脸照片大小不能超过500KB');
+        return Upload.LIST_IGNORE;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        message.error('请上传图片文件');
+        return Upload.LIST_IGNORE;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string;
+        setFacePhotoPreview(base64);
+        setFacePhotoValue(base64);
+        form.setFieldsValue({ facePhoto: base64 });
+      };
+      reader.readAsDataURL(file);
+
+      return false;
+    },
+    [form],
+  );
+
+  const removeFacePhoto = useCallback(() => {
+    setFacePhotoPreview(null);
+    setFacePhotoValue(null);
+    form.setFieldsValue({ facePhoto: null });
+  }, [form]);
 
   const columns: ColumnsType<KeyPersonItem> = useMemo(
     () => [
@@ -590,6 +643,56 @@ const KeyPersonnel: React.FC = () => {
                     'pages.userManagement.keyPersonnel.form.placeholders.remark',
                   )}
                 />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item
+                label="人脸照片"
+                name="facePhoto"
+                rules={[
+                  {
+                    required: true,
+                    message: '请上传人脸照片',
+                  },
+                ]}
+              >
+                <div>
+                  {!facePhotoPreview ? (
+                    <Upload
+                      beforeUpload={handleFacePhotoUpload}
+                      showUploadList={false}
+                      accept="image/*"
+                    >
+                      <Button icon={<UploadOutlined />}>上传人脸照片</Button>
+                    </Upload>
+                  ) : (
+                    <div>
+                      <Image
+                        src={facePhotoPreview}
+                        alt="Face Photo"
+                        style={{
+                          maxWidth: '200px',
+                          maxHeight: '200px',
+                          marginBottom: 8,
+                        }}
+                      />
+                      <br />
+                      <Button
+                        icon={<DeleteOutlined />}
+                        onClick={removeFacePhoto}
+                        size="small"
+                        danger
+                      >
+                        删除照片
+                      </Button>
+                    </div>
+                  )}
+                  <div style={{ marginTop: 8, color: '#666', fontSize: 12 }}>
+                    请上传清晰的人脸照片，文件大小不超过500KB
+                  </div>
+                </div>
               </Form.Item>
             </Col>
           </Row>

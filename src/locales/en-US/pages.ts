@@ -975,7 +975,6 @@ export default {
     'Control Start Time',
   'pages.userManagement.keyPersonnel.form.labels.endTime': 'Control End Time',
   'pages.userManagement.keyPersonnel.form.labels.reason': 'Control Reason',
-  'pages.userManagement.keyPersonnel.form.labels.faceLibrary': 'Face Library',
   'pages.userManagement.keyPersonnel.form.labels.contactName': 'Contact Name',
   'pages.userManagement.keyPersonnel.form.labels.contactPhone': 'Contact Phone',
   'pages.userManagement.keyPersonnel.form.labels.status': 'Status',
@@ -999,8 +998,6 @@ export default {
     'e.g. 2024-08-31 23:59',
   'pages.userManagement.keyPersonnel.form.placeholders.reason':
     'Enter control reason',
-  'pages.userManagement.keyPersonnel.form.placeholders.faceLibrary':
-    'Enter face library',
   'pages.userManagement.keyPersonnel.form.placeholders.contactName':
     'Enter contact name',
   'pages.userManagement.keyPersonnel.form.placeholders.contactPhone':
@@ -1030,8 +1027,6 @@ export default {
     'Please enter the end time',
   'pages.userManagement.keyPersonnel.form.validations.reason':
     'Please enter the control reason',
-  'pages.userManagement.keyPersonnel.form.validations.faceLibrary':
-    'Please enter the face library',
   'pages.userManagement.keyPersonnel.form.validations.status':
     'Please select the status',
   'pages.userManagement.keyPersonnel.form.validations.statusUpdatedAt':

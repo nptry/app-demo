@@ -874,6 +874,7 @@ export default {
   'pages.userManagement.keyPersonnel.filter.allStatus': '全部状态',
   'pages.userManagement.keyPersonnel.columns.id': '重点人员 ID',
   'pages.userManagement.keyPersonnel.columns.basicInfo': '姓名 / 基础信息',
+  'pages.userManagement.keyPersonnel.columns.photo': '照片',
   'pages.userManagement.keyPersonnel.columns.status': '人员状态',
   'pages.userManagement.keyPersonnel.columns.contact': '联系人',
   'pages.userManagement.keyPersonnel.columns.remark': '备注',

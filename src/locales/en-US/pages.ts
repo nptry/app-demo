@@ -934,6 +934,7 @@ export default {
   'pages.userManagement.keyPersonnel.filter.allStatus': 'All statuses',
   'pages.userManagement.keyPersonnel.columns.id': 'Key Person ID',
   'pages.userManagement.keyPersonnel.columns.basicInfo': 'Name / Basic Info',
+  'pages.userManagement.keyPersonnel.columns.photo': 'Face Photo',
   'pages.userManagement.keyPersonnel.columns.status': 'Status',
   'pages.userManagement.keyPersonnel.columns.contact': 'Contact',
   'pages.userManagement.keyPersonnel.columns.remark': 'Remark',

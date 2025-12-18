@@ -330,6 +330,22 @@ const KeyPersonnel: React.FC = () => {
         ),
       },
       {
+        title: t('pages.userManagement.keyPersonnel.columns.photo'),
+        dataIndex: 'facePhotoUrl',
+        width: 150,
+        render: (value: string | undefined) =>
+          value ? (
+            <Image
+              src={value}
+              width={72}
+              height={72}
+              style={{ objectFit: 'cover', borderRadius: 4 }}
+            />
+          ) : (
+            t('pages.common.text.none')
+          ),
+      },
+      {
         title: t('pages.userManagement.keyPersonnel.columns.status'),
         dataIndex: 'status',
         width: 160,

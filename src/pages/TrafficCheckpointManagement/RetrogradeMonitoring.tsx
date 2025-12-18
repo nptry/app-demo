@@ -45,12 +45,7 @@ const RetrogradeMonitoring: React.FC = () => {
       intl.formatMessage({ id }, values),
     [intl],
   );
-  const personSeparator = useMemo(
-    () => (intl.locale?.startsWith('zh') ? '、' : ', '),
-    [intl.locale],
-  );
   const recordUnitLabel = t('pages.common.unit.records');
-  const noLinkedPersonsText = t('pages.common.text.noLinkedPersons');
   const unknownLabel = t('pages.common.text.unknown');
 
   const { data, loading, run } = useRequest(
@@ -103,10 +98,6 @@ const RetrogradeMonitoring: React.FC = () => {
 
   const records = data?.records ?? [];
   const totalRecords = data?.total ?? 0;
-  const taggedRecords = records.filter(
-    (record) => record.personIdentifiers.length > 0,
-  ).length;
-
   const columns: ColumnsType<RetrogradeViolationItem> = useMemo(
     () => [
       {
@@ -151,13 +142,6 @@ const RetrogradeMonitoring: React.FC = () => {
         ),
       },
       {
-        title: t('pages.retrogradeMonitoring.columns.linkedPersons'),
-        dataIndex: 'personIdentifiers',
-        width: 220,
-        render: (value: string[], _record) =>
-          value?.length ? value.join(personSeparator) : noLinkedPersonsText,
-      },
-      {
         title: t('pages.retrogradeMonitoring.columns.captureImages'),
         dataIndex: 'captureImageUrls',
         render: (
@@ -199,7 +183,7 @@ const RetrogradeMonitoring: React.FC = () => {
         ),
       },
     ],
-    [handleViewDetail, noLinkedPersonsText, personSeparator, t, unknownLabel],
+    [handleViewDetail, t, unknownLabel],
   );
 
   return (
@@ -212,15 +196,6 @@ const RetrogradeMonitoring: React.FC = () => {
             <Statistic
               title={t('pages.retrogradeMonitoring.stat.totalRecords')}
               value={totalRecords}
-              suffix={recordUnitLabel}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic
-              title={t('pages.retrogradeMonitoring.stat.taggedRecords')}
-              value={taggedRecords}
               suffix={recordUnitLabel}
             />
           </Card>
@@ -289,13 +264,6 @@ const RetrogradeMonitoring: React.FC = () => {
                 {[detail.vehicleClass, detail.vehicleColor]
                   .filter(Boolean)
                   .join('/')}
-              </Descriptions.Item>
-              <Descriptions.Item
-                label={t('pages.retrogradeMonitoring.fields.linkedPersons')}
-              >
-                {detail.personIdentifiers.length
-                  ? detail.personIdentifiers.join(personSeparator)
-                  : t('pages.common.text.none')}
               </Descriptions.Item>
               <Descriptions.Item
                 label={t('pages.retrogradeMonitoring.fields.eventType')}

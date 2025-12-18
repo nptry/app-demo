@@ -45,14 +45,8 @@ const ParkingViolation: React.FC = () => {
       intl.formatMessage({ id }, values),
     [intl],
   );
-  const personSeparator = useMemo(
-    () => (intl.locale?.startsWith('zh') ? '、' : ', '),
-    [intl.locale],
-  );
   const recordUnitLabel = t('pages.common.unit.records');
-  const noLinkedPersonsText = t('pages.common.text.noLinkedPersons');
   const unknownLabel = t('pages.common.text.unknown');
-  const noneText = t('pages.common.text.none');
 
   const { data, loading, run } = useRequest(
     ({ page = pagination.current, pageSize = pagination.pageSize } = {}) =>
@@ -102,10 +96,6 @@ const ParkingViolation: React.FC = () => {
 
   const records = data?.records ?? [];
   const totalRecords = data?.total ?? 0;
-  const taggedRecords = records.filter(
-    (record) => record.personIdentifiers.length > 0,
-  ).length;
-
   const columns: ColumnsType<ParkingViolationItem> = useMemo(
     () => [
       {
@@ -150,13 +140,6 @@ const ParkingViolation: React.FC = () => {
         ),
       },
       {
-        title: t('pages.parkingViolation.columns.linkedPersons'),
-        dataIndex: 'personIdentifiers',
-        width: 220,
-        render: (value: string[]) =>
-          value?.length ? value.join(personSeparator) : noLinkedPersonsText,
-      },
-      {
         title: t('pages.parkingViolation.columns.captureImages'),
         dataIndex: 'captureImageUrls',
         render: (value: string[], record) =>
@@ -195,7 +178,7 @@ const ParkingViolation: React.FC = () => {
         ),
       },
     ],
-    [handleViewDetail, noLinkedPersonsText, personSeparator, t, unknownLabel],
+    [handleViewDetail, t, unknownLabel],
   );
 
   return (
@@ -206,15 +189,6 @@ const ParkingViolation: React.FC = () => {
             <Statistic
               title={t('pages.parkingViolation.stat.totalRecords')}
               value={totalRecords}
-              suffix={recordUnitLabel}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic
-              title={t('pages.parkingViolation.stat.taggedRecords')}
-              value={taggedRecords}
               suffix={recordUnitLabel}
             />
           </Card>
@@ -283,13 +257,6 @@ const ParkingViolation: React.FC = () => {
                 {[detail.vehicleClass, detail.vehicleColor]
                   .filter(Boolean)
                   .join('/')}
-              </Descriptions.Item>
-              <Descriptions.Item
-                label={t('pages.parkingViolation.fields.linkedPersons')}
-              >
-                {detail.personIdentifiers.length
-                  ? detail.personIdentifiers.join(personSeparator)
-                  : noneText}
               </Descriptions.Item>
               <Descriptions.Item
                 label={t('pages.parkingViolation.fields.eventType')}

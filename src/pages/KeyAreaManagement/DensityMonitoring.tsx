@@ -1,5 +1,5 @@
 import { PageContainer } from '@ant-design/pro-components';
-import { useRequest } from '@umijs/max';
+import { useIntl, useRequest } from '@umijs/max';
 import {
   Button,
   Card,
@@ -39,6 +39,25 @@ const CROWD_DENSITY_FILTER = {
 const DensityMonitoring: React.FC = () => {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
   const [detailVisible, setDetailVisible] = useState(false);
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
+  const personSeparator = useMemo(
+    () => (intl.locale?.startsWith('zh') ? '、' : ', '),
+    [intl.locale],
+  );
+  const recordUnitLabel = t('pages.common.unit.records');
+  const personCountLabel = useCallback(
+    (count: number) => t('pages.keyArea.density.personCount', { count }),
+    [t],
+  );
+  const showTotalText = useCallback(
+    (total: number) => t('pages.common.table.total', { total }),
+    [t],
+  );
 
   const { data, loading, run } = useRequest(
     ({ page = pagination.current, pageSize = pagination.pageSize } = {}) =>
@@ -97,36 +116,42 @@ const DensityMonitoring: React.FC = () => {
   const columns: ColumnsType<CrowdDensityItem> = useMemo(
     () => [
       {
-        title: '时间',
+        title: t('pages.keyArea.density.columns.time'),
         dataIndex: 'timestamp',
         width: 180,
         render: (value: string | undefined) =>
           value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '—',
       },
       {
-        title: '人群规模',
+        title: t('pages.keyArea.density.columns.crowdSize'),
         width: 160,
         render: (_: unknown, record) => (
           <Tag color={record.personIdentifiers.length >= 5 ? 'red' : 'blue'}>
-            {record.personIdentifiers.length} 人
+            {personCountLabel(record.personIdentifiers.length)}
           </Tag>
         ),
       },
       {
-        title: '关联人员',
+        title: t('pages.keyArea.density.columns.linkedPersons'),
         dataIndex: 'personIdentifiers',
         width: 260,
         render: (value: string[]) =>
           value?.length ? (
-            <Paragraph ellipsis={{ rows: 2, expandable: true, symbol: '展开' }}>
-              {value.join('、')}
+            <Paragraph
+              ellipsis={{
+                rows: 2,
+                expandable: true,
+                symbol: t('pages.common.actions.expand'),
+              }}
+            >
+              {value.join(personSeparator)}
             </Paragraph>
           ) : (
-            '未识别到具体人员'
+            t('pages.common.text.noLinkedPersons')
           ),
       },
       {
-        title: '抓拍图片',
+        title: t('pages.keyArea.density.columns.captureImages'),
         dataIndex: 'captureImageUrls',
         render: (value: string[], record) =>
           value?.length ? (
@@ -154,56 +179,60 @@ const DensityMonitoring: React.FC = () => {
           ),
       },
       {
-        title: '类型',
+        title: t('pages.keyArea.density.columns.type'),
         dataIndex: 'minorType',
         width: 180,
         render: (_: string | undefined, record) =>
           `${record.majorType || ''}/${record.minorType || ''}`,
       },
       {
-        title: '操作',
+        title: t('pages.keyArea.density.columns.action'),
         dataIndex: 'action',
         width: 120,
         render: (_: unknown, record) => (
           <Button type="link" onClick={() => handleViewDetail(record.id)}>
-            查看详情
+            {t('pages.common.actions.viewDetail')}
           </Button>
         ),
       },
     ],
-    [handleViewDetail],
+    [handleViewDetail, personSeparator, personCountLabel, t],
   );
 
   return (
-    <PageContainer header={{ title: '人群密度监测' }}>
+    <PageContainer header={{ title: t('pages.keyArea.density.pageTitle') }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="总事件" value={totalRecords} suffix="条" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
             <Statistic
-              title="高密度事件"
-              value={highDensityCount}
-              suffix="条"
+              title={t('pages.keyArea.density.stats.totalEvents')}
+              value={totalRecords}
+              suffix={recordUnitLabel}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
             <Statistic
-              title="最大识别人数"
+              title={t('pages.keyArea.density.stats.highDensity')}
+              value={highDensityCount}
+              suffix={recordUnitLabel}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card bordered={false}>
+            <Statistic
+              title={t('pages.keyArea.density.stats.maxPersons')}
               value={maxPersonCount}
-              suffix="人"
+              suffix={t('pages.keyArea.density.stats.personUnit')}
             />
           </Card>
         </Col>
       </Row>
 
       <Card
-        title="实时密度事件"
+        title={t('pages.keyArea.density.table.title')}
         style={{ marginTop: 24 }}
         bodyStyle={{ paddingTop: 8 }}
       >
@@ -222,14 +251,14 @@ const DensityMonitoring: React.FC = () => {
                 current: page,
                 pageSize: pageSize || pagination.pageSize,
               }),
-            showTotal: (total) => `共 ${total} 条`,
+            showTotal: showTotalText,
           }}
           scroll={{ x: 1100 }}
         />
       </Card>
 
       <Drawer
-        title="密度事件详情"
+        title={t('pages.keyArea.density.drawer.title')}
         width={520}
         open={detailVisible}
         onClose={closeDetail}
@@ -242,20 +271,26 @@ const DensityMonitoring: React.FC = () => {
         ) : detail ? (
           <>
             <Descriptions bordered size="small" column={1}>
-              <Descriptions.Item label="时间">
+              <Descriptions.Item label={t('pages.keyArea.density.fields.time')}>
                 {detail.timestamp
                   ? dayjs(detail.timestamp).format('YYYY-MM-DD HH:mm:ss')
                   : '—'}
               </Descriptions.Item>
-              <Descriptions.Item label="关联人员">
+              <Descriptions.Item
+                label={t('pages.keyArea.density.fields.linkedPersons')}
+              >
                 {detail.personIdentifiers.length
-                  ? detail.personIdentifiers.join('、')
-                  : '未识别到具体人员'}
+                  ? detail.personIdentifiers.join(personSeparator)
+                  : t('pages.common.text.noLinkedPersons')}
               </Descriptions.Item>
-              <Descriptions.Item label="事件类型">
+              <Descriptions.Item
+                label={t('pages.keyArea.density.fields.eventType')}
+              >
                 {`${detail.majorType || ''}/${detail.minorType || ''}`}
               </Descriptions.Item>
-              <Descriptions.Item label="抓拍图片数量">
+              <Descriptions.Item
+                label={t('pages.keyArea.density.fields.captureCount')}
+              >
                 {detail.captureImageCount ?? detail.captureImageUrls.length}
               </Descriptions.Item>
             </Descriptions>
@@ -279,12 +314,15 @@ const DensityMonitoring: React.FC = () => {
             ) : (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="暂无抓拍图片"
+                description={t('pages.common.empty.noImages')}
               />
             )}
           </>
         ) : (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={t('pages.common.empty.noData')}
+          />
         )}
       </Drawer>
     </PageContainer>

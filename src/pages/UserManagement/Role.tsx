@@ -56,7 +56,6 @@ const RolePage: React.FC = () => {
   const [pagination, setPagination] = useState(DEFAULT_PAGINATION);
   const [modalVisible, setModalVisible] = useState(false);
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
-  const [modalTitle, setModalTitle] = useState('新增角色');
   const [editingRole, setEditingRole] = useState<RoleItem | null>(null);
   const formRef = useRef<FormInstance<RoleItem>>(null);
 
@@ -112,18 +111,18 @@ const RolePage: React.FC = () => {
 
   const handleAdd = () => {
     setEditingRole(null);
-    setModalTitle('新增角色');
     setModalVisible(true);
     formRef.current?.resetFields();
   };
 
   const handleEdit = (record: RoleItem) => {
     if (record.is_super_admin) {
-      message.warning('超级管理员角色不允许编辑');
+      message.warning(
+        t('pages.userManagement.role.messages.superAdminEditForbidden'),
+      );
       return;
     }
     setEditingRole(record);
-    setModalTitle('编辑角色');
     setModalVisible(true);
 
     setTimeout(() => {
@@ -136,7 +135,9 @@ const RolePage: React.FC = () => {
 
   const handleManagePermissions = (record: RoleItem) => {
     if (record.is_super_admin) {
-      message.warning('超级管理员角色权限不允许修改');
+      message.warning(
+        t('pages.userManagement.role.messages.superAdminPermissionForbidden'),
+      );
       return;
     }
     setEditingRole(record);
@@ -148,7 +149,9 @@ const RolePage: React.FC = () => {
     if (!editingRole) return;
     try {
       await updateRolePermissions(editingRole.id, selectedPermissions);
-      message.success('权限已更新');
+      message.success(
+        t('pages.userManagement.role.messages.permissionUpdated'),
+      );
       setPermissionModalVisible(false);
       fetchRoles({
         page: pagination.current,
@@ -161,12 +164,14 @@ const RolePage: React.FC = () => {
 
   const handleDelete = async (id: number, role: RoleItem) => {
     if (role.is_super_admin) {
-      message.warning('超级管理员角色不可删除');
+      message.warning(
+        t('pages.userManagement.role.messages.superAdminDeleteForbidden'),
+      );
       return;
     }
     try {
       await deleteRole(id);
-      message.success('删除成功');
+      message.success(t('pages.common.messages.deleteSuccess'));
       fetchRoles({
         page: pagination.current,
         per_page: pagination.pageSize,
@@ -183,10 +188,10 @@ const RolePage: React.FC = () => {
 
       if (editingRole) {
         await updateRole(editingRole.id, values);
-        message.success('角色已更新');
+        message.success(t('pages.userManagement.role.messages.updateSuccess'));
       } else {
         await createRole(values);
-        message.success('角色已创建');
+        message.success(t('pages.userManagement.role.messages.createSuccess'));
       }
       setModalVisible(false);
       fetchRoles({
@@ -213,12 +218,15 @@ const RolePage: React.FC = () => {
         permission.group === group && permission.module === moduleName,
     );
 
-  const permissionTypes = {
-    view: '查看',
-    create: '创建',
-    edit: '修改',
-    delete: '删除',
-  };
+  const permissionTypes = useMemo(
+    () => ({
+      view: t('pages.userManagement.role.permissionTypes.view'),
+      create: t('pages.userManagement.role.permissionTypes.create'),
+      edit: t('pages.userManagement.role.permissionTypes.edit'),
+      delete: t('pages.userManagement.role.permissionTypes.delete'),
+    }),
+    [t],
+  );
 
   const getPermissionType = (code: string) => {
     if (code.includes('view')) return 'view';
@@ -247,7 +255,7 @@ const RolePage: React.FC = () => {
 
   const permissionColumns: ColumnsType<PermissionTableRow> = [
     {
-      title: '权限组',
+      title: t('pages.userManagement.role.permissionTable.group'),
       dataIndex: 'group',
       width: 120,
       render: (text: string) => getGroupName(text),
@@ -258,13 +266,13 @@ const RolePage: React.FC = () => {
       }),
     },
     {
-      title: '模块',
+      title: t('pages.userManagement.role.permissionTable.module'),
       dataIndex: 'module',
       width: 150,
       render: (text: string) => getModuleName(text),
     },
     {
-      title: '权限',
+      title: t('pages.userManagement.role.permissionTable.permissions'),
       dataIndex: 'permissions',
       render: (permissionItems: PermissionItem[]) => {
         const permissionsByType: Record<string, PermissionItem[]> = {
@@ -335,35 +343,35 @@ const RolePage: React.FC = () => {
 
   const roleColumns: ColumnsType<RoleItem> = [
     {
-      title: '名称',
+      title: t('pages.userManagement.role.columns.name'),
       dataIndex: 'name',
     },
     {
-      title: '描述',
+      title: t('pages.userManagement.role.columns.description'),
       dataIndex: 'description',
     },
     {
-      title: '操作',
+      title: t('pages.userManagement.role.columns.action'),
       dataIndex: 'action',
       render: (_, record) => (
         <Space size="middle">
           {!record.is_super_admin && (
             <>
-              <Tooltip title="编辑">
+              <Tooltip title={t('pages.common.actions.edit')}>
                 <a onClick={() => handleEdit(record)}>
                   <EditOutlined />
                 </a>
               </Tooltip>
-              <Tooltip title="管理权限">
+              <Tooltip title={t('pages.userManagement.role.actions.manage')}>
                 <a onClick={() => handleManagePermissions(record)}>
                   <SettingOutlined />
                 </a>
               </Tooltip>
-              <Tooltip title="删除">
+              <Tooltip title={t('pages.common.actions.delete')}>
                 <Popconfirm
-                  title="确定删除此角色吗？"
-                  okText="确定"
-                  cancelText="取消"
+                  title={t('pages.userManagement.role.popconfirm.delete')}
+                  okText={t('pages.common.actions.confirm')}
+                  cancelText={t('pages.common.actions.cancel')}
                   onConfirm={() => handleDelete(record.id, record)}
                 >
                   <a>
@@ -374,18 +382,28 @@ const RolePage: React.FC = () => {
             </>
           )}
           {record.is_super_admin && (
-            <span style={{ color: '#999' }}>超级管理员角色不可操作</span>
+            <span style={{ color: '#999' }}>
+              {t('pages.userManagement.role.text.superAdminReadonly')}
+            </span>
           )}
         </Space>
       ),
     },
   ];
 
+  const roleModalTitle = editingRole
+    ? t('pages.userManagement.role.modal.editTitle')
+    : t('pages.userManagement.role.modal.createTitle');
+  const permissionModalTitle = t(
+    'pages.userManagement.role.permissionModal.title',
+    { name: editingRole?.name ?? '' },
+  );
+
   return (
-    <PageContainer header={{ title: '角色与权限管理' }}>
+    <PageContainer header={{ title: t('pages.userManagement.role.pageTitle') }}>
       <div style={{ marginBottom: 16 }}>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          新增角色
+          {t('pages.userManagement.role.button.add')}
         </Button>
       </div>
       <Table<RoleItem>
@@ -399,13 +417,17 @@ const RolePage: React.FC = () => {
           showQuickJumper: true,
           pageSizeOptions: ['10', '15', '20', '50', '100'],
           showTotal: (total, range) =>
-            `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+            t('pages.userManagement.role.pagination.total', {
+              from: range[0],
+              to: range[1],
+              total,
+            }),
         }}
         onChange={handleTableChange}
       />
 
       <Modal
-        title={modalTitle}
+        title={roleModalTitle}
         open={modalVisible}
         destroyOnClose
         onOk={handleSubmit}
@@ -414,19 +436,36 @@ const RolePage: React.FC = () => {
         <Form layout="vertical" ref={formRef}>
           <Form.Item
             name="name"
-            label="角色名称"
-            rules={[{ required: true, message: '请输入角色名称' }]}
+            label={t('pages.userManagement.role.form.labels.name')}
+            rules={[
+              {
+                required: true,
+                message: t('pages.userManagement.role.form.validations.name'),
+              },
+            ]}
           >
-            <Input placeholder="请输入角色名称" />
+            <Input
+              placeholder={t(
+                'pages.userManagement.role.form.placeholders.name',
+              )}
+            />
           </Form.Item>
-          <Form.Item name="description" label="角色描述">
-            <Input.TextArea rows={4} placeholder="请输入角色描述" />
+          <Form.Item
+            name="description"
+            label={t('pages.userManagement.role.form.labels.description')}
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder={t(
+                'pages.userManagement.role.form.placeholders.description',
+              )}
+            />
           </Form.Item>
         </Form>
       </Modal>
 
       <Modal
-        title={`管理权限：${editingRole?.name ?? ''}`}
+        title={permissionModalTitle}
         open={permissionModalVisible}
         width={860}
         destroyOnClose

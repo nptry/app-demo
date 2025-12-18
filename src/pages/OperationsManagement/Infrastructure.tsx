@@ -1,7 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
-import type { ColumnsType } from 'antd/es/table';
+import { useIntl, useRequest } from '@umijs/max';
 import {
   Badge,
   Button,
@@ -10,6 +8,7 @@ import {
   Form,
   Input,
   Modal,
+  message,
   Popconfirm,
   Row,
   Select,
@@ -17,12 +16,19 @@ import {
   Statistic,
   Table,
   Tag,
-  message,
 } from 'antd';
-import type { FacilityItem, InfrastructureResponse } from '@/services/operations';
+import type { ColumnsType } from 'antd/es/table';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import type {
+  FacilityItem,
+  InfrastructureResponse,
+} from '@/services/operations';
 import { getInfrastructureOverview } from '@/services/operations';
 
-const statusColor: Record<FacilityItem['status'], 'success' | 'warning' | 'error'> = {
+const statusColor: Record<
+  FacilityItem['status'],
+  'success' | 'warning' | 'error'
+> = {
   正常运行: 'success',
   待维护: 'warning',
   停用: 'error',
@@ -34,18 +40,65 @@ type FilterState = {
   type: FacilityItem['type'] | 'all';
 };
 
-const facilityTypes: FacilityItem['type'][] = ['监测区域', '交通卡口', '行人通道点位', '智慧灯杆'];
+const facilityTypes: FacilityItem['type'][] = [
+  '监测区域',
+  '交通卡口',
+  '行人通道点位',
+  '智慧灯杆',
+];
 const facilityStatus: FacilityItem['status'][] = ['正常运行', '待维护', '停用'];
+const FACILITY_TYPE_LABEL_IDS: Record<FacilityItem['type'], string> = {
+  监测区域: 'pages.operations.infrastructure.types.region',
+  交通卡口: 'pages.operations.infrastructure.types.checkpoint',
+  行人通道点位: 'pages.operations.infrastructure.types.pedestrian',
+  智慧灯杆: 'pages.operations.infrastructure.types.lamp',
+};
+const FACILITY_STATUS_LABEL_IDS: Record<FacilityItem['status'], string> = {
+  正常运行: 'pages.operations.infrastructure.status.normal',
+  待维护: 'pages.operations.infrastructure.status.maintenance',
+  停用: 'pages.operations.infrastructure.status.stop',
+};
 
 const Infrastructure: React.FC = () => {
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
   const { data, loading } = useRequest(getInfrastructureOverview, {
-    formatResult: (res: InfrastructureResponse | { data: InfrastructureResponse }) =>
-      (res as { data?: InfrastructureResponse })?.data ?? (res as InfrastructureResponse),
+    formatResult: (
+      res: InfrastructureResponse | { data: InfrastructureResponse },
+    ) =>
+      (res as { data?: InfrastructureResponse })?.data ??
+      (res as InfrastructureResponse),
   });
+  const typeOptions = useMemo(
+    () =>
+      facilityTypes.map((type) => ({
+        value: type,
+        label: t(FACILITY_TYPE_LABEL_IDS[type]),
+      })),
+    [t],
+  );
+  const statusOptions = useMemo(
+    () =>
+      facilityStatus.map((status) => ({
+        value: status,
+        label: t(FACILITY_STATUS_LABEL_IDS[status]),
+      })),
+    [t],
+  );
+  const countUnit = t('pages.operations.infrastructure.unit.count');
+  const poleUnit = t('pages.operations.infrastructure.unit.pole');
 
   const [initialized, setInitialized] = useState(false);
   const [facilities, setFacilities] = useState<FacilityItem[]>([]);
-  const [filters, setFilters] = useState<FilterState>({ keyword: '', status: 'all', type: 'all' });
+  const [filters, setFilters] = useState<FilterState>({
+    keyword: '',
+    status: 'all',
+    type: 'all',
+  });
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<FacilityItem | null>(null);
   const [form] = Form.useForm<FacilityItem>();
@@ -62,8 +115,11 @@ const Infrastructure: React.FC = () => {
     if (facilities.length) {
       return {
         regions: facilities.filter((item) => item.type === '监测区域').length,
-        checkpoints: facilities.filter((item) => item.type === '交通卡口').length,
-        pedestrianPoints: facilities.filter((item) => item.type === '行人通道点位').length,
+        checkpoints: facilities.filter((item) => item.type === '交通卡口')
+          .length,
+        pedestrianPoints: facilities.filter(
+          (item) => item.type === '行人通道点位',
+        ).length,
         lampPoles: facilities.filter((item) => item.type === '智慧灯杆').length,
       };
     }
@@ -85,7 +141,8 @@ const Infrastructure: React.FC = () => {
             .filter(Boolean)
             .some((field) => field?.toLowerCase().includes(keyword))
         : true;
-      const matchStatus = filters.status === 'all' || item.status === filters.status;
+      const matchStatus =
+        filters.status === 'all' || item.status === filters.status;
       const matchType = filters.type === 'all' || item.type === filters.type;
       return matchKeyword && matchStatus && matchType;
     });
@@ -126,120 +183,182 @@ const Infrastructure: React.FC = () => {
     [form],
   );
 
-  const handleDelete = useCallback((id: string) => {
-    setFacilities((prev) => prev.filter((item) => item.id !== id));
-    message.success('删除成功');
-  }, []);
+  const handleDelete = useCallback(
+    (id: string) => {
+      setFacilities((prev) => prev.filter((item) => item.id !== id));
+      message.success(t('pages.common.messages.deleteSuccess'));
+    },
+    [t],
+  );
 
   const handleModalOk = useCallback(async () => {
     const values = await form.validateFields();
     if (editingRecord) {
-      setFacilities((prev) => prev.map((item) => (item.id === editingRecord.id ? values : item)));
-      message.success('设施信息已更新');
+      setFacilities((prev) =>
+        prev.map((item) => (item.id === editingRecord.id ? values : item)),
+      );
+      message.success(
+        t('pages.operations.infrastructure.messages.updateSuccess'),
+      );
     } else {
       const newItem: FacilityItem = {
         ...values,
         id: values.id?.trim() ? values.id : `FAC-${Date.now()}`,
       };
       setFacilities((prev) => [newItem, ...prev]);
-      message.success('新增设施成功');
+      message.success(
+        t('pages.operations.infrastructure.messages.createSuccess'),
+      );
     }
     setModalVisible(false);
-  }, [editingRecord, form]);
+  }, [editingRecord, form, t]);
 
   const handleModalCancel = useCallback(() => setModalVisible(false), []);
 
   const columns: ColumnsType<FacilityItem> = useMemo(
     () => [
-      { title: '设施 ID', dataIndex: 'id', width: 140 },
       {
-        title: '设施名称',
+        title: t('pages.operations.infrastructure.table.columns.id'),
+        dataIndex: 'id',
+        width: 140,
+      },
+      {
+        title: t('pages.operations.infrastructure.table.columns.name'),
         dataIndex: 'name',
         width: 220,
         render: (value: string) => <strong>{value}</strong>,
       },
       {
-        title: '设施类型',
+        title: t('pages.operations.infrastructure.table.columns.type'),
         dataIndex: 'type',
         width: 160,
-        render: (value: FacilityItem['type']) => <Tag color="blue">{value}</Tag>,
+        render: (value: FacilityItem['type']) => (
+          <Tag color="blue">{t(FACILITY_TYPE_LABEL_IDS[value])}</Tag>
+        ),
       },
-      { title: '所属区域', dataIndex: 'region', width: 220 },
-      { title: '详细地址', dataIndex: 'address', width: 240 },
-      { title: '经纬度', dataIndex: 'coordinates', width: 180 },
       {
-        title: '负责人 / 联系电话',
+        title: t('pages.operations.infrastructure.table.columns.region'),
+        dataIndex: 'region',
+        width: 220,
+      },
+      {
+        title: t('pages.operations.infrastructure.table.columns.address'),
+        dataIndex: 'address',
+        width: 240,
+      },
+      {
+        title: t('pages.operations.infrastructure.table.columns.coordinates'),
+        dataIndex: 'coordinates',
+        width: 180,
+      },
+      {
+        title: t('pages.operations.infrastructure.table.columns.owner'),
         dataIndex: 'owner',
         width: 220,
         render: (value: string, record) => (
           <div>
             <div>{value}</div>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.phone}</div>
+            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>
+              {record.phone}
+            </div>
           </div>
         ),
       },
       {
-        title: '设施状态',
+        title: t('pages.operations.infrastructure.table.columns.status'),
         dataIndex: 'status',
         width: 140,
-        render: (value: FacilityItem['status']) => <Badge status={statusColor[value]} text={value} />,
+        render: (value: FacilityItem['status']) => (
+          <Badge
+            status={statusColor[value]}
+            text={t(FACILITY_STATUS_LABEL_IDS[value])}
+          />
+        ),
       },
-      { title: '建成时间', dataIndex: 'buildDate', width: 140 },
-      // { title: '备注', dataIndex: 'remark' },
       {
-        title: '操作',
+        title: t('pages.operations.infrastructure.table.columns.buildDate'),
+        dataIndex: 'buildDate',
+        width: 140,
+      },
+      {
+        title: t('pages.operations.infrastructure.table.columns.action'),
         dataIndex: 'action',
         width: 160,
         fixed: 'right',
         render: (_, record) => (
           <Space size="small">
             <Button type="link" onClick={() => handleEdit(record)}>
-              编辑
+              {t('pages.common.actions.edit')}
             </Button>
-            <Popconfirm title="确认删除该设施？" okText="确认" cancelText="取消" onConfirm={() => handleDelete(record.id)}>
+            <Popconfirm
+              title={t(
+                'pages.operations.infrastructure.popconfirm.deleteTitle',
+              )}
+              okText={t('pages.common.actions.confirm')}
+              cancelText={t('pages.common.actions.cancel')}
+              onConfirm={() => handleDelete(record.id)}
+            >
               <Button type="link" danger>
-                删除
+                {t('pages.common.actions.delete')}
               </Button>
             </Popconfirm>
           </Space>
         ),
       },
     ],
-    [handleDelete, handleEdit],
+    [handleDelete, handleEdit, t],
   );
 
   return (
-    <PageContainer header={{ title: '基础设施管理' }}>
+    <PageContainer
+      header={{ title: t('pages.operations.infrastructure.pageTitle') }}
+    >
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="重点区域" value={summary.regions} suffix="个" />
+            <Statistic
+              title={t('pages.operations.infrastructure.card.regions')}
+              value={summary.regions}
+              suffix={countUnit}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="交通卡口" value={summary.checkpoints} suffix="个" />
+            <Statistic
+              title={t('pages.operations.infrastructure.card.checkpoints')}
+              value={summary.checkpoints}
+              suffix={countUnit}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="行人通道点位" value={summary.pedestrianPoints} suffix="个" />
+            <Statistic
+              title={t('pages.operations.infrastructure.card.pedestrian')}
+              value={summary.pedestrianPoints}
+              suffix={countUnit}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="智慧灯杆" value={summary.lampPoles} suffix="根" />
+            <Statistic
+              title={t('pages.operations.infrastructure.card.lampPoles')}
+              value={summary.lampPoles}
+              suffix={poleUnit}
+            />
           </Card>
         </Col>
       </Row>
 
       <Card
-        title="设施清单"
+        title={t('pages.operations.infrastructure.table.title')}
         style={{ marginTop: 24 }}
         bodyStyle={{ paddingTop: 8 }}
         extra={
           <Button type="primary" onClick={openCreateModal}>
-            新增设施
+            {t('pages.operations.infrastructure.button.create')}
           </Button>
         }
       >
@@ -251,22 +370,42 @@ const Infrastructure: React.FC = () => {
           style={{ marginBottom: 16 }}
         >
           <Form.Item name="keyword">
-            <Input allowClear placeholder="搜索名称 / 区域 / 地址" style={{ width: 240 }} />
+            <Input
+              allowClear
+              placeholder={t(
+                'pages.operations.infrastructure.filter.keyword.placeholder',
+              )}
+              style={{ width: 240 }}
+            />
           </Form.Item>
           <Form.Item name="type">
             <Select
               style={{ width: 200 }}
-              options={[{ value: 'all', label: '全部类型' }, ...facilityTypes.map((type) => ({ label: type, value: type }))]}
+              options={[
+                {
+                  value: 'all',
+                  label: t('pages.operations.infrastructure.filter.type.all'),
+                },
+                ...typeOptions,
+              ]}
             />
           </Form.Item>
           <Form.Item name="status">
             <Select
               style={{ width: 180 }}
-              options={[{ value: 'all', label: '全部状态' }, ...facilityStatus.map((status) => ({ label: status, value: status }))]}
+              options={[
+                {
+                  value: 'all',
+                  label: t('pages.operations.infrastructure.filter.status.all'),
+                },
+                ...statusOptions,
+              ]}
             />
           </Form.Item>
           <Form.Item>
-            <Button onClick={handleFilterReset}>重置筛选</Button>
+            <Button onClick={handleFilterReset}>
+              {t('pages.common.buttons.resetFilters')}
+            </Button>
           </Form.Item>
         </Form>
         <Table<FacilityItem>
@@ -280,75 +419,221 @@ const Infrastructure: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingRecord ? '编辑设施' : '新增设施'}
+        title={
+          editingRecord
+            ? t('pages.operations.infrastructure.modal.editTitle')
+            : t('pages.operations.infrastructure.modal.createTitle')
+        }
         open={modalVisible}
         onOk={handleModalOk}
         onCancel={handleModalCancel}
-        okText="保存"
+        okText={t('pages.common.actions.save')}
         destroyOnClose
         width={760}
       >
         <Form layout="vertical" form={form}>
-          {editingRecord ? (
-            <Form.Item label="设施 ID" name="id">
-              <Input disabled />
-            </Form.Item>
-          ) : (
-            <Form.Item label="设施 ID" name="id">
-              <Input placeholder="不填写自动生成" />
-            </Form.Item>
-          )}
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item label="设施名称" name="name" rules={[{ required: true, message: '请输入设施名称' }]}>
-                <Input placeholder="请输入设施名称" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="设施类型" name="type" rules={[{ required: true, message: '请选择设施类型' }]}>
-                <Select options={facilityTypes.map((type) => ({ label: type, value: type }))} placeholder="请选择设施类型" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item label="所属区域" name="region" rules={[{ required: true, message: '请输入所属区域' }]}>
-                <Input placeholder="请输入所属区域" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="设施状态" name="status" rules={[{ required: true, message: '请选择状态' }]}>
-                <Select options={facilityStatus.map((status) => ({ label: status, value: status }))} placeholder="请选择状态" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item label="详细地址" name="address" rules={[{ required: true, message: '请输入详细地址' }]}>
-            <Input placeholder="请输入详细地址" />
-          </Form.Item>
-          <Form.Item label="经纬度" name="coordinates">
-            <Input placeholder="示例：118.8,31.9" />
+          <Form.Item
+            label={t('pages.operations.infrastructure.form.labels.id')}
+            name="id"
+          >
+            <Input
+              disabled={!!editingRecord}
+              placeholder={
+                editingRecord
+                  ? undefined
+                  : t('pages.operations.infrastructure.form.placeholders.id')
+              }
+            />
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="负责人" name="owner" rules={[{ required: true, message: '请输入负责人' }]}>
-                <Input placeholder="请输入负责人" />
+              <Form.Item
+                label={t('pages.operations.infrastructure.form.labels.name')}
+                name="name"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.operations.infrastructure.form.validations.name',
+                    ),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder={t(
+                    'pages.operations.infrastructure.form.placeholders.name',
+                  )}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="联系电话" name="phone" rules={[{ required: true, message: '请输入联系电话' }]}>
-                <Input placeholder="请输入联系电话" />
+              <Form.Item
+                label={t('pages.operations.infrastructure.form.labels.type')}
+                name="type"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.operations.infrastructure.form.validations.type',
+                    ),
+                  },
+                ]}
+              >
+                <Select
+                  options={typeOptions}
+                  placeholder={t(
+                    'pages.operations.infrastructure.form.placeholders.type',
+                  )}
+                />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="建成时间" name="buildDate" rules={[{ required: true, message: '请输入建成时间' }]}>
-                <Input placeholder="示例：2022-08-01" />
+              <Form.Item
+                label={t('pages.operations.infrastructure.form.labels.region')}
+                name="region"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.operations.infrastructure.form.validations.region',
+                    ),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder={t(
+                    'pages.operations.infrastructure.form.placeholders.region',
+                  )}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="备注" name="remark">
-                <Input placeholder="可填写维护信息、扩展说明" />
+              <Form.Item
+                label={t('pages.operations.infrastructure.form.labels.status')}
+                name="status"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.operations.infrastructure.form.validations.status',
+                    ),
+                  },
+                ]}
+              >
+                <Select
+                  options={statusOptions}
+                  placeholder={t(
+                    'pages.operations.infrastructure.form.placeholders.status',
+                  )}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item
+            label={t('pages.operations.infrastructure.form.labels.address')}
+            name="address"
+            rules={[
+              {
+                required: true,
+                message: t(
+                  'pages.operations.infrastructure.form.validations.address',
+                ),
+              },
+            ]}
+          >
+            <Input
+              placeholder={t(
+                'pages.operations.infrastructure.form.placeholders.address',
+              )}
+            />
+          </Form.Item>
+          <Form.Item
+            label={t('pages.operations.infrastructure.form.labels.coordinates')}
+            name="coordinates"
+          >
+            <Input
+              placeholder={t(
+                'pages.operations.infrastructure.form.placeholders.coordinates',
+              )}
+            />
+          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label={t('pages.operations.infrastructure.form.labels.owner')}
+                name="owner"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.operations.infrastructure.form.validations.owner',
+                    ),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder={t(
+                    'pages.operations.infrastructure.form.placeholders.owner',
+                  )}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label={t('pages.operations.infrastructure.form.labels.phone')}
+                name="phone"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.operations.infrastructure.form.validations.phone',
+                    ),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder={t(
+                    'pages.operations.infrastructure.form.placeholders.phone',
+                  )}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label={t(
+                  'pages.operations.infrastructure.form.labels.buildDate',
+                )}
+                name="buildDate"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.operations.infrastructure.form.validations.buildDate',
+                    ),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder={t(
+                    'pages.operations.infrastructure.form.placeholders.buildDate',
+                  )}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label={t('pages.operations.infrastructure.form.labels.remark')}
+                name="remark"
+              >
+                <Input
+                  placeholder={t(
+                    'pages.operations.infrastructure.form.placeholders.remark',
+                  )}
+                />
               </Form.Item>
             </Col>
           </Row>

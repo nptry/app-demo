@@ -1,5 +1,5 @@
 import { PageContainer } from '@ant-design/pro-components';
-import { useRequest } from '@umijs/max';
+import { useIntl, useRequest } from '@umijs/max';
 import {
   Button,
   Card,
@@ -30,8 +30,17 @@ type FilterState = {
 };
 
 const deviceTypeOptions: ChannelDeploymentItem['deviceType'][] = ['智能盒子'];
+const DEVICE_TYPE_LABEL_IDS: Record<string, string> = {
+  智能盒子: 'pages.pedestrian.deviceDeployment.deviceType.smartBox',
+};
 
 const DeviceDeployment: React.FC = () => {
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
   const { data, loading } = useRequest(getChannelDeployments, {
     formatResult: (
       res: ChannelDeploymentResponse | { data: ChannelDeploymentResponse },
@@ -51,6 +60,14 @@ const DeviceDeployment: React.FC = () => {
     useState<ChannelDeploymentItem | null>(null);
   const [form] = Form.useForm<ChannelDeploymentItem>();
   const [filterForm] = Form.useForm();
+  const formatDeviceType = useCallback(
+    (type?: string) => {
+      if (!type) return undefined;
+      const labelId = DEVICE_TYPE_LABEL_IDS[type];
+      return labelId ? t(labelId) : type;
+    },
+    [t],
+  );
 
   useEffect(() => {
     if (data?.devices && !initialized) {
@@ -106,10 +123,13 @@ const DeviceDeployment: React.FC = () => {
     [form],
   );
 
-  const handleDelete = useCallback((id: string) => {
-    setDevices((prev) => prev.filter((item) => item.id !== id));
-    message.success('删除成功');
-  }, []);
+  const handleDelete = useCallback(
+    (id: string) => {
+      setDevices((prev) => prev.filter((item) => item.id !== id));
+      message.success(t('pages.common.messages.deleteSuccess'));
+    },
+    [t],
+  );
 
   const handleModalOk = useCallback(async () => {
     const values = await form.validateFields();
@@ -119,7 +139,9 @@ const DeviceDeployment: React.FC = () => {
           item.id === editingRecord.id ? { ...item, ...values } : item,
         ),
       );
-      message.success('部署信息已更新');
+      message.success(
+        t('pages.pedestrian.deviceDeployment.messages.updateSuccess'),
+      );
     } else {
       const newItem: ChannelDeploymentItem = {
         ...values,
@@ -127,10 +149,12 @@ const DeviceDeployment: React.FC = () => {
         status: '正常运行',
       };
       setDevices((prev) => [newItem, ...prev]);
-      message.success('新增部署成功');
+      message.success(
+        t('pages.pedestrian.deviceDeployment.messages.createSuccess'),
+      );
     }
     setModalVisible(false);
-  }, [editingRecord, form]);
+  }, [editingRecord, form, t]);
 
   const handleModalCancel = useCallback(() => {
     setModalVisible(false);
@@ -138,9 +162,13 @@ const DeviceDeployment: React.FC = () => {
 
   const columns: ColumnsType<ChannelDeploymentItem> = useMemo(
     () => [
-      { title: '通道', dataIndex: 'channelName', width: 200 },
       {
-        title: '设备名称',
+        title: t('pages.pedestrian.deviceDeployment.columns.channel'),
+        dataIndex: 'channelName',
+        width: 200,
+      },
+      {
+        title: t('pages.pedestrian.deviceDeployment.columns.deviceName'),
         dataIndex: 'deviceName',
         width: 220,
         render: (value: string, record) => (
@@ -153,53 +181,79 @@ const DeviceDeployment: React.FC = () => {
         ),
       },
       {
-        title: '设备类型',
+        title: t('pages.pedestrian.deviceDeployment.columns.deviceType'),
         dataIndex: 'deviceType',
         width: 180,
         render: (value: ChannelDeploymentItem['deviceType']) => (
-          <Tag color="blue">{value}</Tag>
+          <Tag color="blue">{formatDeviceType(value)}</Tag>
         ),
       },
-      { title: '安装位置', dataIndex: 'position', width: 220 },
-      { title: '安装高度 (m)', dataIndex: 'installHeight', width: 140 },
-      { title: '镜头角度', dataIndex: 'lensAngle', width: 160 },
-      { title: '部署时间', dataIndex: 'installDate', width: 160 },
-      { title: '责任人', dataIndex: 'owner', width: 160 },
-      { title: '捕获测试结果', dataIndex: 'testResult', width: 200 },
       {
-        title: '操作',
+        title: t('pages.pedestrian.deviceDeployment.columns.position'),
+        dataIndex: 'position',
+        width: 220,
+      },
+      {
+        title: t('pages.pedestrian.deviceDeployment.columns.installHeight'),
+        dataIndex: 'installHeight',
+        width: 140,
+      },
+      {
+        title: t('pages.pedestrian.deviceDeployment.columns.lensAngle'),
+        dataIndex: 'lensAngle',
+        width: 160,
+      },
+      {
+        title: t('pages.pedestrian.deviceDeployment.columns.installDate'),
+        dataIndex: 'installDate',
+        width: 160,
+      },
+      {
+        title: t('pages.pedestrian.deviceDeployment.columns.owner'),
+        dataIndex: 'owner',
+        width: 160,
+      },
+      {
+        title: t('pages.pedestrian.deviceDeployment.columns.testResult'),
+        dataIndex: 'testResult',
+        width: 200,
+      },
+      {
+        title: t('pages.pedestrian.deviceDeployment.columns.action'),
         dataIndex: 'action',
         width: 160,
         fixed: 'right',
         render: (_, record) => (
           <Space size="small">
             <Button type="link" onClick={() => handleEdit(record)}>
-              编辑
+              {t('pages.common.actions.edit')}
             </Button>
             <Popconfirm
-              title="确认删除该部署？"
-              okText="确认"
-              cancelText="取消"
+              title={t('pages.pedestrian.deviceDeployment.popconfirm.delete')}
+              okText={t('pages.common.actions.confirm')}
+              cancelText={t('pages.common.actions.cancel')}
               onConfirm={() => handleDelete(record.id)}
             >
               <Button type="link" danger>
-                删除
+                {t('pages.common.actions.delete')}
               </Button>
             </Popconfirm>
           </Space>
         ),
       },
     ],
-    [handleDelete, handleEdit],
+    [formatDeviceType, handleDelete, handleEdit, t],
   );
 
   return (
-    <PageContainer header={{ title: '通道设备部署' }}>
+    <PageContainer
+      header={{ title: t('pages.pedestrian.deviceDeployment.pageTitle') }}
+    >
       <Card
         bodyStyle={{ paddingTop: 8 }}
         extra={
           <Button type="primary" onClick={openCreateModal}>
-            新增部署
+            {t('pages.pedestrian.deviceDeployment.button.add')}
           </Button>
         }
       >
@@ -213,7 +267,9 @@ const DeviceDeployment: React.FC = () => {
           <Form.Item name="keyword">
             <Input
               allowClear
-              placeholder="搜索通道 / 设备 / 位置"
+              placeholder={t(
+                'pages.pedestrian.deviceDeployment.filter.keyword',
+              )}
               style={{ width: 240 }}
             />
           </Form.Item>
@@ -221,16 +277,21 @@ const DeviceDeployment: React.FC = () => {
             <Select
               style={{ width: 200 }}
               options={[
-                { value: 'all', label: '全部设备类型' },
+                {
+                  value: 'all',
+                  label: t('pages.pedestrian.deviceDeployment.filter.allTypes'),
+                },
                 ...deviceTypeOptions.map((type) => ({
                   value: type,
-                  label: type,
+                  label: formatDeviceType(type),
                 })),
               ]}
             />
           </Form.Item>
           <Form.Item>
-            <Button onClick={handleFilterReset}>重置筛选</Button>
+            <Button onClick={handleFilterReset}>
+              {t('pages.common.buttons.resetFilters')}
+            </Button>
           </Form.Item>
         </Form>
         <Table<ChannelDeploymentItem>
@@ -244,46 +305,80 @@ const DeviceDeployment: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingRecord ? '编辑部署' : '新增部署'}
+        title={
+          editingRecord
+            ? t('pages.pedestrian.deviceDeployment.modal.editTitle')
+            : t('pages.pedestrian.deviceDeployment.modal.createTitle')
+        }
         open={modalVisible}
         onOk={handleModalOk}
         onCancel={handleModalCancel}
-        okText="保存"
+        okText={t('pages.common.actions.save')}
         destroyOnClose
         width={760}
       >
         <Form layout="vertical" form={form}>
           {editingRecord ? (
-            <Form.Item label="部署 ID" name="id">
+            <Form.Item
+              label={t('pages.pedestrian.deviceDeployment.form.labels.id')}
+              name="id"
+            >
               <Input disabled />
             </Form.Item>
           ) : (
-            <Form.Item label="部署 ID" name="id">
-              <Input placeholder="不填写自动生成" />
+            <Form.Item
+              label={t('pages.pedestrian.deviceDeployment.form.labels.id')}
+              name="id"
+            >
+              <Input
+                placeholder={t('pages.common.form.placeholder.autoGenerate')}
+              />
             </Form.Item>
           )}
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="通道名称"
+                label={t(
+                  'pages.pedestrian.deviceDeployment.form.labels.channel',
+                )}
                 name="channelName"
-                rules={[{ required: true, message: '请输入通道名称' }]}
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.pedestrian.deviceDeployment.form.validations.channel',
+                    ),
+                  },
+                ]}
               >
-                <Input placeholder="请输入通道名称" />
+                <Input
+                  placeholder={t(
+                    'pages.pedestrian.deviceDeployment.form.placeholders.channel',
+                  )}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label="设备类型"
+                label={t('pages.pedestrian.deviceDeployment.form.labels.type')}
                 name="deviceType"
-                rules={[{ required: true, message: '请选择设备类型' }]}
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.pedestrian.deviceDeployment.form.validations.type',
+                    ),
+                  },
+                ]}
               >
                 <Select
                   options={deviceTypeOptions.map((type) => ({
-                    label: type,
+                    label: formatDeviceType(type),
                     value: type,
                   }))}
-                  placeholder="请选择设备类型"
+                  placeholder={t(
+                    'pages.pedestrian.deviceDeployment.form.placeholders.type',
+                  )}
                 />
               </Form.Item>
             </Col>
@@ -291,66 +386,152 @@ const DeviceDeployment: React.FC = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="设备名称"
+                label={t(
+                  'pages.pedestrian.deviceDeployment.form.labels.deviceName',
+                )}
                 name="deviceName"
-                rules={[{ required: true, message: '请输入设备名称' }]}
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.pedestrian.deviceDeployment.form.validations.deviceName',
+                    ),
+                  },
+                ]}
               >
-                <Input placeholder="请输入设备名称" />
+                <Input
+                  placeholder={t(
+                    'pages.pedestrian.deviceDeployment.form.placeholders.deviceName',
+                  )}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label="设备编号"
+                label={t(
+                  'pages.pedestrian.deviceDeployment.form.labels.deviceId',
+                )}
                 name="deviceId"
-                rules={[{ required: true, message: '请输入设备编号' }]}
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.pedestrian.deviceDeployment.form.validations.deviceId',
+                    ),
+                  },
+                ]}
               >
-                <Input placeholder="请输入设备编号" />
+                <Input
+                  placeholder={t(
+                    'pages.pedestrian.deviceDeployment.form.placeholders.deviceId',
+                  )}
+                />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item
-            label="安装位置"
+            label={t('pages.pedestrian.deviceDeployment.form.labels.position')}
             name="position"
-            rules={[{ required: true, message: '请输入安装位置' }]}
+            rules={[
+              {
+                required: true,
+                message: t(
+                  'pages.pedestrian.deviceDeployment.form.validations.position',
+                ),
+              },
+            ]}
           >
-            <Input placeholder="请输入安装位置" />
+            <Input
+              placeholder={t(
+                'pages.pedestrian.deviceDeployment.form.placeholders.position',
+              )}
+            />
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="安装高度 (m)" name="installHeight">
+              <Form.Item
+                label={t(
+                  'pages.pedestrian.deviceDeployment.form.labels.installHeight',
+                )}
+                name="installHeight"
+              >
                 <InputNumber
                   min={0}
                   style={{ width: '100%' }}
-                  placeholder="请输入安装高度"
+                  placeholder={t(
+                    'pages.pedestrian.deviceDeployment.form.placeholders.installHeight',
+                  )}
                 />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="镜头角度" name="lensAngle">
-                <Input placeholder="请输入镜头角度" />
+              <Form.Item
+                label={t(
+                  'pages.pedestrian.deviceDeployment.form.labels.lensAngle',
+                )}
+                name="lensAngle"
+              >
+                <Input
+                  placeholder={t(
+                    'pages.pedestrian.deviceDeployment.form.placeholders.lensAngle',
+                  )}
+                />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={24}>
               <Form.Item
-                label="部署时间"
+                label={t(
+                  'pages.pedestrian.deviceDeployment.form.labels.installDate',
+                )}
                 name="installDate"
-                rules={[{ required: true, message: '请输入部署时间' }]}
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.pedestrian.deviceDeployment.form.validations.installDate',
+                    ),
+                  },
+                ]}
               >
-                <Input placeholder="示例：2024-08-01" />
+                <Input
+                  placeholder={t(
+                    'pages.pedestrian.deviceDeployment.form.placeholders.installDate',
+                  )}
+                />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item
-            label="责任人"
+            label={t('pages.pedestrian.deviceDeployment.form.labels.owner')}
             name="owner"
-            rules={[{ required: true, message: '请输入责任人' }]}
+            rules={[
+              {
+                required: true,
+                message: t(
+                  'pages.pedestrian.deviceDeployment.form.validations.owner',
+                ),
+              },
+            ]}
           >
-            <Input placeholder="请输入责任人" />
+            <Input
+              placeholder={t(
+                'pages.pedestrian.deviceDeployment.form.placeholders.owner',
+              )}
+            />
           </Form.Item>
-          <Form.Item label="捕获测试结果" name="testResult">
-            <Input placeholder="请输入测试结果" />
+          <Form.Item
+            label={t(
+              'pages.pedestrian.deviceDeployment.form.labels.testResult',
+            )}
+            name="testResult"
+          >
+            <Input
+              placeholder={t(
+                'pages.pedestrian.deviceDeployment.form.placeholders.testResult',
+              )}
+            />
           </Form.Item>
         </Form>
       </Modal>

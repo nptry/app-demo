@@ -1,12 +1,18 @@
-import React, { useMemo } from 'react';
-import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
-import type { ColumnsType } from 'antd/es/table';
+import { useIntl, useRequest } from '@umijs/max';
 import { Badge, Card, Table, Tag } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import React, { useCallback, useMemo } from 'react';
 import type { AccessRecord, AccessResponse } from '@/services/pedestrian';
 import { getAccessRecords } from '@/services/pedestrian';
 
 const AccessRecords: React.FC = () => {
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
   const { data, loading } = useRequest(getAccessRecords, {
     formatResult: (res: AccessResponse | { data: AccessResponse }) =>
       (res as { data?: AccessResponse })?.data ?? (res as AccessResponse),
@@ -15,35 +21,114 @@ const AccessRecords: React.FC = () => {
   const records = data?.records ?? [];
   const abnormalCount = records.filter((record) => record.abnormal).length;
 
+  const recordUnit = t('pages.common.unit.records');
   const columns: ColumnsType<AccessRecord> = useMemo(
     () => [
-      { title: '通道', dataIndex: 'channelName', width: 200 },
-      { title: '通行时间', dataIndex: 'time', width: 200 },
-      { title: '匿名编号', dataIndex: 'anonymousId', width: 200 },
-      { title: '性别/年龄', dataIndex: 'gender', width: 160, render: (value: string, record) => `${value} / ${record.ageRange}` },
-      { title: '方向', dataIndex: 'direction', width: 120 },
-      { title: '携带物品', dataIndex: 'belongings', width: 180 },
-      { title: '照片', dataIndex: 'photo', width: 140, render: (value: string) => <a>{value ? '查看' : '—'}</a> },
       {
-        title: '异常通行',
+        title: t('pages.pedestrian.access.columns.channel'),
+        dataIndex: 'channelName',
+        width: 200,
+      },
+      {
+        title: t('pages.pedestrian.access.columns.time'),
+        dataIndex: 'time',
+        width: 200,
+      },
+      {
+        title: t('pages.pedestrian.access.columns.anonymousId'),
+        dataIndex: 'anonymousId',
+        width: 200,
+      },
+      {
+        title: t('pages.pedestrian.access.columns.genderAge'),
+        dataIndex: 'gender',
+        width: 160,
+        render: (value: string, record) =>
+          `${value ?? t('pages.common.text.unknown')} / ${
+            record.ageRange ?? t('pages.common.text.unknown')
+          }`,
+      },
+      {
+        title: t('pages.pedestrian.access.columns.direction'),
+        dataIndex: 'direction',
+        width: 120,
+      },
+      {
+        title: t('pages.pedestrian.access.columns.belongings'),
+        dataIndex: 'belongings',
+        width: 180,
+      },
+      {
+        title: t('pages.pedestrian.access.columns.photo'),
+        dataIndex: 'photo',
+        width: 140,
+        render: (value: string) =>
+          value ? <a>{t('pages.pedestrian.access.actions.viewPhoto')}</a> : '—',
+      },
+      {
+        title: t('pages.pedestrian.access.columns.abnormal'),
         dataIndex: 'abnormal',
         width: 160,
         render: (value: boolean, record) =>
-          value ? <Tag color="orange">{record.abnormalReason ?? '异常'}</Tag> : <Tag color="green">正常</Tag>,
+          value ? (
+            <Tag color="orange">
+              {record.abnormalReason ??
+                t('pages.pedestrian.access.text.abnormal')}
+            </Tag>
+          ) : (
+            <Tag color="green">{t('pages.pedestrian.access.text.normal')}</Tag>
+          ),
       },
-      { title: '告警状态', dataIndex: 'alarmStatus', width: 180, render: (value: string) => <Badge status={value.includes('处理中') ? 'processing' : 'default'} text={value} /> },
-      { title: '备注', dataIndex: 'remark', width: 200 },
-      { title: '识别设备', dataIndex: 'deviceId', width: 160 },
+      {
+        title: t('pages.pedestrian.access.columns.alarmStatus'),
+        dataIndex: 'alarmStatus',
+        width: 180,
+        render: (value: string) => {
+          if (!value) {
+            return <Badge status="default" text="—" />;
+          }
+          const isProcessing = value.includes('处理中');
+          const text = isProcessing
+            ? t('pages.pedestrian.access.alarm.processing')
+            : value;
+          return (
+            <Badge
+              status={isProcessing ? 'processing' : 'default'}
+              text={text}
+            />
+          );
+        },
+      },
+      {
+        title: t('pages.pedestrian.access.columns.remark'),
+        dataIndex: 'remark',
+        width: 200,
+      },
+      {
+        title: t('pages.pedestrian.access.columns.device'),
+        dataIndex: 'deviceId',
+        width: 160,
+      },
     ],
-    [],
+    [t],
   );
 
   return (
-    <PageContainer header={{ title: '通行记录' }}>
+    <PageContainer header={{ title: t('pages.pedestrian.access.pageTitle') }}>
       <Card bordered={false} style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', gap: 32 }}>
-          <Tag color="blue">总记录 {records.length} 条</Tag>
-          <Tag color="orange">异常 {abnormalCount} 条</Tag>
+          <Tag color="blue">
+            {t('pages.pedestrian.access.summary.total', {
+              count: records.length,
+              unit: recordUnit,
+            })}
+          </Tag>
+          <Tag color="orange">
+            {t('pages.pedestrian.access.summary.abnormal', {
+              count: abnormalCount,
+              unit: recordUnit,
+            })}
+          </Tag>
         </div>
       </Card>
 

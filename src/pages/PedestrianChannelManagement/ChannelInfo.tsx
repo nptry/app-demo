@@ -1,7 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
-import type { ColumnsType } from 'antd/es/table';
+import { useIntl, useRequest } from '@umijs/max';
 import {
   Badge,
   Button,
@@ -11,15 +9,20 @@ import {
   Input,
   InputNumber,
   Modal,
+  message,
   Popconfirm,
   Row,
   Select,
   Space,
   Statistic,
   Table,
-  message,
 } from 'antd';
-import type { ChannelInfoItem, ChannelInfoResponse } from '@/services/pedestrian';
+import type { ColumnsType } from 'antd/es/table';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import type {
+  ChannelInfoItem,
+  ChannelInfoResponse,
+} from '@/services/pedestrian';
 import { getChannelInfo } from '@/services/pedestrian';
 
 const statusColor: Record<ChannelInfoItem['status'], 'success' | 'default'> = {
@@ -33,22 +36,66 @@ type FilterState = {
   channelType: ChannelInfoItem['channelType'] | 'all';
 };
 
-const channelTypeOptions: ChannelInfoItem['channelType'][] = ['商场入口', '地铁站出口', '步行街通道', '政府入口'];
+const channelTypeOptions: ChannelInfoItem['channelType'][] = [
+  '商场入口',
+  '地铁站出口',
+  '步行街通道',
+  '政府入口',
+];
 const statusOptions: ChannelInfoItem['status'][] = ['启用', '禁用'];
+const CHANNEL_TYPE_LABEL_IDS: Record<ChannelInfoItem['channelType'], string> = {
+  商场入口: 'pages.pedestrian.channelInfo.channelTypes.mall',
+  地铁站出口: 'pages.pedestrian.channelInfo.channelTypes.metro',
+  步行街通道: 'pages.pedestrian.channelInfo.channelTypes.walkway',
+  政府入口: 'pages.pedestrian.channelInfo.channelTypes.government',
+};
+const STATUS_LABEL_IDS: Record<ChannelInfoItem['status'], string> = {
+  启用: 'pages.pedestrian.channelInfo.status.enabled',
+  禁用: 'pages.pedestrian.channelInfo.status.disabled',
+};
 
 const ChannelInfo: React.FC = () => {
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
   const { data, loading } = useRequest(getChannelInfo, {
     formatResult: (res: ChannelInfoResponse | { data: ChannelInfoResponse }) =>
-      (res as { data?: ChannelInfoResponse })?.data ?? (res as ChannelInfoResponse),
+      (res as { data?: ChannelInfoResponse })?.data ??
+      (res as ChannelInfoResponse),
   });
 
   const [initialized, setInitialized] = useState(false);
   const [channels, setChannels] = useState<ChannelInfoItem[]>([]);
-  const [filters, setFilters] = useState<FilterState>({ keyword: '', status: 'all', channelType: 'all' });
+  const [filters, setFilters] = useState<FilterState>({
+    keyword: '',
+    status: 'all',
+    channelType: 'all',
+  });
   const [modalVisible, setModalVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<ChannelInfoItem | null>(null);
+  const [editingRecord, setEditingRecord] = useState<ChannelInfoItem | null>(
+    null,
+  );
   const [form] = Form.useForm<ChannelInfoItem>();
   const [filterForm] = Form.useForm();
+  const formatChannelType = useCallback(
+    (type?: ChannelInfoItem['channelType']) => {
+      if (!type) return undefined;
+      const labelId = CHANNEL_TYPE_LABEL_IDS[type];
+      return labelId ? t(labelId) : type;
+    },
+    [t],
+  );
+  const formatStatus = useCallback(
+    (status?: ChannelInfoItem['status']) => {
+      if (!status) return undefined;
+      const labelId = STATUS_LABEL_IDS[status];
+      return labelId ? t(labelId) : status;
+    },
+    [t],
+  );
 
   useEffect(() => {
     if (data?.channels && !initialized) {
@@ -78,10 +125,15 @@ const ChannelInfo: React.FC = () => {
     const keyword = filters.keyword.trim().toLowerCase();
     return channels.filter((item) => {
       const matchKeyword = keyword
-        ? [item.name, item.region, item.address].some((field) => field?.toLowerCase().includes(keyword))
+        ? [item.name, item.region, item.address].some((field) =>
+            field?.toLowerCase().includes(keyword),
+          )
         : true;
-      const matchStatus = filters.status === 'all' || item.status === filters.status;
-      const matchType = filters.channelType === 'all' || item.channelType === filters.channelType;
+      const matchStatus =
+        filters.status === 'all' || item.status === filters.status;
+      const matchType =
+        filters.channelType === 'all' ||
+        item.channelType === filters.channelType;
       return matchKeyword && matchStatus && matchType;
     });
   }, [channels, filters.channelType, filters.keyword, filters.status]);
@@ -91,7 +143,8 @@ const ChannelInfo: React.FC = () => {
       setFilters({
         keyword: values.keyword ?? '',
         status: (values.status ?? 'all') as FilterState['status'],
-        channelType: (values.channelType ?? 'all') as FilterState['channelType'],
+        channelType: (values.channelType ??
+          'all') as FilterState['channelType'],
       });
     },
     [],
@@ -121,26 +174,31 @@ const ChannelInfo: React.FC = () => {
     [form],
   );
 
-  const handleDelete = useCallback((id: string) => {
-    setChannels((prev) => prev.filter((item) => item.id !== id));
-    message.success('删除成功');
-  }, []);
+  const handleDelete = useCallback(
+    (id: string) => {
+      setChannels((prev) => prev.filter((item) => item.id !== id));
+      message.success(t('pages.common.messages.deleteSuccess'));
+    },
+    [t],
+  );
 
   const handleModalOk = useCallback(async () => {
     const values = await form.validateFields();
     if (editingRecord) {
-      setChannels((prev) => prev.map((item) => (item.id === editingRecord.id ? values : item)));
-      message.success('通道信息已更新');
+      setChannels((prev) =>
+        prev.map((item) => (item.id === editingRecord.id ? values : item)),
+      );
+      message.success(t('pages.pedestrian.channelInfo.messages.updateSuccess'));
     } else {
       const newItem: ChannelInfoItem = {
         ...values,
         id: values.id?.trim() ? values.id : `CH-${Date.now()}`,
       };
       setChannels((prev) => [newItem, ...prev]);
-      message.success('新增通道成功');
+      message.success(t('pages.pedestrian.channelInfo.messages.createSuccess'));
     }
     setModalVisible(false);
-  }, [editingRecord, form]);
+  }, [editingRecord, form, t]);
 
   const handleModalCancel = useCallback(() => {
     setModalVisible(false);
@@ -148,84 +206,140 @@ const ChannelInfo: React.FC = () => {
 
   const columns: ColumnsType<ChannelInfoItem> = useMemo(
     () => [
-      { title: '通道 ID', dataIndex: 'id', width: 140 },
       {
-        title: '通道名称',
+        title: t('pages.pedestrian.channelInfo.columns.id'),
+        dataIndex: 'id',
+        width: 140,
+      },
+      {
+        title: t('pages.pedestrian.channelInfo.columns.name'),
         dataIndex: 'name',
         width: 220,
         render: (value: string, record) => (
           <div>
             <strong>{value}</strong>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.address}</div>
+            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>
+              {record.address}
+            </div>
           </div>
         ),
       },
-      { title: '通道类型', dataIndex: 'channelType', width: 160 },
-      { title: '所属区域', dataIndex: 'region', width: 200 },
-      { title: '宽度 (m)', dataIndex: 'width', width: 120 },
-      { title: '经纬度', dataIndex: 'coordinates', width: 200 },
       {
-        title: '负责人',
+        title: t('pages.pedestrian.channelInfo.columns.channelType'),
+        dataIndex: 'channelType',
+        width: 160,
+        render: (value: ChannelInfoItem['channelType']) =>
+          formatChannelType(value),
+      },
+      {
+        title: t('pages.pedestrian.channelInfo.columns.region'),
+        dataIndex: 'region',
+        width: 200,
+      },
+      {
+        title: t('pages.pedestrian.channelInfo.columns.width'),
+        dataIndex: 'width',
+        width: 120,
+      },
+      {
+        title: t('pages.pedestrian.channelInfo.columns.coordinates'),
+        dataIndex: 'coordinates',
+        width: 200,
+      },
+      {
+        title: t('pages.pedestrian.channelInfo.columns.manager'),
         dataIndex: 'manager',
         width: 180,
         render: (value: string, record) => (
           <div>
             <div>{value}</div>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.phone}</div>
+            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>
+              {record.phone}
+            </div>
           </div>
         ),
       },
-      { title: '通道状态', dataIndex: 'status', width: 140, render: (value: ChannelInfoItem['status']) => <Badge status={statusColor[value]} text={value} /> },
-      { title: '电子地图', dataIndex: 'mapFile', width: 200 },
       {
-        title: '操作',
+        title: t('pages.pedestrian.channelInfo.columns.status'),
+        dataIndex: 'status',
+        width: 140,
+        render: (value: ChannelInfoItem['status']) => (
+          <Badge status={statusColor[value]} text={formatStatus(value)} />
+        ),
+      },
+      {
+        title: t('pages.pedestrian.channelInfo.columns.mapFile'),
+        dataIndex: 'mapFile',
+        width: 200,
+      },
+      {
+        title: t('pages.pedestrian.channelInfo.columns.action'),
         dataIndex: 'action',
         width: 160,
         fixed: 'right',
         render: (_, record) => (
           <Space size="small">
             <Button type="link" onClick={() => handleEdit(record)}>
-              编辑
+              {t('pages.common.actions.edit')}
             </Button>
-            <Popconfirm title="确认删除该通道？" okText="确认" cancelText="取消" onConfirm={() => handleDelete(record.id)}>
+            <Popconfirm
+              title={t('pages.pedestrian.channelInfo.popconfirm.delete')}
+              okText={t('pages.common.actions.confirm')}
+              cancelText={t('pages.common.actions.cancel')}
+              onConfirm={() => handleDelete(record.id)}
+            >
               <Button type="link" danger>
-                删除
+                {t('pages.common.actions.delete')}
               </Button>
             </Popconfirm>
           </Space>
         ),
       },
     ],
-    [handleDelete, handleEdit],
+    [formatChannelType, formatStatus, handleDelete, handleEdit, t],
   );
 
   return (
-    <PageContainer header={{ title: '通道定位基础信息' }}>
+    <PageContainer
+      header={{ title: t('pages.pedestrian.channelInfo.pageTitle') }}
+    >
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={4}>
           <Card bordered={false}>
-            <Statistic title="纳管理通道" value={summary.total} suffix="处" />
+            <Statistic
+              title={t('pages.pedestrian.channelInfo.stats.total')}
+              value={summary.total}
+              suffix={t('pages.pedestrian.channelInfo.unit.location')}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={4}>
           <Card bordered={false}>
-            <Statistic title="启用通道" value={summary.enabled} suffix="处" />
+            <Statistic
+              title={t('pages.pedestrian.channelInfo.stats.enabled')}
+              value={summary.enabled}
+              suffix={t('pages.pedestrian.channelInfo.unit.location')}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={4}>
           <Card bordered={false}>
-            <Statistic title="通道宽度合计" value={summary.widthMeters} suffix="m" />
+            <Statistic
+              title={t('pages.pedestrian.channelInfo.stats.width')}
+              value={summary.widthMeters}
+              suffix="m"
+            />
           </Card>
         </Col>
       </Row>
 
       <Card
-        title="通道清单"
+        title={t('pages.pedestrian.channelInfo.table.title')}
         style={{ marginTop: 24 }}
         bodyStyle={{ paddingTop: 8 }}
         extra={
           <Button type="primary" onClick={openCreateModal}>
-            新建通道
+            {t('pages.pedestrian.channelInfo.button.add')}
           </Button>
         }
       >
@@ -237,22 +351,46 @@ const ChannelInfo: React.FC = () => {
           style={{ marginBottom: 16 }}
         >
           <Form.Item name="keyword">
-            <Input allowClear placeholder="搜索名称 / 区域 / 地址" style={{ width: 240 }} />
+            <Input
+              allowClear
+              placeholder={t('pages.pedestrian.channelInfo.filter.keyword')}
+              style={{ width: 240 }}
+            />
           </Form.Item>
           <Form.Item name="channelType">
             <Select
               style={{ width: 200 }}
-              options={[{ value: 'all', label: '全部类型' }, ...channelTypeOptions.map((type) => ({ label: type, value: type }))]}
+              options={[
+                {
+                  value: 'all',
+                  label: t('pages.pedestrian.channelInfo.filter.allTypes'),
+                },
+                ...channelTypeOptions.map((type) => ({
+                  label: formatChannelType(type),
+                  value: type,
+                })),
+              ]}
             />
           </Form.Item>
           <Form.Item name="status">
             <Select
               style={{ width: 160 }}
-              options={[{ value: 'all', label: '全部状态' }, ...statusOptions.map((status) => ({ label: status, value: status }))]}
+              options={[
+                {
+                  value: 'all',
+                  label: t('pages.pedestrian.channelInfo.filter.allStatus'),
+                },
+                ...statusOptions.map((status) => ({
+                  label: formatStatus(status),
+                  value: status,
+                })),
+              ]}
             />
           </Form.Item>
           <Form.Item>
-            <Button onClick={handleFilterReset}>重置筛选</Button>
+            <Button onClick={handleFilterReset}>
+              {t('pages.common.buttons.resetFilters')}
+            </Button>
           </Form.Item>
         </Form>
         <Table<ChannelInfoItem>
@@ -266,75 +404,233 @@ const ChannelInfo: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingRecord ? '编辑通道' : '新建通道'}
+        title={
+          editingRecord
+            ? t('pages.pedestrian.channelInfo.modal.editTitle')
+            : t('pages.pedestrian.channelInfo.modal.createTitle')
+        }
         open={modalVisible}
         onOk={handleModalOk}
         onCancel={handleModalCancel}
-        okText="保存"
+        okText={t('pages.common.actions.save')}
         destroyOnClose
         width={800}
       >
         <Form layout="vertical" form={form}>
           {editingRecord ? (
-            <Form.Item label="通道 ID" name="id">
+            <Form.Item
+              label={t('pages.pedestrian.channelInfo.form.labels.id')}
+              name="id"
+            >
               <Input disabled />
             </Form.Item>
           ) : (
-            <Form.Item label="通道 ID" name="id">
-              <Input placeholder="不填写自动生成" />
+            <Form.Item
+              label={t('pages.pedestrian.channelInfo.form.labels.id')}
+              name="id"
+            >
+              <Input
+                placeholder={t('pages.common.form.placeholder.autoGenerate')}
+              />
             </Form.Item>
           )}
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="通道名称" name="name" rules={[{ required: true, message: '请输入通道名称' }]}>
-                <Input placeholder="请输入通道名称" />
+              <Form.Item
+                label={t('pages.pedestrian.channelInfo.form.labels.name')}
+                name="name"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.pedestrian.channelInfo.form.validations.name',
+                    ),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder={t(
+                    'pages.pedestrian.channelInfo.form.placeholders.name',
+                  )}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="通道类型" name="channelType" rules={[{ required: true, message: '请选择通道类型' }]}>
-                <Select options={channelTypeOptions.map((type) => ({ label: type, value: type }))} placeholder="请选择通道类型" />
+              <Form.Item
+                label={t(
+                  'pages.pedestrian.channelInfo.form.labels.channelType',
+                )}
+                name="channelType"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.pedestrian.channelInfo.form.validations.channelType',
+                    ),
+                  },
+                ]}
+              >
+                <Select
+                  options={channelTypeOptions.map((type) => ({
+                    label: formatChannelType(type),
+                    value: type,
+                  }))}
+                  placeholder={t(
+                    'pages.pedestrian.channelInfo.form.placeholders.channelType',
+                  )}
+                />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="所属区域" name="region" rules={[{ required: true, message: '请输入所属区域' }]}>
-                <Input placeholder="请输入所属区域" />
+              <Form.Item
+                label={t('pages.pedestrian.channelInfo.form.labels.region')}
+                name="region"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.pedestrian.channelInfo.form.validations.region',
+                    ),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder={t(
+                    'pages.pedestrian.channelInfo.form.placeholders.region',
+                  )}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="宽度 (m)" name="width" rules={[{ required: true, message: '请输入宽度' }]}>
-                <InputNumber min={0} style={{ width: '100%' }} placeholder="请输入宽度" />
+              <Form.Item
+                label={t('pages.pedestrian.channelInfo.form.labels.width')}
+                name="width"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.pedestrian.channelInfo.form.validations.width',
+                    ),
+                  },
+                ]}
+              >
+                <InputNumber
+                  min={0}
+                  style={{ width: '100%' }}
+                  placeholder={t(
+                    'pages.pedestrian.channelInfo.form.placeholders.width',
+                  )}
+                />
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item label="详细地址" name="address" rules={[{ required: true, message: '请输入详细地址' }]}>
-            <Input placeholder="请输入详细地址" />
+          <Form.Item
+            label={t('pages.pedestrian.channelInfo.form.labels.address')}
+            name="address"
+            rules={[
+              {
+                required: true,
+                message: t(
+                  'pages.pedestrian.channelInfo.form.validations.address',
+                ),
+              },
+            ]}
+          >
+            <Input
+              placeholder={t(
+                'pages.pedestrian.channelInfo.form.placeholders.address',
+              )}
+            />
           </Form.Item>
-          <Form.Item label="经纬度" name="coordinates">
-            <Input placeholder="示例：118.8,31.9" />
+          <Form.Item
+            label={t('pages.pedestrian.channelInfo.form.labels.coordinates')}
+            name="coordinates"
+          >
+            <Input
+              placeholder={t(
+                'pages.pedestrian.channelInfo.form.placeholders.coordinates',
+              )}
+            />
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="负责人" name="manager" rules={[{ required: true, message: '请输入负责人' }]}>
-                <Input placeholder="请输入负责人" />
+              <Form.Item
+                label={t('pages.pedestrian.channelInfo.form.labels.manager')}
+                name="manager"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.pedestrian.channelInfo.form.validations.manager',
+                    ),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder={t(
+                    'pages.pedestrian.channelInfo.form.placeholders.manager',
+                  )}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="联系电话" name="phone" rules={[{ required: true, message: '请输入联系电话' }]}>
-                <Input placeholder="请输入联系电话" />
+              <Form.Item
+                label={t('pages.pedestrian.channelInfo.form.labels.phone')}
+                name="phone"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.pedestrian.channelInfo.form.validations.phone',
+                    ),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder={t(
+                    'pages.pedestrian.channelInfo.form.placeholders.phone',
+                  )}
+                />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="通道状态" name="status" rules={[{ required: true, message: '请选择状态' }]}>
-                <Select options={statusOptions.map((status) => ({ label: status, value: status }))} placeholder="请选择通道状态" />
+              <Form.Item
+                label={t('pages.pedestrian.channelInfo.form.labels.status')}
+                name="status"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.pedestrian.channelInfo.form.validations.status',
+                    ),
+                  },
+                ]}
+              >
+                <Select
+                  options={statusOptions.map((status) => ({
+                    label: formatStatus(status),
+                    value: status,
+                  }))}
+                  placeholder={t(
+                    'pages.pedestrian.channelInfo.form.placeholders.status',
+                  )}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="电子地图" name="mapFile">
-                <Input placeholder="请输入链接或文件标识" />
+              <Form.Item
+                label={t('pages.pedestrian.channelInfo.form.labels.mapFile')}
+                name="mapFile"
+              >
+                <Input
+                  placeholder={t(
+                    'pages.pedestrian.channelInfo.form.placeholders.mapFile',
+                  )}
+                />
               </Form.Item>
             </Col>
           </Row>

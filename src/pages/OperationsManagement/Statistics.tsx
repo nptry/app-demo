@@ -1,14 +1,25 @@
-import React from 'react';
-import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
+import { useIntl, useRequest } from '@umijs/max';
 import { Card, Col, List, Progress, Row, Statistic, Table } from 'antd';
+import React, { useCallback } from 'react';
 import type { OperationsStatisticsResponse } from '@/services/operations';
 import { getOperationsStatistics } from '@/services/operations';
 
 const Statistics: React.FC = () => {
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
   const { data, loading } = useRequest(getOperationsStatistics, {
-    formatResult: (res: OperationsStatisticsResponse | { data: OperationsStatisticsResponse }) =>
-      (res as { data?: OperationsStatisticsResponse })?.data ?? (res as OperationsStatisticsResponse),
+    formatResult: (
+      res:
+        | OperationsStatisticsResponse
+        | { data: OperationsStatisticsResponse },
+    ) =>
+      (res as { data?: OperationsStatisticsResponse })?.data ??
+      (res as OperationsStatisticsResponse),
   });
 
   const stats = data ?? {
@@ -24,30 +35,57 @@ const Statistics: React.FC = () => {
   };
 
   return (
-    <PageContainer header={{ title: '运维统计' }}>
+    <PageContainer
+      header={{ title: t('pages.operations.statistics.pageTitle') }}
+    >
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="统计周期" value={stats.period} />
-            <div style={{ marginTop: 12, color: 'rgba(0,0,0,0.45)' }}>生成时间：{stats.generatedAt}</div>
+            <Statistic
+              title={t('pages.operations.statistics.card.period')}
+              value={stats.period}
+            />
+            <div style={{ marginTop: 12, color: 'rgba(0,0,0,0.45)' }}>
+              {t('pages.operations.statistics.card.generatedAt', {
+                time: stats.generatedAt,
+              })}
+            </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="故障总数" value={stats.totalFaults} suffix="起" />
+            <Statistic
+              title={t('pages.operations.statistics.card.totalFaults')}
+              value={stats.totalFaults}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="已处理" value={stats.resolved} suffix="起" />
+            <Statistic
+              title={t('pages.operations.statistics.card.resolved')}
+              value={stats.resolved}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="平均处理时长" value={stats.avgHandleDuration} />
+            <Statistic
+              title={t('pages.operations.statistics.card.avgDuration')}
+              value={stats.avgHandleDuration}
+            />
             <div style={{ marginTop: 12 }}>
-              <Statistic title="解决率" value={stats.resolveRate} precision={1} suffix="%" />
-              <Progress percent={stats.resolveRate} size="small" style={{ marginTop: 8 }} />
+              <Statistic
+                title={t('pages.operations.statistics.card.resolveRate')}
+                value={stats.resolveRate}
+                precision={1}
+                suffix="%"
+              />
+              <Progress
+                percent={stats.resolveRate}
+                size="small"
+                style={{ marginTop: 8 }}
+              />
             </div>
           </Card>
         </Col>
@@ -55,55 +93,104 @@ const Statistics: React.FC = () => {
 
       <Row gutter={16} style={{ marginTop: 24 }}>
         <Col xs={24} md={12}>
-          <Card title="故障类型分布">
+          <Card title={t('pages.operations.statistics.distribution.title')}>
             {stats.typeDistribution.length ? (
               stats.typeDistribution.map((item) => (
                 <div key={item.type} style={{ marginBottom: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      marginBottom: 4,
+                    }}
+                  >
                     <span>{item.type}</span>
-                    <span>{item.value} 起</span>
+                    <span>
+                      {t('pages.operations.statistics.distribution.count', {
+                        value: item.value,
+                      })}
+                    </span>
                   </div>
-                  <Progress percent={(item.value / stats.totalFaults) * 100} showInfo={false} strokeColor="#faad14" />
+                  <Progress
+                    percent={(item.value / stats.totalFaults) * 100}
+                    showInfo={false}
+                    strokeColor="#faad14"
+                  />
                 </div>
               ))
             ) : (
-              <div style={{ textAlign: 'center', padding: 16 }}>暂无分布数据</div>
+              <div style={{ textAlign: 'center', padding: 16 }}>
+                {t('pages.operations.statistics.distribution.none')}
+              </div>
             )}
           </Card>
         </Col>
         <Col xs={24} md={12}>
-          <Card title="故障高发设备 TOP">
+          <Card title={t('pages.operations.statistics.devices.title')}>
             <Table
               rowKey="deviceName"
               size="small"
               columns={[
-                { title: '设备', dataIndex: 'deviceName' },
-                { title: '故障次数', dataIndex: 'count', width: 120, align: 'center' },
+                {
+                  title: t('pages.operations.statistics.table.columns.device'),
+                  dataIndex: 'deviceName',
+                },
+                {
+                  title: t('pages.operations.statistics.table.columns.count'),
+                  dataIndex: 'count',
+                  width: 120,
+                  align: 'center',
+                },
               ]}
               dataSource={stats.topDevices}
               pagination={false}
               loading={loading}
             />
-            {!stats.topDevices.length && <div style={{ textAlign: 'center', padding: 16 }}>暂无设备数据</div>}
+            {!stats.topDevices.length && (
+              <div style={{ textAlign: 'center', padding: 16 }}>
+                {t('pages.operations.statistics.devices.none')}
+              </div>
+            )}
           </Card>
         </Col>
       </Row>
 
-      <Card title="运维人员处理量 TOP" style={{ marginTop: 24 }}>
+      <Card
+        title={t('pages.operations.statistics.engineers.title')}
+        style={{ marginTop: 24 }}
+      >
         <List
           loading={loading}
           dataSource={stats.topEngineers}
           renderItem={(item) => (
             <List.Item key={item.engineer}>
-              <List.Item.Meta title={item.engineer} description={`处理 ${item.handled} 起`} />
+              <List.Item.Meta
+                title={item.engineer}
+                description={t(
+                  'pages.operations.statistics.engineers.handled',
+                  { count: item.handled },
+                )}
+              />
               <div style={{ minWidth: 180 }}>
-                <div style={{ marginBottom: 4 }}>解决率：{(item.rate * 100).toFixed(0)}%</div>
-                <Progress percent={item.rate * 100} showInfo={false} strokeColor="#52c41a" />
+                <div style={{ marginBottom: 4 }}>
+                  {t('pages.operations.statistics.engineers.rate', {
+                    rate: (item.rate * 100).toFixed(0),
+                  })}
+                </div>
+                <Progress
+                  percent={item.rate * 100}
+                  showInfo={false}
+                  strokeColor="#52c41a"
+                />
               </div>
             </List.Item>
           )}
         />
-        {!stats.topEngineers.length && <div style={{ textAlign: 'center', padding: 16 }}>暂无人员数据</div>}
+        {!stats.topEngineers.length && (
+          <div style={{ textAlign: 'center', padding: 16 }}>
+            {t('pages.operations.statistics.engineers.none')}
+          </div>
+        )}
       </Card>
     </PageContainer>
   );

@@ -1,7 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRequest } from '@umijs/max';
 import { PageContainer } from '@ant-design/pro-components';
-import type { ColumnsType } from 'antd/es/table';
+import { useIntl, useRequest } from '@umijs/max';
 import {
   Button,
   Card,
@@ -9,6 +7,7 @@ import {
   Form,
   Input,
   Modal,
+  message,
   Popconfirm,
   Row,
   Select,
@@ -16,8 +15,9 @@ import {
   Statistic,
   Table,
   Tag,
-  message,
 } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ResourceItem, ResourceResponse } from '@/services/operations';
 import { getResourceOverview } from '@/services/operations';
 
@@ -25,7 +25,12 @@ const statusTagColor = (status: string) => {
   if (status.includes('任务中') || status.includes('执行')) return 'red';
   if (status.includes('待命')) return 'blue';
   if (status.includes('可用') || status.includes('充足')) return 'green';
-  if (status.includes('不足') || status.includes('休假') || status.includes('停用')) return 'orange';
+  if (
+    status.includes('不足') ||
+    status.includes('休假') ||
+    status.includes('停用')
+  )
+    return 'orange';
   return 'default';
 };
 
@@ -35,9 +40,24 @@ type FilterState = {
   status: string | 'all';
 };
 
-const resourceTypeOptions: ResourceItem['resourceType'][] = ['运维车辆', '运维人员', '设备配件'];
+const RESOURCE_TYPE_LABEL_IDS: Record<ResourceItem['resourceType'], string> = {
+  运维车辆: 'pages.operations.resources.types.vehicle',
+  运维人员: 'pages.operations.resources.types.engineer',
+  设备配件: 'pages.operations.resources.types.spare',
+};
+const resourceTypeOptions: ResourceItem['resourceType'][] = [
+  '运维车辆',
+  '运维人员',
+  '设备配件',
+];
 
 const Resources: React.FC = () => {
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
   const { data, loading } = useRequest(getResourceOverview, {
     formatResult: (res: ResourceResponse | { data: ResourceResponse }) =>
       (res as { data?: ResourceResponse })?.data ?? (res as ResourceResponse),
@@ -45,11 +65,18 @@ const Resources: React.FC = () => {
 
   const [initialized, setInitialized] = useState(false);
   const [resources, setResources] = useState<ResourceItem[]>([]);
-  const [filters, setFilters] = useState<FilterState>({ keyword: '', resourceType: 'all', status: 'all' });
+  const [filters, setFilters] = useState<FilterState>({
+    keyword: '',
+    resourceType: 'all',
+    status: 'all',
+  });
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<ResourceItem | null>(null);
   const [form] = Form.useForm<ResourceItem>();
   const [filterForm] = Form.useForm();
+  const vehicleUnit = t('pages.operations.resources.unit.vehicle');
+  const engineerUnit = t('pages.operations.resources.unit.engineer');
+  const spareUnit = t('pages.operations.resources.unit.spare');
 
   useEffect(() => {
     if (data?.resources && !initialized) {
@@ -58,12 +85,23 @@ const Resources: React.FC = () => {
     }
   }, [data?.resources, initialized]);
 
+  const typeOptions = useMemo(
+    () =>
+      resourceTypeOptions.map((type) => ({
+        value: type,
+        label: t(RESOURCE_TYPE_LABEL_IDS[type]),
+      })),
+    [t],
+  );
   const summary = useMemo(() => {
     if (resources.length) {
       return {
-        vehicles: resources.filter((item) => item.resourceType === '运维车辆').length,
-        engineers: resources.filter((item) => item.resourceType === '运维人员').length,
-        spareParts: resources.filter((item) => item.resourceType === '设备配件').length,
+        vehicles: resources.filter((item) => item.resourceType === '运维车辆')
+          .length,
+        engineers: resources.filter((item) => item.resourceType === '运维人员')
+          .length,
+        spareParts: resources.filter((item) => item.resourceType === '设备配件')
+          .length,
       };
     }
     return (
@@ -76,7 +114,7 @@ const Resources: React.FC = () => {
   }, [data?.summary, resources]);
 
   const statusOptions = useMemo(() => {
-    const source = resources.length ? resources : data?.resources ?? [];
+    const source = resources.length ? resources : (data?.resources ?? []);
     return Array.from(new Set(source.map((item) => item.status)));
   }, [data?.resources, resources]);
 
@@ -88,8 +126,11 @@ const Resources: React.FC = () => {
             .filter(Boolean)
             .some((field) => field?.toLowerCase().includes(keyword))
         : true;
-      const matchType = filters.resourceType === 'all' || item.resourceType === filters.resourceType;
-      const matchStatus = filters.status === 'all' || item.status === filters.status;
+      const matchType =
+        filters.resourceType === 'all' ||
+        item.resourceType === filters.resourceType;
+      const matchStatus =
+        filters.status === 'all' || item.status === filters.status;
       return matchKeyword && matchType && matchStatus;
     });
   }, [filters.keyword, filters.resourceType, filters.status, resources]);
@@ -98,7 +139,8 @@ const Resources: React.FC = () => {
     (_: unknown, values: Record<string, string>) => {
       setFilters({
         keyword: values.keyword ?? '',
-        resourceType: (values.resourceType ?? 'all') as FilterState['resourceType'],
+        resourceType: (values.resourceType ??
+          'all') as FilterState['resourceType'],
         status: (values.status ?? 'all') as FilterState['status'],
       });
     },
@@ -128,117 +170,159 @@ const Resources: React.FC = () => {
     [form],
   );
 
-  const handleDelete = useCallback((id: string) => {
-    setResources((prev) => prev.filter((item) => item.id !== id));
-    message.success('删除成功');
-  }, []);
+  const handleDelete = useCallback(
+    (id: string) => {
+      setResources((prev) => prev.filter((item) => item.id !== id));
+      message.success(t('pages.common.messages.deleteSuccess'));
+    },
+    [t],
+  );
 
   const handleModalOk = useCallback(async () => {
     const values = await form.validateFields();
     if (editingRecord) {
-      setResources((prev) => prev.map((item) => (item.id === editingRecord.id ? values : item)));
-      message.success('资源信息已更新');
+      setResources((prev) =>
+        prev.map((item) => (item.id === editingRecord.id ? values : item)),
+      );
+      message.success(t('pages.operations.resources.messages.updateSuccess'));
     } else {
       const newItem: ResourceItem = {
         ...values,
         id: values.id?.trim() ? values.id : `RES-${Date.now()}`,
       };
       setResources((prev) => [newItem, ...prev]);
-      message.success('新增资源成功');
+      message.success(t('pages.operations.resources.messages.createSuccess'));
     }
     setModalVisible(false);
-  }, [editingRecord, form]);
+  }, [editingRecord, form, t]);
 
   const handleModalCancel = useCallback(() => setModalVisible(false), []);
 
   const columns: ColumnsType<ResourceItem> = useMemo(
     () => [
       {
-        title: '资源编号',
+        title: t('pages.operations.resources.table.columns.id'),
         dataIndex: 'id',
         width: 140,
       },
       {
-        title: '资源类型',
+        title: t('pages.operations.resources.table.columns.type'),
         dataIndex: 'resourceType',
         width: 160,
-        render: (value: ResourceItem['resourceType']) => <Tag color="blue">{value}</Tag>,
+        render: (value: ResourceItem['resourceType']) => (
+          <Tag color="blue">{t(RESOURCE_TYPE_LABEL_IDS[value])}</Tag>
+        ),
       },
       {
-        title: '资源名称',
+        title: t('pages.operations.resources.table.columns.name'),
         dataIndex: 'name',
         width: 200,
         render: (value: string) => <strong>{value}</strong>,
       },
-      { title: '所属部门', dataIndex: 'department', width: 200 },
       {
-        title: '状态',
-        dataIndex: 'status',
-        width: 140,
-        render: (value: string) => <Tag color={statusTagColor(value)}>{value}</Tag>,
+        title: t('pages.operations.resources.table.columns.department'),
+        dataIndex: 'department',
+        width: 200,
       },
       {
-        title: '联系人 / 电话',
+        title: t('pages.operations.resources.table.columns.status'),
+        dataIndex: 'status',
+        width: 140,
+        render: (value: string) => (
+          <Tag color={statusTagColor(value)}>{value}</Tag>
+        ),
+      },
+      {
+        title: t('pages.operations.resources.table.columns.contact'),
         dataIndex: 'contact',
         width: 220,
         render: (value: string, record) => (
           <div>
             <div>{value}</div>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{record.phone}</div>
+            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>
+              {record.phone}
+            </div>
           </div>
         ),
       },
-      { title: '资源详情', dataIndex: 'detail', width: 240 },
-      { title: '最后调度时间', dataIndex: 'lastDispatch', width: 180 },
       {
-        title: '操作',
+        title: t('pages.operations.resources.table.columns.detail'),
+        dataIndex: 'detail',
+        width: 240,
+      },
+      {
+        title: t('pages.operations.resources.table.columns.lastDispatch'),
+        dataIndex: 'lastDispatch',
+        width: 180,
+      },
+      {
+        title: t('pages.operations.resources.table.columns.action'),
         dataIndex: 'action',
         width: 160,
         fixed: 'right',
         render: (_, record) => (
           <Space size="small">
             <Button type="link" onClick={() => handleEdit(record)}>
-              编辑
+              {t('pages.common.actions.edit')}
             </Button>
-            <Popconfirm title="确认删除该资源？" okText="确认" cancelText="取消" onConfirm={() => handleDelete(record.id)}>
+            <Popconfirm
+              title={t('pages.operations.resources.popconfirm.deleteTitle')}
+              okText={t('pages.common.actions.confirm')}
+              cancelText={t('pages.common.actions.cancel')}
+              onConfirm={() => handleDelete(record.id)}
+            >
               <Button type="link" danger>
-                删除
+                {t('pages.common.actions.delete')}
               </Button>
             </Popconfirm>
           </Space>
         ),
       },
     ],
-    [handleDelete, handleEdit],
+    [handleDelete, handleEdit, t],
   );
 
   return (
-    <PageContainer header={{ title: '运维资源管理' }}>
+    <PageContainer
+      header={{ title: t('pages.operations.resources.pageTitle') }}
+    >
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={8}>
           <Card bordered={false}>
-            <Statistic title="运维车辆" value={summary.vehicles} suffix="台" />
+            <Statistic
+              title={t('pages.operations.resources.card.vehicles')}
+              value={summary.vehicles}
+              suffix={vehicleUnit}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8}>
           <Card bordered={false}>
-            <Statistic title="在册工程师" value={summary.engineers} suffix="人" />
+            <Statistic
+              title={t('pages.operations.resources.card.engineers')}
+              value={summary.engineers}
+              suffix={engineerUnit}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8}>
           <Card bordered={false}>
-            <Statistic title="核心备件" value={summary.spareParts} suffix="件" />
+            <Statistic
+              title={t('pages.operations.resources.card.spareParts')}
+              value={summary.spareParts}
+              suffix={spareUnit}
+            />
           </Card>
         </Col>
       </Row>
 
       <Card
-        title="资源清单"
+        title={t('pages.operations.resources.table.title')}
         style={{ marginTop: 24 }}
         bodyStyle={{ paddingTop: 8 }}
         extra={
           <Button type="primary" onClick={openCreateModal}>
-            新增资源
+            {t('pages.operations.resources.button.create')}
           </Button>
         }
       >
@@ -250,22 +334,45 @@ const Resources: React.FC = () => {
           style={{ marginBottom: 16 }}
         >
           <Form.Item name="keyword">
-            <Input allowClear placeholder="搜索名称 / 部门 / 联系人" style={{ width: 260 }} />
+            <Input
+              allowClear
+              placeholder={t(
+                'pages.operations.resources.filter.keyword.placeholder',
+              )}
+              style={{ width: 260 }}
+            />
           </Form.Item>
           <Form.Item name="resourceType">
             <Select
               style={{ width: 200 }}
-              options={[{ value: 'all', label: '全部资源类型' }, ...resourceTypeOptions.map((type) => ({ label: type, value: type }))]}
+              options={[
+                {
+                  value: 'all',
+                  label: t('pages.operations.resources.filter.type.all'),
+                },
+                ...typeOptions,
+              ]}
             />
           </Form.Item>
           <Form.Item name="status">
             <Select
               style={{ width: 200 }}
-              options={[{ value: 'all', label: '全部状态' }, ...statusOptions.map((status) => ({ label: status, value: status }))]}
+              options={[
+                {
+                  value: 'all',
+                  label: t('pages.operations.resources.filter.status.all'),
+                },
+                ...statusOptions.map((status) => ({
+                  label: status,
+                  value: status,
+                })),
+              ]}
             />
           </Form.Item>
           <Form.Item>
-            <Button onClick={handleFilterReset}>重置筛选</Button>
+            <Button onClick={handleFilterReset}>
+              {t('pages.common.buttons.resetFilters')}
+            </Button>
           </Form.Item>
         </Form>
         <Table<ResourceItem>
@@ -279,65 +386,186 @@ const Resources: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingRecord ? '编辑资源' : '新增资源'}
+        title={
+          editingRecord
+            ? t('pages.operations.resources.modal.editTitle')
+            : t('pages.operations.resources.modal.createTitle')
+        }
         open={modalVisible}
         onOk={handleModalOk}
         onCancel={handleModalCancel}
-        okText="保存"
+        okText={t('pages.common.actions.save')}
         destroyOnClose
         width={720}
       >
         <Form layout="vertical" form={form}>
-          {editingRecord ? (
-            <Form.Item label="资源编号" name="id">
-              <Input disabled />
-            </Form.Item>
-          ) : (
-            <Form.Item label="资源编号" name="id">
-              <Input placeholder="不填写自动生成" />
-            </Form.Item>
-          )}
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item label="资源类型" name="resourceType" rules={[{ required: true, message: '请选择资源类型' }]}>
-                <Select options={resourceTypeOptions.map((type) => ({ label: type, value: type }))} placeholder="请选择资源类型" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="资源名称" name="name" rules={[{ required: true, message: '请输入资源名称' }]}>
-                <Input placeholder="请输入资源名称" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item label="所属部门" name="department" rules={[{ required: true, message: '请输入部门' }]}>
-                <Input placeholder="请输入所属部门" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="状态" name="status" rules={[{ required: true, message: '请输入状态' }]}>
-                <Input placeholder="例如：可用 / 待命 / 任务中" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item label="联系人" name="contact" rules={[{ required: true, message: '请输入联系人' }]}>
-                <Input placeholder="请输入联系人" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="联系电话" name="phone" rules={[{ required: true, message: '请输入联系电话' }]}>
-                <Input placeholder="请输入联系电话" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item label="资源详情" name="detail" rules={[{ required: true, message: '请输入资源详情' }]}>
-            <Input placeholder="请输入资源详情" />
+          <Form.Item
+            label={t('pages.operations.resources.form.labels.id')}
+            name="id"
+          >
+            <Input
+              disabled={!!editingRecord}
+              placeholder={
+                editingRecord
+                  ? undefined
+                  : t('pages.operations.resources.form.placeholders.id')
+              }
+            />
           </Form.Item>
-          <Form.Item label="最后调度时间" name="lastDispatch">
-            <Input placeholder="示例：2024-07-01 12:00" />
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label={t('pages.operations.resources.form.labels.type')}
+                name="resourceType"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.operations.resources.form.validations.type',
+                    ),
+                  },
+                ]}
+              >
+                <Select
+                  options={typeOptions}
+                  placeholder={t(
+                    'pages.operations.resources.form.placeholders.type',
+                  )}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label={t('pages.operations.resources.form.labels.name')}
+                name="name"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.operations.resources.form.validations.name',
+                    ),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder={t(
+                    'pages.operations.resources.form.placeholders.name',
+                  )}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label={t('pages.operations.resources.form.labels.department')}
+                name="department"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.operations.resources.form.validations.department',
+                    ),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder={t(
+                    'pages.operations.resources.form.placeholders.department',
+                  )}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label={t('pages.operations.resources.form.labels.status')}
+                name="status"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.operations.resources.form.validations.status',
+                    ),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder={t(
+                    'pages.operations.resources.form.placeholders.status',
+                  )}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label={t('pages.operations.resources.form.labels.contact')}
+                name="contact"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.operations.resources.form.validations.contact',
+                    ),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder={t(
+                    'pages.operations.resources.form.placeholders.contact',
+                  )}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label={t('pages.operations.resources.form.labels.phone')}
+                name="phone"
+                rules={[
+                  {
+                    required: true,
+                    message: t(
+                      'pages.operations.resources.form.validations.phone',
+                    ),
+                  },
+                ]}
+              >
+                <Input
+                  placeholder={t(
+                    'pages.operations.resources.form.placeholders.phone',
+                  )}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item
+            label={t('pages.operations.resources.form.labels.detail')}
+            name="detail"
+            rules={[
+              {
+                required: true,
+                message: t(
+                  'pages.operations.resources.form.validations.detail',
+                ),
+              },
+            ]}
+          >
+            <Input
+              placeholder={t(
+                'pages.operations.resources.form.placeholders.detail',
+              )}
+            />
+          </Form.Item>
+          <Form.Item
+            label={t('pages.operations.resources.form.labels.lastDispatch')}
+            name="lastDispatch"
+          >
+            <Input
+              placeholder={t(
+                'pages.operations.resources.form.placeholders.lastDispatch',
+              )}
+            />
           </Form.Item>
         </Form>
       </Modal>

@@ -1,10 +1,11 @@
 import { PageContainer } from '@ant-design/pro-components';
-import { useRequest } from '@umijs/max';
+import { useIntl, useRequest } from '@umijs/max';
 import {
   Button,
   Card,
   Col,
   Descriptions,
+  Divider,
   Drawer,
   Empty,
   Image,
@@ -32,6 +33,15 @@ const PERSON_TAG_FILTER = 'blacklist';
 const KeyPersonnelMonitoring: React.FC = () => {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
   const [detailVisible, setDetailVisible] = useState(false);
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
+  const recordUnit = t('pages.common.unit.records');
+  const personUnit = t('pages.pedestrian.keyPersonnel.unit.person');
+  const locationUnit = t('pages.pedestrian.keyPersonnel.unit.location');
 
   const { data, loading, run } = useRequest(
     ({ page = pagination.current, pageSize = pagination.pageSize } = {}) =>
@@ -79,42 +89,59 @@ const KeyPersonnelMonitoring: React.FC = () => {
   ).length;
   const locationCount = new Set(records.map((record) => record.location)).size;
 
+  const tagLabelMap = useMemo(
+    () => ({
+      blacklist: t('pages.pedestrian.keyPersonnel.tags.blacklist'),
+      watchlist: t('pages.pedestrian.keyPersonnel.tags.watchlist'),
+    }),
+    [t],
+  );
+
   const columns: ColumnsType<PersonEventRecord> = useMemo(
     () => [
       {
-        title: '抓拍时间',
+        title: t('pages.pedestrian.keyPersonnel.columns.captureTime'),
         dataIndex: 'timestamp',
         width: 180,
         render: (value: string | undefined) =>
           value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '—',
       },
       {
-        title: '姓名/类型',
+        title: t('pages.pedestrian.keyPersonnel.columns.person'),
         dataIndex: 'name',
         width: 200,
         render: (_: string | undefined, record) => (
           <>
-            <div style={{ fontWeight: 600 }}>{record.name ?? '未知'}</div>
+            <div style={{ fontWeight: 600 }}>
+              {record.name ?? t('pages.common.text.unknown')}
+            </div>
             <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>
-              {record.personType ?? '未分类'}
+              {record.personType ??
+                t('pages.pedestrian.keyPersonnel.text.unclassified')}
             </div>
           </>
         ),
       },
       {
-        title: '人员标签',
+        title: t('pages.pedestrian.keyPersonnel.columns.tag'),
         dataIndex: 'personTag',
         width: 140,
         render: (value: string | undefined) =>
           value ? (
-            <Tag color={value === 'blacklist' ? 'red' : 'orange'}>{value}</Tag>
+            <Tag color={value === 'blacklist' ? 'red' : 'orange'}>
+              {tagLabelMap[value] ?? value}
+            </Tag>
           ) : (
             '—'
           ),
       },
-      { title: '位置', dataIndex: 'location', width: 180 },
       {
-        title: '抓拍图片',
+        title: t('pages.pedestrian.keyPersonnel.columns.location'),
+        dataIndex: 'location',
+        width: 180,
+      },
+      {
+        title: t('pages.pedestrian.keyPersonnel.columns.images'),
         dataIndex: 'captureImageUrl',
         width: 200,
         render: (value: string | undefined, record) =>
@@ -144,41 +171,55 @@ const KeyPersonnelMonitoring: React.FC = () => {
           ),
       },
       {
-        title: '操作',
+        title: t('pages.pedestrian.keyPersonnel.columns.action'),
         dataIndex: 'action',
         width: 120,
         render: (_: unknown, record) => (
           <Button type="link" onClick={() => handleViewDetail(record.id)}>
-            查看详情
+            {t('pages.common.actions.viewDetail')}
           </Button>
         ),
       },
     ],
-    [handleViewDetail],
+    [handleViewDetail, t, tagLabelMap],
   );
 
   return (
-    <PageContainer header={{ title: '重点人员监控' }}>
+    <PageContainer
+      header={{ title: t('pages.pedestrian.keyPersonnel.pageTitle') }}
+    >
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="抓拍记录" value={totalRecords} suffix="条" />
+            <Statistic
+              title={t('pages.pedestrian.keyPersonnel.stats.records')}
+              value={totalRecords}
+              suffix={recordUnit}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="重点人员" value={vipCount} suffix="条" />
+            <Statistic
+              title={t('pages.pedestrian.keyPersonnel.stats.keyPersons')}
+              value={vipCount}
+              suffix={personUnit}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card bordered={false}>
-            <Statistic title="覆盖点位" value={locationCount} suffix="处" />
+            <Statistic
+              title={t('pages.pedestrian.keyPersonnel.stats.locations')}
+              value={locationCount}
+              suffix={locationUnit}
+            />
           </Card>
         </Col>
       </Row>
 
       <Card
-        title="重点人员抓拍记录"
+        title={t('pages.pedestrian.keyPersonnel.table.title')}
         style={{ marginTop: 24 }}
         bodyStyle={{ paddingTop: 8 }}
       >
@@ -197,14 +238,14 @@ const KeyPersonnelMonitoring: React.FC = () => {
                 current: page,
                 pageSize: pageSize || pagination.pageSize,
               }),
-            showTotal: (total) => `共 ${total} 条`,
+            showTotal: (total) => t('pages.common.table.total', { total }),
           }}
           scroll={{ x: 1100 }}
         />
       </Card>
 
       <Drawer
-        title="抓拍详情"
+        title={t('pages.pedestrian.keyPersonnel.drawer.title')}
         width={520}
         open={detailVisible}
         onClose={closeDetail}
@@ -217,21 +258,33 @@ const KeyPersonnelMonitoring: React.FC = () => {
         ) : detail ? (
           <>
             <Descriptions bordered size="small" column={1}>
-              <Descriptions.Item label="抓拍时间">
+              <Descriptions.Item
+                label={t('pages.pedestrian.keyPersonnel.fields.captureTime')}
+              >
                 {detail.timestamp
                   ? dayjs(detail.timestamp).format('YYYY-MM-DD HH:mm:ss')
                   : '—'}
               </Descriptions.Item>
-              <Descriptions.Item label="姓名">
-                {detail.name ?? '未知'}
+              <Descriptions.Item
+                label={t('pages.pedestrian.keyPersonnel.fields.name')}
+              >
+                {detail.name ?? t('pages.common.text.unknown')}
               </Descriptions.Item>
-              <Descriptions.Item label="人员类型">
+              <Descriptions.Item
+                label={t('pages.pedestrian.keyPersonnel.fields.type')}
+              >
                 {detail.personType ?? '—'}
               </Descriptions.Item>
-              <Descriptions.Item label="人员标签">
-                {detail.personTag ?? '—'}
+              <Descriptions.Item
+                label={t('pages.pedestrian.keyPersonnel.fields.tag')}
+              >
+                {detail.personTag
+                  ? (tagLabelMap[detail.personTag] ?? detail.personTag)
+                  : '—'}
               </Descriptions.Item>
-              <Descriptions.Item label="位置">
+              <Descriptions.Item
+                label={t('pages.pedestrian.keyPersonnel.fields.location')}
+              >
                 {detail.location ?? '—'}
               </Descriptions.Item>
             </Descriptions>
@@ -268,7 +321,10 @@ const KeyPersonnelMonitoring: React.FC = () => {
             </Image.PreviewGroup>
           </>
         ) : (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={t('pages.common.empty.noData')}
+          />
         )}
       </Drawer>
     </PageContainer>

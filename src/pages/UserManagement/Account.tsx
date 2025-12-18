@@ -5,6 +5,7 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
+import { useIntl } from '@umijs/max';
 import type { FormInstance } from 'antd';
 import {
   Button,
@@ -19,7 +20,13 @@ import {
   Tooltip,
 } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   type AdminItem,
   type AdminParams,
@@ -39,13 +46,18 @@ const DEFAULT_PAGINATION = {
 };
 
 const AccountPage: React.FC = () => {
+  const intl = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intl.formatMessage({ id }, values),
+    [intl],
+  );
   const [loading, setLoading] = useState(false);
   const [admins, setAdmins] = useState<AdminItem[]>([]);
   const [roles, setRoles] = useState<RoleItem[]>([]);
   const [pagination, setPagination] = useState(DEFAULT_PAGINATION);
   const [modalVisible, setModalVisible] = useState(false);
   const [resetModalVisible, setResetModalVisible] = useState(false);
-  const [modalTitle, setModalTitle] = useState('新增管理员');
   const [editingAdmin, setEditingAdmin] = useState<AdminItem | null>(null);
   const [resetTarget, setResetTarget] = useState<AdminItem | null>(null);
   const formRef = useRef<FormInstance<AdminParams>>(null);
@@ -112,14 +124,12 @@ const AccountPage: React.FC = () => {
 
   const handleAdd = () => {
     setEditingAdmin(null);
-    setModalTitle('新增管理员');
     setModalVisible(true);
     formRef.current?.resetFields();
   };
 
   const handleEdit = (record: AdminItem) => {
     setEditingAdmin(record);
-    setModalTitle('编辑管理员');
     setModalVisible(true);
 
     setTimeout(() => {
@@ -140,7 +150,7 @@ const AccountPage: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       await deleteAdmin(id);
-      message.success('删除成功');
+      message.success(t('pages.common.messages.deleteSuccess'));
       fetchAdmins({
         page: pagination.current,
         per_page: pagination.pageSize,
@@ -161,10 +171,14 @@ const AccountPage: React.FC = () => {
           delete payload.role_id;
         }
         await updateAdmin(editingAdmin.id, payload);
-        message.success('管理员已更新');
+        message.success(
+          t('pages.userManagement.account.messages.updateSuccess'),
+        );
       } else {
         await createAdmin(values);
-        message.success('管理员已创建');
+        message.success(
+          t('pages.userManagement.account.messages.createSuccess'),
+        );
       }
 
       setModalVisible(false);
@@ -193,7 +207,7 @@ const AccountPage: React.FC = () => {
       }
 
       await resetAdminPassword(payload);
-      message.success('密码重置成功');
+      message.success(t('pages.userManagement.account.messages.resetSuccess'));
       setResetModalVisible(false);
     } catch (error) {
       console.error(error);
@@ -205,40 +219,40 @@ const AccountPage: React.FC = () => {
 
   const columns: ColumnsType<AdminItem> = [
     {
-      title: '用户名',
+      title: t('pages.userManagement.account.columns.username'),
       dataIndex: 'username',
     },
     {
-      title: '手机号',
+      title: t('pages.userManagement.account.columns.mobile'),
       dataIndex: 'mobile',
     },
     {
-      title: '角色',
+      title: t('pages.userManagement.account.columns.role'),
       dataIndex: 'role_name',
     },
     {
-      title: '操作',
+      title: t('pages.userManagement.account.columns.action'),
       dataIndex: 'action',
       render: (_, record) => (
         <Space size="middle">
-          <Tooltip title="编辑">
+          <Tooltip title={t('pages.common.actions.edit')}>
             <a onClick={() => handleEdit(record)}>
               <EditOutlined />
             </a>
           </Tooltip>
           {isSuperAdmin && (
-            <Tooltip title="重置密码">
+            <Tooltip title={t('pages.userManagement.account.actions.reset')}>
               <a onClick={() => openResetPassword(record)}>
                 <KeyOutlined />
               </a>
             </Tooltip>
           )}
           {!record.is_super_admin && (
-            <Tooltip title="删除">
+            <Tooltip title={t('pages.common.actions.delete')}>
               <Popconfirm
-                title="确定删除此管理员吗？"
-                okText="确定"
-                cancelText="取消"
+                title={t('pages.userManagement.account.popconfirm.delete')}
+                okText={t('pages.common.actions.confirm')}
+                cancelText={t('pages.common.actions.cancel')}
                 onConfirm={() => handleDelete(record.id)}
               >
                 <a>
@@ -252,11 +266,17 @@ const AccountPage: React.FC = () => {
     },
   ];
 
+  const modalTitleText = editingAdmin
+    ? t('pages.userManagement.account.modal.editTitle')
+    : t('pages.userManagement.account.modal.createTitle');
+
   return (
-    <PageContainer header={{ title: '管理员账号管理' }}>
+    <PageContainer
+      header={{ title: t('pages.userManagement.account.pageTitle') }}
+    >
       <div style={{ marginBottom: 16 }}>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          新增管理员
+          {t('pages.userManagement.account.button.add')}
         </Button>
       </div>
       <Table<AdminItem>
@@ -270,13 +290,17 @@ const AccountPage: React.FC = () => {
           showQuickJumper: true,
           pageSizeOptions: ['10', '15', '20', '50', '100'],
           showTotal: (total, range) =>
-            `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+            t('pages.userManagement.account.pagination.total', {
+              from: range[0],
+              to: range[1],
+              total,
+            }),
         }}
         onChange={handleTableChange}
       />
 
       <Modal
-        title={modalTitle}
+        title={modalTitleText}
         open={modalVisible}
         destroyOnClose
         onOk={handleSubmit}
@@ -286,11 +310,20 @@ const AccountPage: React.FC = () => {
           {!editingAdmin?.is_super_admin && (
             <Form.Item
               name="role_id"
-              label="角色"
-              rules={[{ required: true, message: '请选择角色' }]}
+              label={t('pages.userManagement.account.form.labels.role')}
+              rules={[
+                {
+                  required: true,
+                  message: t(
+                    'pages.userManagement.account.form.validations.role',
+                  ),
+                },
+              ]}
             >
               <Select
-                placeholder="请选择角色"
+                placeholder={t(
+                  'pages.userManagement.account.form.placeholders.role',
+                )}
                 options={getNonSuperAdminRoles().map((role) => ({
                   label: role.name,
                   value: role.id,
@@ -300,53 +333,112 @@ const AccountPage: React.FC = () => {
           )}
           <Form.Item
             name="username"
-            label="用户名"
+            label={t('pages.userManagement.account.form.labels.username')}
             rules={[
-              { required: true, message: '请输入用户名' },
-              { min: 3, message: '用户名至少3个字符' },
+              {
+                required: true,
+                message: t(
+                  'pages.userManagement.account.form.validations.username',
+                ),
+              },
+              {
+                min: 3,
+                message: t(
+                  'pages.userManagement.account.form.validations.usernameMin',
+                ),
+              },
             ]}
           >
-            <Input placeholder="请输入用户名" />
+            <Input
+              placeholder={t(
+                'pages.userManagement.account.form.placeholders.username',
+              )}
+            />
           </Form.Item>
           <Form.Item
             name="mobile"
-            label="手机号"
+            label={t('pages.userManagement.account.form.labels.mobile')}
             rules={[
-              { required: true, message: '请输入手机号' },
-              { pattern: /^\d{11}$/, message: '请输入11位手机号码' },
+              {
+                required: true,
+                message: t(
+                  'pages.userManagement.account.form.validations.mobile',
+                ),
+              },
+              {
+                pattern: /^\d{11}$/,
+                message: t(
+                  'pages.userManagement.account.form.validations.mobilePattern',
+                ),
+              },
             ]}
           >
-            <Input placeholder="请输入手机号" />
+            <Input
+              placeholder={t(
+                'pages.userManagement.account.form.placeholders.mobile',
+              )}
+            />
           </Form.Item>
           {!editingAdmin && (
             <>
               <Form.Item
                 name="password"
-                label="密码"
+                label={t('pages.userManagement.account.form.labels.password')}
                 rules={[
-                  { required: true, message: '请输入密码' },
-                  { min: 6, message: '密码至少6个字符' },
+                  {
+                    required: true,
+                    message: t(
+                      'pages.userManagement.account.form.validations.password',
+                    ),
+                  },
+                  {
+                    min: 6,
+                    message: t(
+                      'pages.userManagement.account.form.validations.passwordMin',
+                    ),
+                  },
                 ]}
               >
-                <Input.Password placeholder="请输入密码" />
+                <Input.Password
+                  placeholder={t(
+                    'pages.userManagement.account.form.placeholders.password',
+                  )}
+                />
               </Form.Item>
               <Form.Item
                 name="password_confirmation"
-                label="确认密码"
+                label={t(
+                  'pages.userManagement.account.form.labels.passwordConfirm',
+                )}
                 dependencies={['password']}
                 rules={[
-                  { required: true, message: '请确认密码' },
+                  {
+                    required: true,
+                    message: t(
+                      'pages.userManagement.account.form.validations.passwordConfirm',
+                    ),
+                  },
                   ({ getFieldValue }) => ({
                     validator(_, value) {
                       if (!value || getFieldValue('password') === value) {
                         return Promise.resolve();
                       }
-                      return Promise.reject(new Error('两次输入的密码不一致'));
+                      return Promise.reject(
+                        new Error(
+                          t(
+                            'pages.userManagement.account.form.errors.passwordMismatch',
+                          ),
+                        ),
+                      );
                     },
                   }),
                 ]}
               >
-                <Input.Password placeholder="请确认密码" />
+                <Input.Password
+                  placeholder={t(
+                    'pages.userManagement.account.form.placeholders.passwordConfirm',
+                  )}
+                />
               </Form.Item>
             </>
           )}
@@ -354,52 +446,100 @@ const AccountPage: React.FC = () => {
       </Modal>
 
       <Modal
-        title={resetTarget ? `重置密码：${resetTarget.username}` : '重置密码'}
+        title={
+          resetTarget
+            ? t('pages.userManagement.account.reset.titleWithName', {
+                name: resetTarget.username,
+              })
+            : t('pages.userManagement.account.reset.title')
+        }
         open={resetModalVisible}
         destroyOnClose
         onOk={handleResetPassword}
         onCancel={() => setResetModalVisible(false)}
       >
         <Form layout="vertical" ref={resetFormRef}>
-          <Form.Item label="用户名">
+          <Form.Item
+            label={t('pages.userManagement.account.form.labels.username')}
+          >
             <Input value={resetTarget?.username} disabled />
           </Form.Item>
           {!isSuperAdmin && (
             <Form.Item
               name="old_password"
-              label="旧密码"
-              rules={[{ required: true, message: '请输入旧密码' }]}
+              label={t('pages.userManagement.account.reset.oldPassword')}
+              rules={[
+                {
+                  required: true,
+                  message: t(
+                    'pages.userManagement.account.reset.validations.oldPassword',
+                  ),
+                },
+              ]}
             >
-              <Input.Password placeholder="请输入旧密码" />
+              <Input.Password
+                placeholder={t(
+                  'pages.userManagement.account.reset.placeholders.oldPassword',
+                )}
+              />
             </Form.Item>
           )}
           <Form.Item
             name="new_password"
-            label="新密码"
+            label={t('pages.userManagement.account.reset.newPassword')}
             rules={[
-              { required: true, message: '请输入新密码' },
-              { min: 6, message: '新密码长度不能少于6位' },
+              {
+                required: true,
+                message: t(
+                  'pages.userManagement.account.reset.validations.newPassword',
+                ),
+              },
+              {
+                min: 6,
+                message: t(
+                  'pages.userManagement.account.reset.validations.newPasswordMin',
+                ),
+              },
             ]}
           >
-            <Input.Password placeholder="请输入新密码" />
+            <Input.Password
+              placeholder={t(
+                'pages.userManagement.account.reset.placeholders.newPassword',
+              )}
+            />
           </Form.Item>
           <Form.Item
             name="new_password_confirmation"
-            label="确认新密码"
+            label={t('pages.userManagement.account.reset.confirmPassword')}
             dependencies={['new_password']}
             rules={[
-              { required: true, message: '请再次输入新密码' },
+              {
+                required: true,
+                message: t(
+                  'pages.userManagement.account.reset.validations.confirmPassword',
+                ),
+              },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue('new_password') === value) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error('两次输入的新密码不一致'));
+                  return Promise.reject(
+                    new Error(
+                      t(
+                        'pages.userManagement.account.form.errors.passwordMismatch',
+                      ),
+                    ),
+                  );
                 },
               }),
             ]}
           >
-            <Input.Password placeholder="请再次输入新密码" />
+            <Input.Password
+              placeholder={t(
+                'pages.userManagement.account.reset.placeholders.confirmPassword',
+              )}
+            />
           </Form.Item>
         </Form>
       </Modal>

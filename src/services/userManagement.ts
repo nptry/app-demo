@@ -124,7 +124,6 @@ export type KeyPersonSummary = {
   total: number;
   inControl: number;
   expired: number;
-  highRisk: number;
 };
 
 export type KeyPersonItem = {
@@ -196,19 +195,10 @@ const buildKeyPersonPayload = (person: Partial<KeyPersonItem>) => ({
   key_person: {
     name: person.name,
     gender: person.gender,
-    birth_date: person.birthDate,
     id_number: person.idNumber,
-    person_type: person.personType,
     reason: person.reason,
-    control_areas: person.controlAreas,
-    start_time: person.startTime,
-    end_time: person.endTime,
-    face_library: person.faceLibrary,
     contact_name: person.contactName,
     contact_phone: person.contactPhone,
-    status: person.status,
-    status_updated_at: person.statusUpdatedAt,
-    operator: person.operator,
     remark: person.remark,
   },
 });
@@ -231,7 +221,6 @@ export async function getKeyPersons(options?: Record<string, any>) {
     total: 0,
     in_control: 0,
     expired: 0,
-    high_risk: 0,
   };
 
   return {
@@ -241,7 +230,6 @@ export async function getKeyPersons(options?: Record<string, any>) {
         total: summary.total,
         inControl: summary.in_control,
         expired: summary.expired,
-        highRisk: summary.high_risk,
       },
       persons: (payload.persons || []).map(transformKeyPerson),
     },

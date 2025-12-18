@@ -66,7 +66,6 @@ const KeyPersonnel: React.FC = () => {
       (res as { data?: KeyPersonResponse })?.data ?? (res as KeyPersonResponse),
   });
 
-  const [initialized, setInitialized] = useState(false);
   const [persons, setPersons] = useState<KeyPersonItem[]>([]);
   const [filters, setFilters] = useState<FilterState>({
     keyword: '',
@@ -139,30 +138,11 @@ const KeyPersonnel: React.FC = () => {
     ],
     [genderLabelMap],
   );
-  const typeFormOptions = useMemo(
-    () =>
-      typeOptions.map((type) => ({
-        value: type,
-        label: typeLabelMap[type] ?? type,
-      })),
-    [typeLabelMap],
-  );
-  const statusFormOptions = useMemo(
-    () =>
-      statusOptions.map((status) => ({
-        value: status,
-        label: statusLabelMap[status] ?? status,
-      })),
-    [statusLabelMap],
-  );
   const personUnitLabel = t('pages.userManagement.keyPersonnel.unit.person');
 
   useEffect(() => {
-    if (data?.persons && !initialized) {
-      setPersons(data.persons);
-      setInitialized(true);
-    }
-  }, [data?.persons, initialized]);
+    setPersons(data?.persons ?? []);
+  }, [data?.persons]);
 
   const summary = useMemo(() => {
     if (persons.length) {
@@ -170,8 +150,6 @@ const KeyPersonnel: React.FC = () => {
         total: persons.length,
         inControl: persons.filter((item) => item.status === '在控').length,
         expired: persons.filter((item) => item.status === '已解除').length,
-        highRisk: persons.filter((item) => item.personType === '黑名单人员')
-          .length,
       };
     }
     return (
@@ -179,7 +157,6 @@ const KeyPersonnel: React.FC = () => {
         total: 0,
         inControl: 0,
         expired: 0,
-        highRisk: 0,
       }
     );
   }, [data?.summary, persons]);
@@ -220,8 +197,6 @@ const KeyPersonnel: React.FC = () => {
     setEditingRecord(null);
     form.resetFields();
     form.setFieldsValue({
-      personType: '重点关注人员',
-      status: '在控',
       gender: '未知',
     });
     setModalVisible(true);
@@ -255,7 +230,6 @@ const KeyPersonnel: React.FC = () => {
     const values = await form.validateFields();
     const payload: Partial<KeyPersonItem> = {
       ...values,
-      controlAreas: values.controlAreas?.length ? values.controlAreas : [],
     };
     try {
       if (editingRecord) {
@@ -298,51 +272,6 @@ const KeyPersonnel: React.FC = () => {
               {genderLabelMap[record.gender ?? ''] ??
                 record.gender ??
                 t('pages.common.text.unknown')}
-              {` · ${t('pages.userManagement.keyPersonnel.text.birthLabel')}${
-                record.birthDate ?? '—'
-              }`}
-            </div>
-          </div>
-        ),
-      },
-      {
-        title: t('pages.userManagement.keyPersonnel.columns.personType'),
-        dataIndex: 'personType',
-        width: 160,
-        render: (value: KeyPersonItem['personType']) => (
-          <Tag color={typeColor[value]}>
-            {typeLabelMap[value] ?? value ?? t('pages.common.text.unknown')}
-          </Tag>
-        ),
-      },
-      {
-        title: t('pages.userManagement.keyPersonnel.columns.controlAreas'),
-        dataIndex: 'controlAreas',
-        width: 240,
-        render: (areas: string[]) =>
-          areas?.length
-            ? areas.map((area) => (
-                <Tag key={area} color="purple" style={{ marginBottom: 4 }}>
-                  {area}
-                </Tag>
-              ))
-            : t('pages.common.text.none'),
-      },
-      {
-        title: t('pages.userManagement.keyPersonnel.columns.duration'),
-        dataIndex: 'startTime',
-        width: 260,
-        render: (value: string, record) => (
-          <div>
-            <div>
-              {t('pages.userManagement.keyPersonnel.text.startLabel', {
-                time: value ?? '—',
-              })}
-            </div>
-            <div>
-              {t('pages.userManagement.keyPersonnel.text.endLabel', {
-                time: record.endTime ?? '—',
-              })}
             </div>
           </div>
         ),
@@ -352,16 +281,9 @@ const KeyPersonnel: React.FC = () => {
         dataIndex: 'status',
         width: 160,
         render: (value: KeyPersonItem['status'], record) => (
-          <div>
-            <Tag color={statusColor[value]}>
-              {statusLabelMap[value] ?? value ?? t('pages.common.text.unknown')}
-            </Tag>
-            <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>
-              {t('pages.userManagement.keyPersonnel.text.statusUpdatedAt', {
-                time: record.statusUpdatedAt ?? '—',
-              })}
-            </div>
-          </div>
+          <Tag color={statusColor[value]}>
+            {statusLabelMap[value] ?? value ?? t('pages.common.text.unknown')}
+          </Tag>
         ),
       },
       {
@@ -379,12 +301,6 @@ const KeyPersonnel: React.FC = () => {
           ) : (
             t('pages.common.text.none')
           ),
-      },
-      {
-        title: t('pages.userManagement.keyPersonnel.columns.operator'),
-        dataIndex: 'operator',
-        width: 140,
-        render: (value: string | undefined) => value ?? '—',
       },
       {
         title: t('pages.userManagement.keyPersonnel.columns.remark'),
@@ -452,16 +368,6 @@ const KeyPersonnel: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card bordered={false}>
-            <Statistic
-              title={t('pages.userManagement.keyPersonnel.stats.highRisk')}
-              value={summary.highRisk}
-              suffix={personUnitLabel}
-              valueStyle={{ color: '#fa541c' }}
-            />
-          </Card>
-        </Col>
       </Row>
 
       <Card
@@ -504,7 +410,7 @@ const KeyPersonnel: React.FC = () => {
         </Form>
         <Table<KeyPersonItem>
           rowKey="id"
-          loading={loading && !initialized}
+          loading={loading}
           columns={columns}
           dataSource={filteredPersons}
           expandable={{
@@ -518,11 +424,6 @@ const KeyPersonnel: React.FC = () => {
                 <div>
                   {t('pages.userManagement.keyPersonnel.detail.reason', {
                     value: record.reason ?? '—',
-                  })}
-                </div>
-                <div>
-                  {t('pages.userManagement.keyPersonnel.detail.faceLibrary', {
-                    value: record.faceLibrary ?? '—',
                   })}
                 </div>
               </div>
@@ -547,21 +448,12 @@ const KeyPersonnel: React.FC = () => {
         width={900}
       >
         <Form layout="vertical" form={form}>
-          {editingRecord ? (
+          {editingRecord && (
             <Form.Item
               label={t('pages.userManagement.keyPersonnel.form.labels.id')}
               name="id"
             >
               <Input disabled />
-            </Form.Item>
-          ) : (
-            <Form.Item
-              label={t('pages.userManagement.keyPersonnel.form.labels.id')}
-              name="id"
-            >
-              <Input
-                placeholder={t('pages.common.form.placeholder.autoGenerate')}
-              />
             </Form.Item>
           )}
           <Row gutter={16}>
@@ -611,30 +503,6 @@ const KeyPersonnel: React.FC = () => {
             <Col span={8}>
               <Form.Item
                 label={t(
-                  'pages.userManagement.keyPersonnel.form.labels.birthDate',
-                )}
-                name="birthDate"
-                rules={[
-                  {
-                    required: true,
-                    message: t(
-                      'pages.userManagement.keyPersonnel.form.validations.birthDate',
-                    ),
-                  },
-                ]}
-              >
-                <Input
-                  placeholder={t(
-                    'pages.userManagement.keyPersonnel.form.placeholders.birthDate',
-                  )}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label={t(
                   'pages.userManagement.keyPersonnel.form.labels.idNumber',
                 )}
                 name="idNumber"
@@ -654,105 +522,9 @@ const KeyPersonnel: React.FC = () => {
                 />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item
-                label={t(
-                  'pages.userManagement.keyPersonnel.form.labels.personType',
-                )}
-                name="personType"
-                rules={[
-                  {
-                    required: true,
-                    message: t(
-                      'pages.userManagement.keyPersonnel.form.validations.personType',
-                    ),
-                  },
-                ]}
-              >
-                <Select
-                  options={typeFormOptions}
-                  placeholder={t(
-                    'pages.userManagement.keyPersonnel.form.placeholders.personType',
-                  )}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item
-            label={t(
-              'pages.userManagement.keyPersonnel.form.labels.controlAreas',
-            )}
-            name="controlAreas"
-            rules={[
-              {
-                required: true,
-                message: t(
-                  'pages.userManagement.keyPersonnel.form.validations.controlAreas',
-                ),
-              },
-            ]}
-          >
-            <Select
-              mode="tags"
-              placeholder={t(
-                'pages.userManagement.keyPersonnel.form.placeholders.controlAreas',
-              )}
-              options={Array.from(
-                new Set(persons.flatMap((item) => item.controlAreas)),
-              ).map((area) => ({
-                label: area,
-                value: area,
-              }))}
-            />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label={t(
-                  'pages.userManagement.keyPersonnel.form.labels.startTime',
-                )}
-                name="startTime"
-                rules={[
-                  {
-                    required: true,
-                    message: t(
-                      'pages.userManagement.keyPersonnel.form.validations.startTime',
-                    ),
-                  },
-                ]}
-              >
-                <Input
-                  placeholder={t(
-                    'pages.userManagement.keyPersonnel.form.placeholders.startTime',
-                  )}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label={t(
-                  'pages.userManagement.keyPersonnel.form.labels.endTime',
-                )}
-                name="endTime"
-                rules={[
-                  {
-                    required: true,
-                    message: t(
-                      'pages.userManagement.keyPersonnel.form.validations.endTime',
-                    ),
-                  },
-                ]}
-              >
-                <Input
-                  placeholder={t(
-                    'pages.userManagement.keyPersonnel.form.placeholders.endTime',
-                  )}
-                />
-              </Form.Item>
-            </Col>
           </Row>
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={24}>
               <Form.Item
                 label={t(
                   'pages.userManagement.keyPersonnel.form.labels.reason',
@@ -770,28 +542,6 @@ const KeyPersonnel: React.FC = () => {
                 <Input
                   placeholder={t(
                     'pages.userManagement.keyPersonnel.form.placeholders.reason',
-                  )}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label={t(
-                  'pages.userManagement.keyPersonnel.form.labels.faceLibrary',
-                )}
-                name="faceLibrary"
-                rules={[
-                  {
-                    required: true,
-                    message: t(
-                      'pages.userManagement.keyPersonnel.form.validations.faceLibrary',
-                    ),
-                  },
-                ]}
-              >
-                <Input
-                  placeholder={t(
-                    'pages.userManagement.keyPersonnel.form.placeholders.faceLibrary',
                   )}
                 />
               </Form.Item>
@@ -828,76 +578,7 @@ const KeyPersonnel: React.FC = () => {
             </Col>
           </Row>
           <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label={t(
-                  'pages.userManagement.keyPersonnel.form.labels.status',
-                )}
-                name="status"
-                rules={[
-                  {
-                    required: true,
-                    message: t(
-                      'pages.userManagement.keyPersonnel.form.validations.status',
-                    ),
-                  },
-                ]}
-              >
-                <Select
-                  options={statusFormOptions}
-                  placeholder={t(
-                    'pages.userManagement.keyPersonnel.form.placeholders.status',
-                  )}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label={t(
-                  'pages.userManagement.keyPersonnel.form.labels.statusUpdatedAt',
-                )}
-                name="statusUpdatedAt"
-                rules={[
-                  {
-                    required: true,
-                    message: t(
-                      'pages.userManagement.keyPersonnel.form.validations.statusUpdatedAt',
-                    ),
-                  },
-                ]}
-              >
-                <Input
-                  placeholder={t(
-                    'pages.userManagement.keyPersonnel.form.placeholders.statusUpdatedAt',
-                  )}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label={t(
-                  'pages.userManagement.keyPersonnel.form.labels.operator',
-                )}
-                name="operator"
-                rules={[
-                  {
-                    required: true,
-                    message: t(
-                      'pages.userManagement.keyPersonnel.form.validations.operator',
-                    ),
-                  },
-                ]}
-              >
-                <Input
-                  placeholder={t(
-                    'pages.userManagement.keyPersonnel.form.placeholders.operator',
-                  )}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
+            <Col span={24}>
               <Form.Item
                 label={t(
                   'pages.userManagement.keyPersonnel.form.labels.remark',

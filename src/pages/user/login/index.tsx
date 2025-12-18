@@ -1,11 +1,4 @@
-import {
-  AlipayCircleOutlined,
-  LockOutlined,
-  MobileOutlined,
-  TaobaoCircleOutlined,
-  UserOutlined,
-  WeiboCircleOutlined,
-} from '@ant-design/icons';
+import { LockOutlined, MobileOutlined, UserOutlined } from '@ant-design/icons';
 import {
   LoginForm,
   ProFormCaptcha,
@@ -64,27 +57,6 @@ const useStyles = createStyles(({ token }) => {
   };
 });
 
-const ActionIcons = () => {
-  const { styles } = useStyles();
-
-  return (
-    <>
-      <AlipayCircleOutlined
-        key="AlipayCircleOutlined"
-        className={styles.action}
-      />
-      <TaobaoCircleOutlined
-        key="TaobaoCircleOutlined"
-        className={styles.action}
-      />
-      <WeiboCircleOutlined
-        key="WeiboCircleOutlined"
-        className={styles.action}
-      />
-    </>
-  );
-};
-
 const Lang = () => {
   const { styles } = useStyles();
 
@@ -132,12 +104,10 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (values: API.LoginParams) => {
     try {
-      // 登录
       const msg = await login({ ...values, type });
       if (msg.status === 'ok') {
         const defaultLoginSuccessMessage = intl.formatMessage({
           id: 'pages.login.success',
-          defaultMessage: '登录成功！',
         });
         message.success(defaultLoginSuccessMessage);
         await fetchUserInfo();
@@ -146,12 +116,10 @@ const Login: React.FC = () => {
         return;
       }
       console.log(msg);
-      // 如果失败去设置用户错误信息
       setUserLoginState(msg);
     } catch (error) {
       const defaultLoginFailureMessage = intl.formatMessage({
         id: 'pages.login.failure',
-        defaultMessage: '登录失败，请重试！',
       });
       console.log(error);
       message.error(defaultLoginFailureMessage);
@@ -183,7 +151,10 @@ const Login: React.FC = () => {
             maxWidth: '75vw',
           }}
           logo={<img alt="logo" src="/logo.png" />}
-          title="HYPERVISE AIOT MANAGEMENT PLATFORM"
+          title={intl.formatMessage({
+            id: 'pages.login.title',
+            defaultMessage: 'HYPERVISE AIOT MANAGEMENT PLATFORM',
+          })}
           subTitle={intl.formatMessage({
             id: 'pages.layouts.userLayout.title',
           })}
@@ -213,7 +184,6 @@ const Login: React.FC = () => {
                 key: 'account',
                 label: intl.formatMessage({
                   id: 'pages.login.accountLogin.tab',
-                  defaultMessage: '账户密码登录',
                 }),
               },
               // 注释掉“手机号登录”选项
@@ -285,7 +255,11 @@ const Login: React.FC = () => {
           )}
 
           {status === 'error' && loginType === 'mobile' && (
-            <LoginMessage content="验证码错误" />
+            <LoginMessage
+              content={intl.formatMessage({
+                id: 'pages.login.captcha.error',
+              })}
+            />
           )}
           {type === 'mobile' && (
             <>
@@ -363,7 +337,11 @@ const Login: React.FC = () => {
                   if (!result) {
                     return;
                   }
-                  message.success('获取验证码成功！验证码为：1234');
+                  message.success(
+                    intl.formatMessage({
+                      id: 'pages.login.captcha.success',
+                    }),
+                  );
                 }}
               />
             </>

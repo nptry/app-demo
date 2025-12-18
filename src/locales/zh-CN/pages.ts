@@ -23,6 +23,9 @@ export default {
   'pages.login.submit': '登录',
   'pages.login.loginWith': '其他登录方式 :',
   'pages.login.registerAccount': '注册账户',
+  'pages.login.title': 'HYPERVISE AIOT MANAGEMENT PLATFORM',
+  'pages.login.captcha.error': '验证码错误',
+  'pages.login.captcha.success': '获取验证码成功！验证码为：1234',
   'pages.welcome.link': '欢迎使用',
   'pages.welcome.alertMessage': '更快更强的重型组件，已经发布。',
   'pages.404.subTitle': '抱歉，您访问的页面不存在。',
@@ -858,6 +861,140 @@ export default {
   'pages.userManagement.role.form.validations.name': '请输入角色名称',
   'pages.userManagement.role.pagination.total':
     '第 {from}-{to} 条/共 {total} 条',
+  'pages.userManagement.keyPersonnel.pageTitle': '重点人员管理',
+  'pages.userManagement.keyPersonnel.stats.total': '重点人员总数',
+  'pages.userManagement.keyPersonnel.stats.inControl': '在控',
+  'pages.userManagement.keyPersonnel.stats.expired': '已解除 / 过期',
+  'pages.userManagement.keyPersonnel.stats.highRisk': '高风险对象',
+  'pages.userManagement.keyPersonnel.unit.person': '人',
+  'pages.userManagement.keyPersonnel.table.title': '重点人员列表',
+  'pages.userManagement.keyPersonnel.button.add': '新建重点人员',
+  'pages.userManagement.keyPersonnel.filter.keyword':
+    '搜索姓名 / 原因 / 操作人',
+  'pages.userManagement.keyPersonnel.filter.allTypes': '全部类型',
+  'pages.userManagement.keyPersonnel.filter.allStatus': '全部状态',
+  'pages.userManagement.keyPersonnel.columns.id': '重点人员 ID',
+  'pages.userManagement.keyPersonnel.columns.basicInfo': '姓名 / 基础信息',
+  'pages.userManagement.keyPersonnel.columns.personType': '人员类型',
+  'pages.userManagement.keyPersonnel.columns.controlAreas': '布控区域',
+  'pages.userManagement.keyPersonnel.columns.duration': '布控时效',
+  'pages.userManagement.keyPersonnel.columns.status': '人员状态',
+  'pages.userManagement.keyPersonnel.columns.contact': '联系人',
+  'pages.userManagement.keyPersonnel.columns.operator': '操作人',
+  'pages.userManagement.keyPersonnel.columns.remark': '备注',
+  'pages.userManagement.keyPersonnel.columns.action': '操作',
+  'pages.userManagement.keyPersonnel.text.birthLabel': '出生：',
+  'pages.userManagement.keyPersonnel.text.startLabel': '开始：{time}',
+  'pages.userManagement.keyPersonnel.text.endLabel': '结束：{time}',
+  'pages.userManagement.keyPersonnel.text.statusUpdatedAt': '更新：{time}',
+  'pages.userManagement.keyPersonnel.detail.idNumber':
+    '身份证号（脱敏）：{value}',
+  'pages.userManagement.keyPersonnel.detail.reason': '布控原因：{value}',
+  'pages.userManagement.keyPersonnel.detail.faceLibrary': '人脸特征库：{value}',
+  'pages.userManagement.keyPersonnel.personTypes.blacklist': '黑名单人员',
+  'pages.userManagement.keyPersonnel.personTypes.keyWatch': '重点关注人员',
+  'pages.userManagement.keyPersonnel.personTypes.restricted': '限制进入人员',
+  'pages.userManagement.keyPersonnel.status.inControl': '在控',
+  'pages.userManagement.keyPersonnel.status.outOfControl': '失控',
+  'pages.userManagement.keyPersonnel.status.released': '已解除',
+  'pages.userManagement.keyPersonnel.gender.male': '男',
+  'pages.userManagement.keyPersonnel.gender.female': '女',
+  'pages.userManagement.keyPersonnel.gender.unknown': '未知',
+  'pages.userManagement.keyPersonnel.popconfirm.delete': '确认删除该人员？',
+  'pages.userManagement.keyPersonnel.messages.updateSuccess':
+    '重点人员信息已更新',
+  'pages.userManagement.keyPersonnel.messages.createSuccess':
+    '新增重点人员成功',
+  'pages.userManagement.keyPersonnel.messages.saveError':
+    '保存失败，请稍后再试',
+  'pages.userManagement.keyPersonnel.messages.deleteError':
+    '删除失败，请稍后重试',
+  'pages.userManagement.keyPersonnel.modal.editTitle': '编辑重点人员',
+  'pages.userManagement.keyPersonnel.modal.createTitle': '新增重点人员',
+  'pages.userManagement.keyPersonnel.form.labels.id': '重点人员 ID',
+  'pages.userManagement.keyPersonnel.form.labels.name': '姓名',
+  'pages.userManagement.keyPersonnel.form.labels.gender': '性别',
+  'pages.userManagement.keyPersonnel.form.labels.birthDate': '出生日期',
+  'pages.userManagement.keyPersonnel.form.labels.idNumber': '身份证号（脱敏）',
+  'pages.userManagement.keyPersonnel.form.labels.personType': '人员类型',
+  'pages.userManagement.keyPersonnel.form.labels.controlAreas': '布控区域',
+  'pages.userManagement.keyPersonnel.form.labels.startTime': '布控开始时间',
+  'pages.userManagement.keyPersonnel.form.labels.endTime': '布控结束时间',
+  'pages.userManagement.keyPersonnel.form.labels.reason': '布控原因',
+  'pages.userManagement.keyPersonnel.form.labels.faceLibrary': '人脸特征库',
+  'pages.userManagement.keyPersonnel.form.labels.contactName': '联系人',
+  'pages.userManagement.keyPersonnel.form.labels.contactPhone': '联系电话',
+  'pages.userManagement.keyPersonnel.form.labels.status': '人员状态',
+  'pages.userManagement.keyPersonnel.form.labels.statusUpdatedAt':
+    '状态更新时间',
+  'pages.userManagement.keyPersonnel.form.labels.operator': '操作人',
+  'pages.userManagement.keyPersonnel.form.labels.remark': '备注',
+  'pages.userManagement.keyPersonnel.form.placeholders.name': '请输入姓名',
+  'pages.userManagement.keyPersonnel.form.placeholders.gender': '请选择性别',
+  'pages.userManagement.keyPersonnel.form.placeholders.birthDate':
+    '示例：1989-06-01',
+  'pages.userManagement.keyPersonnel.form.placeholders.idNumber':
+    '请输入身份证号',
+  'pages.userManagement.keyPersonnel.form.placeholders.personType':
+    '请选择人员类型',
+  'pages.userManagement.keyPersonnel.form.placeholders.controlAreas':
+    '输入或选择布控区域',
+  'pages.userManagement.keyPersonnel.form.placeholders.startTime':
+    '示例：2024-08-01 00:00',
+  'pages.userManagement.keyPersonnel.form.placeholders.endTime':
+    '示例：2024-08-31 23:59',
+  'pages.userManagement.keyPersonnel.form.placeholders.reason':
+    '请输入布控原因',
+  'pages.userManagement.keyPersonnel.form.placeholders.faceLibrary':
+    '请输入人脸特征库',
+  'pages.userManagement.keyPersonnel.form.placeholders.contactName':
+    '请输入联系人',
+  'pages.userManagement.keyPersonnel.form.placeholders.contactPhone':
+    '请输入联系电话',
+  'pages.userManagement.keyPersonnel.form.placeholders.status': '请选择状态',
+  'pages.userManagement.keyPersonnel.form.placeholders.statusUpdatedAt':
+    '示例：2024-08-01 09:00',
+  'pages.userManagement.keyPersonnel.form.placeholders.operator':
+    '请输入操作人',
+  'pages.userManagement.keyPersonnel.form.placeholders.remark':
+    '可填写其他说明',
+  'pages.userManagement.keyPersonnel.form.validations.name': '请输入姓名',
+  'pages.userManagement.keyPersonnel.form.validations.gender': '请选择性别',
+  'pages.userManagement.keyPersonnel.form.validations.birthDate':
+    '请输入出生日期',
+  'pages.userManagement.keyPersonnel.form.validations.idNumber':
+    '请输入身份证号',
+  'pages.userManagement.keyPersonnel.form.validations.personType':
+    '请选择人员类型',
+  'pages.userManagement.keyPersonnel.form.validations.controlAreas':
+    '请选择布控区域',
+  'pages.userManagement.keyPersonnel.form.validations.startTime':
+    '请输入开始时间',
+  'pages.userManagement.keyPersonnel.form.validations.endTime':
+    '请输入结束时间',
+  'pages.userManagement.keyPersonnel.form.validations.reason': '请输入布控原因',
+  'pages.userManagement.keyPersonnel.form.validations.faceLibrary':
+    '请输入人脸特征库',
+  'pages.userManagement.keyPersonnel.form.validations.status': '请选择状态',
+  'pages.userManagement.keyPersonnel.form.validations.statusUpdatedAt':
+    '请输入更新时间',
+  'pages.userManagement.keyPersonnel.form.validations.operator': '请输入操作人',
+  'pages.userManagement.keyPersonnel.pagination.total':
+    '第 {from}-{to} 条/共 {total} 条',
+  'pages.userManagement.actionLog.pageTitle': '行为日志',
+  'pages.userManagement.actionLog.card.title': '行为日志记录',
+  'pages.userManagement.actionLog.columns.id': '日志 ID',
+  'pages.userManagement.actionLog.columns.time': '操作时间',
+  'pages.userManagement.actionLog.columns.account': '操作账号 / 实名',
+  'pages.userManagement.actionLog.columns.module': '操作模块',
+  'pages.userManagement.actionLog.columns.actionType': '操作类型',
+  'pages.userManagement.actionLog.columns.content': '操作内容',
+  'pages.userManagement.actionLog.columns.ip': '来源 IP',
+  'pages.userManagement.actionLog.columns.result': '操作结果',
+  'pages.userManagement.actionLog.columns.failReason': '失败原因',
+  'pages.userManagement.actionLog.result.success': '成功',
+  'pages.userManagement.actionLog.result.failed': '失败',
+  'pages.userManagement.actionLog.empty': '暂无日志',
   'pages.messageCenter.pageTitle': '消息中心',
   'pages.messageCenter.emptyText': '当前暂无消息',
   'pages.messageCenter.status.todo': '待开始',

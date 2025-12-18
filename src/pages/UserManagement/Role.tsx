@@ -5,6 +5,7 @@ import {
   SettingOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
+import { useIntl } from '@umijs/max';
 import type { FormInstance } from 'antd';
 import {
   Button,
@@ -19,7 +20,13 @@ import {
   Tooltip,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { getGroupName, getModuleName } from '@/constants/translations';
 import { getPermissions } from '@/services/api/permission';
 import {
@@ -58,6 +65,12 @@ const RolePage: React.FC = () => {
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
   const [editingRole, setEditingRole] = useState<RoleItem | null>(null);
   const formRef = useRef<FormInstance<RoleItem>>(null);
+  const intlT = useIntl();
+  const t = useCallback(
+    (id: string, values?: Record<string, React.ReactNode>) =>
+      intlT.formatMessage({ id }, values),
+    [intlT],
+  );
 
   const fetchRoles = async (params: RoleQueryParams = {}) => {
     setLoading(true);

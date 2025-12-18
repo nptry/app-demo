@@ -24,6 +24,10 @@ export default {
   'pages.login.submit': 'Login',
   'pages.login.loginWith': 'Login with :',
   'pages.login.registerAccount': 'Register Account',
+  'pages.login.title': 'HYPERVISE AIOT MANAGEMENT PLATFORM',
+  'pages.login.captcha.error': 'Verification code incorrect',
+  'pages.login.captcha.success':
+    'Verification code sent successfully! Code: 1234',
   'pages.welcome.link': 'Welcome',
   'pages.welcome.alertMessage':
     'Faster and stronger heavy-duty components have been released.',
@@ -917,6 +921,150 @@ export default {
     'New password must be at least 6 characters',
   'pages.userManagement.account.reset.validations.confirmPassword':
     'Please confirm the new password',
+  'pages.userManagement.keyPersonnel.pageTitle': 'Key Personnel Management',
+  'pages.userManagement.keyPersonnel.stats.total': 'Total Key Persons',
+  'pages.userManagement.keyPersonnel.stats.inControl': 'Under Control',
+  'pages.userManagement.keyPersonnel.stats.expired': 'Released / Expired',
+  'pages.userManagement.keyPersonnel.stats.highRisk': 'High-Risk Targets',
+  'pages.userManagement.keyPersonnel.unit.person': 'persons',
+  'pages.userManagement.keyPersonnel.table.title': 'Key Personnel List',
+  'pages.userManagement.keyPersonnel.button.add': 'Add Key Person',
+  'pages.userManagement.keyPersonnel.filter.keyword':
+    'Search name / reason / operator',
+  'pages.userManagement.keyPersonnel.filter.allTypes': 'All types',
+  'pages.userManagement.keyPersonnel.filter.allStatus': 'All statuses',
+  'pages.userManagement.keyPersonnel.columns.id': 'Key Person ID',
+  'pages.userManagement.keyPersonnel.columns.basicInfo': 'Name / Basic Info',
+  'pages.userManagement.keyPersonnel.columns.personType': 'Person Type',
+  'pages.userManagement.keyPersonnel.columns.controlAreas': 'Control Areas',
+  'pages.userManagement.keyPersonnel.columns.duration': 'Control Duration',
+  'pages.userManagement.keyPersonnel.columns.status': 'Status',
+  'pages.userManagement.keyPersonnel.columns.contact': 'Contact',
+  'pages.userManagement.keyPersonnel.columns.operator': 'Operator',
+  'pages.userManagement.keyPersonnel.columns.remark': 'Remark',
+  'pages.userManagement.keyPersonnel.columns.action': 'Action',
+  'pages.userManagement.keyPersonnel.text.birthLabel': 'Birth: ',
+  'pages.userManagement.keyPersonnel.text.startLabel': 'Start: {time}',
+  'pages.userManagement.keyPersonnel.text.endLabel': 'End: {time}',
+  'pages.userManagement.keyPersonnel.text.statusUpdatedAt': 'Updated: {time}',
+  'pages.userManagement.keyPersonnel.detail.idNumber':
+    'ID No. (masked): {value}',
+  'pages.userManagement.keyPersonnel.detail.reason': 'Control reason: {value}',
+  'pages.userManagement.keyPersonnel.detail.faceLibrary':
+    'Face library: {value}',
+  'pages.userManagement.keyPersonnel.personTypes.blacklist': 'Blacklist',
+  'pages.userManagement.keyPersonnel.personTypes.keyWatch': 'Key Watch',
+  'pages.userManagement.keyPersonnel.personTypes.restricted':
+    'Restricted Entry',
+  'pages.userManagement.keyPersonnel.status.inControl': 'Under Control',
+  'pages.userManagement.keyPersonnel.status.outOfControl': 'Out of Control',
+  'pages.userManagement.keyPersonnel.status.released': 'Released',
+  'pages.userManagement.keyPersonnel.gender.male': 'Male',
+  'pages.userManagement.keyPersonnel.gender.female': 'Female',
+  'pages.userManagement.keyPersonnel.gender.unknown': 'Unknown',
+  'pages.userManagement.keyPersonnel.popconfirm.delete':
+    'Delete this key person?',
+  'pages.userManagement.keyPersonnel.messages.updateSuccess':
+    'Key person updated',
+  'pages.userManagement.keyPersonnel.messages.createSuccess':
+    'Key person created',
+  'pages.userManagement.keyPersonnel.messages.saveError':
+    'Failed to save, please try again later',
+  'pages.userManagement.keyPersonnel.messages.deleteError':
+    'Failed to delete, please try again later',
+  'pages.userManagement.keyPersonnel.modal.editTitle': 'Edit Key Person',
+  'pages.userManagement.keyPersonnel.modal.createTitle': 'Add Key Person',
+  'pages.userManagement.keyPersonnel.form.labels.id': 'Key Person ID',
+  'pages.userManagement.keyPersonnel.form.labels.name': 'Name',
+  'pages.userManagement.keyPersonnel.form.labels.gender': 'Gender',
+  'pages.userManagement.keyPersonnel.form.labels.birthDate': 'Birth Date',
+  'pages.userManagement.keyPersonnel.form.labels.idNumber':
+    'ID Number (masked)',
+  'pages.userManagement.keyPersonnel.form.labels.personType': 'Person Type',
+  'pages.userManagement.keyPersonnel.form.labels.controlAreas': 'Control Areas',
+  'pages.userManagement.keyPersonnel.form.labels.startTime':
+    'Control Start Time',
+  'pages.userManagement.keyPersonnel.form.labels.endTime': 'Control End Time',
+  'pages.userManagement.keyPersonnel.form.labels.reason': 'Control Reason',
+  'pages.userManagement.keyPersonnel.form.labels.faceLibrary': 'Face Library',
+  'pages.userManagement.keyPersonnel.form.labels.contactName': 'Contact Name',
+  'pages.userManagement.keyPersonnel.form.labels.contactPhone': 'Contact Phone',
+  'pages.userManagement.keyPersonnel.form.labels.status': 'Status',
+  'pages.userManagement.keyPersonnel.form.labels.statusUpdatedAt':
+    'Status Updated At',
+  'pages.userManagement.keyPersonnel.form.labels.operator': 'Operator',
+  'pages.userManagement.keyPersonnel.form.labels.remark': 'Remark',
+  'pages.userManagement.keyPersonnel.form.placeholders.name': 'Enter name',
+  'pages.userManagement.keyPersonnel.form.placeholders.gender': 'Select gender',
+  'pages.userManagement.keyPersonnel.form.placeholders.birthDate':
+    'e.g. 1989-06-01',
+  'pages.userManagement.keyPersonnel.form.placeholders.idNumber':
+    'Enter ID number',
+  'pages.userManagement.keyPersonnel.form.placeholders.personType':
+    'Select person type',
+  'pages.userManagement.keyPersonnel.form.placeholders.controlAreas':
+    'Enter or select control areas',
+  'pages.userManagement.keyPersonnel.form.placeholders.startTime':
+    'e.g. 2024-08-01 00:00',
+  'pages.userManagement.keyPersonnel.form.placeholders.endTime':
+    'e.g. 2024-08-31 23:59',
+  'pages.userManagement.keyPersonnel.form.placeholders.reason':
+    'Enter control reason',
+  'pages.userManagement.keyPersonnel.form.placeholders.faceLibrary':
+    'Enter face library',
+  'pages.userManagement.keyPersonnel.form.placeholders.contactName':
+    'Enter contact name',
+  'pages.userManagement.keyPersonnel.form.placeholders.contactPhone':
+    'Enter contact phone',
+  'pages.userManagement.keyPersonnel.form.placeholders.status': 'Select status',
+  'pages.userManagement.keyPersonnel.form.placeholders.statusUpdatedAt':
+    'e.g. 2024-08-01 09:00',
+  'pages.userManagement.keyPersonnel.form.placeholders.operator':
+    'Enter operator',
+  'pages.userManagement.keyPersonnel.form.placeholders.remark':
+    'Optional notes',
+  'pages.userManagement.keyPersonnel.form.validations.name':
+    'Please enter the name',
+  'pages.userManagement.keyPersonnel.form.validations.gender':
+    'Please select the gender',
+  'pages.userManagement.keyPersonnel.form.validations.birthDate':
+    'Please enter the birth date',
+  'pages.userManagement.keyPersonnel.form.validations.idNumber':
+    'Please enter the ID number',
+  'pages.userManagement.keyPersonnel.form.validations.personType':
+    'Please select the person type',
+  'pages.userManagement.keyPersonnel.form.validations.controlAreas':
+    'Please select the control areas',
+  'pages.userManagement.keyPersonnel.form.validations.startTime':
+    'Please enter the start time',
+  'pages.userManagement.keyPersonnel.form.validations.endTime':
+    'Please enter the end time',
+  'pages.userManagement.keyPersonnel.form.validations.reason':
+    'Please enter the control reason',
+  'pages.userManagement.keyPersonnel.form.validations.faceLibrary':
+    'Please enter the face library',
+  'pages.userManagement.keyPersonnel.form.validations.status':
+    'Please select the status',
+  'pages.userManagement.keyPersonnel.form.validations.statusUpdatedAt':
+    'Please enter the status update time',
+  'pages.userManagement.keyPersonnel.form.validations.operator':
+    'Please enter the operator',
+  'pages.userManagement.keyPersonnel.pagination.total':
+    'Showing {from}-{to} of {total} records',
+  'pages.userManagement.actionLog.pageTitle': 'User Action Logs',
+  'pages.userManagement.actionLog.card.title': 'Action Log Records',
+  'pages.userManagement.actionLog.columns.id': 'Log ID',
+  'pages.userManagement.actionLog.columns.time': 'Operation Time',
+  'pages.userManagement.actionLog.columns.account': 'Account / Real Name',
+  'pages.userManagement.actionLog.columns.module': 'Module',
+  'pages.userManagement.actionLog.columns.actionType': 'Action Type',
+  'pages.userManagement.actionLog.columns.content': 'Content',
+  'pages.userManagement.actionLog.columns.ip': 'Source IP',
+  'pages.userManagement.actionLog.columns.result': 'Result',
+  'pages.userManagement.actionLog.columns.failReason': 'Failure Reason',
+  'pages.userManagement.actionLog.result.success': 'Success',
+  'pages.userManagement.actionLog.result.failed': 'Failed',
+  'pages.userManagement.actionLog.empty': 'No logs yet',
   'pages.userManagement.role.pageTitle': 'Role & Permission Management',
   'pages.userManagement.role.button.add': 'Add Role',
   'pages.userManagement.role.columns.name': 'Name',

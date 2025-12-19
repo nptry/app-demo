@@ -378,15 +378,17 @@ const CheckpointTab: React.FC = () => {
         width={800}
       >
         <Form layout="vertical" form={form}>
-          <Form.Item
-            label={t('pages.deviceManagement.point.form.labels.id')}
-            name="id"
-          >
-            <Input
-              placeholder={t('pages.common.form.placeholder.autoGenerate')}
-              disabled={!!editingRecord}
-            />
-          </Form.Item>
+          {editingRecord && (
+            <Form.Item
+              label={t('pages.deviceManagement.point.form.labels.id')}
+              name="id"
+            >
+              <Input
+                placeholder={t('pages.common.form.placeholder.autoGenerate')}
+                disabled
+              />
+            </Form.Item>
+          )}
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item

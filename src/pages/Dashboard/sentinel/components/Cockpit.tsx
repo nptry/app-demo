@@ -1,3 +1,4 @@
+import Hls from 'hls.js';
 import {
   AlertTriangle,
   ChevronLeft,
@@ -6,7 +7,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   checkpointData,
   crowdAlertTrend,
@@ -17,6 +18,52 @@ import {
   trafficTrend,
 } from '../data';
 import { AreaTrendChart, SimplePieChart, SimpleRadialBarChart } from './Charts';
+
+const PRIMARY_HLS_STREAM =
+  'https://open.ys7.com/v3/openlive/33010553992897144762:33011023991327967947_1_1.m3u8?expire=1766130273&id=922144884406628352&t=151e37c9d9942e79078c43ac2cef5d8218b7645633334ef9e1d45ce2480ba824&ev=101&devProto=gb28181&supportH265=1';
+
+const LiveVideoFeed: React.FC<{ streamUrl: string }> = ({ streamUrl }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return undefined;
+
+    let hls: Hls | null = null;
+
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = streamUrl;
+    } else if (Hls.isSupported()) {
+      hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+      hls.loadSource(streamUrl);
+      hls.attachMedia(video);
+    } else {
+      video.src = streamUrl;
+    }
+
+    const playPromise = video.play();
+    if (playPromise?.catch) {
+      playPromise.catch(() => undefined);
+    }
+
+    return () => {
+      if (hls) {
+        hls.destroy();
+      }
+    };
+  }, [streamUrl]);
+
+  return (
+    <video
+      ref={videoRef}
+      className="absolute inset-0 w-full h-full object-cover"
+      autoPlay
+      muted
+      playsInline
+      controls={false}
+    />
+  );
+};
 
 // --- Tech UI Components ---
 
@@ -182,7 +229,21 @@ const CentralMap = () => {
 };
 
 // 2. Center Bottom - Camera Carousel
-const cameraFeeds = [
+type CameraFeed = {
+  id: string;
+  location: string;
+  resolution: string;
+  traffic: string;
+  alert: string;
+  latency: string;
+  bitrate: string;
+  temperature: string;
+  status: string;
+  color: string;
+  streamUrl?: string;
+};
+
+const cameraFeeds: CameraFeed[] = [
   {
     id: 'CAM-01',
     location: '南门广场',
@@ -194,6 +255,7 @@ const cameraFeeds = [
     temperature: '22℃',
     status: '在线',
     color: '#4ade80',
+    streamUrl: PRIMARY_HLS_STREAM,
   },
   {
     id: 'CAM-02',
@@ -364,13 +426,19 @@ const CameraCarousel = () => {
                     ></div>
                     <div className="relative z-10 flex flex-col h-full p-2 space-y-2">
                       <div className="relative h-24 w-full rounded bg-[#0b1210]/80 overflow-hidden">
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            backgroundImage: `linear-gradient(135deg, ${camera.color}55, rgba(7,15,13,0.9))`,
-                          }}
-                        ></div>
-                        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.15)_0%,transparent_40%)] opacity-40" />
+                        {camera.streamUrl ? (
+                          <LiveVideoFeed streamUrl={camera.streamUrl} />
+                        ) : (
+                          <>
+                            <div
+                              className="absolute inset-0"
+                              style={{
+                                backgroundImage: `linear-gradient(135deg, ${camera.color}55, rgba(7,15,13,0.9))`,
+                              }}
+                            ></div>
+                            <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.15)_0%,transparent_40%)] opacity-40" />
+                          </>
+                        )}
                         <div className="absolute top-1 left-1 text-[10px] font-mono text-white bg-black/40 px-1 rounded">
                           {camera.id}
                         </div>

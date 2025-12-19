@@ -7,7 +7,6 @@ type ApiResponse<T> = {
 
 export type PersonEventRecord = {
   id: string;
-  campusName?: string;
   personId?: string;
   name?: string;
   personType?: string;
@@ -34,13 +33,11 @@ export type PersonEventParams = {
   person_type?: string;
   start_date?: string;
   end_date?: string;
-  campus_id?: string;
   name?: string;
 };
 
 const transformRecord = (record: any): PersonEventRecord => ({
   id: record.id,
-  campusName: record.campus_name,
   personId: record.person_id,
   name: record.name,
   personType: record.person_type,
@@ -74,9 +71,9 @@ export async function getPersonEventLogs(
     ...resp,
     data: {
       total: payload.total,
-      currentPage: payload.current_page,
-      totalPages: payload.total_pages,
-      perPage: payload.per_page,
+      currentPage: payload.currentPage,
+      totalPages: payload.totalPages,
+      perPage: payload.perPage,
       records: (payload.records || []).map(transformRecord),
     },
   };

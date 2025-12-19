@@ -20,7 +20,6 @@ export interface ExportParams {
   format: 'csv' | 'excel';
   start_date?: string;
   end_date?: string;
-  campus_id?: number;
   [key: string]: any; // 允许模型特定的参数
 }
 

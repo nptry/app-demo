@@ -7,8 +7,6 @@ export interface AdminItem {
   mobile: string;
   role_id: number;
   role_name: string;
-  campus_id?: number;
-  campus_name?: string;
   is_super_admin?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -20,7 +18,6 @@ export interface AdminParams {
   password?: string;
   password_confirmation?: string;
   role_id?: number;
-  campus_id?: number;
 }
 
 export interface AdminQueryParams {
@@ -28,7 +25,6 @@ export interface AdminQueryParams {
   per_page?: number;
   search?: string;
   role_id?: number;
-  campus_id?: number;
 }
 
 /** 获取管理员列表 */

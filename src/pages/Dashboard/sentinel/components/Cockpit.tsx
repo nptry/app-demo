@@ -1,3 +1,4 @@
+import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
 import Hls from 'hls.js';
 import {
   AlertTriangle,
@@ -21,6 +22,74 @@ import { AreaTrendChart, SimplePieChart, SimpleRadialBarChart } from './Charts';
 
 const PRIMARY_HLS_STREAM =
   'https://open.ys7.com/v3/openlive/33010553992897144762:33011023991327967947_1_1.m3u8?expire=1766130273&id=922144884406628352&t=151e37c9d9942e79078c43ac2cef5d8218b7645633334ef9e1d45ce2480ba824&ev=101&devProto=gb28181&supportH265=1';
+
+const ABUJA_CENTER = { lat: 9.0765, lng: 7.3986 };
+const DEFAULT_MAP_ZOOM = 11;
+const normalizedGoogleMapsKey = GOOGLE_MAPS_API_KEY.replace(
+  /^(["'])(.*)\1$/,
+  '$2',
+).trim();
+
+const GOOGLE_MAP_STYLE = [
+  { elementType: 'geometry', stylers: [{ color: '#0f1614' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#9fb1a8' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#0b1210' }] },
+  {
+    featureType: 'administrative',
+    elementType: 'geometry',
+    stylers: [{ color: '#2a3a33' }],
+  },
+  {
+    featureType: 'poi',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#6b7f75' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry',
+    stylers: [{ color: '#1b2521' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#2e4239' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#8aa197' }],
+  },
+  {
+    featureType: 'water',
+    elementType: 'geometry',
+    stylers: [{ color: '#0a1c19' }],
+  },
+  {
+    featureType: 'water',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#4c6a60' }],
+  },
+];
+
+type DeviceWithPoint = (typeof deviceData)[number] & {
+  point?: { coordinates?: string | null };
+  points?: { coordinates?: string | null }[];
+  coordinates?: string | null;
+};
+
+const parseCoordinates = (value?: string | null) => {
+  if (!value) return null;
+  const matches = value.match(/-?\d+(?:\.\d+)?/g);
+  if (!matches || matches.length < 2) return null;
+  const first = Number(matches[0]);
+  const second = Number(matches[1]);
+  if (Number.isNaN(first) || Number.isNaN(second)) return null;
+  const firstAbs = Math.abs(first);
+  const secondAbs = Math.abs(second);
+  if (firstAbs > 90 && secondAbs <= 90) return { lat: second, lng: first };
+  if (secondAbs > 90 && firstAbs <= 90) return { lat: first, lng: second };
+  return { lat: first, lng: second };
+};
 
 const LiveVideoFeed: React.FC<{ streamUrl: string }> = ({ streamUrl }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -104,100 +173,134 @@ const TechBorderContainer = ({
 
 // 1. Central Tech Map
 const CentralMap = () => {
-  const [transform, setTransform] = useState({ k: 1, x: 0, y: 0 });
+  const mapRef = useRef<any>(null);
+  const [zoom, setZoom] = useState(DEFAULT_MAP_ZOOM);
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: 'smart-light-google-map',
+    googleMapsApiKey: normalizedGoogleMapsKey,
+    language: 'zh-CN',
+    region: 'NG',
+  });
 
-  // Abstract City Map Outline Path
-  const mapPath =
-    'M150,100 L250,80 L350,90 L450,60 L550,80 L580,150 L520,220 L550,300 L480,350 L400,380 L300,360 L200,380 L100,350 L50,250 L80,180 Z';
-  const riverPath = 'M200,380 Q300,300 350,200 T500,100';
+  useEffect(() => {
+    if (!normalizedGoogleMapsKey) return;
+    console.info(
+      `[Cockpit] Google Maps API Key 已载入: ${normalizedGoogleMapsKey.slice(0, 6)}...${normalizedGoogleMapsKey.slice(-4)}`,
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    const origin =
+      typeof window !== 'undefined' ? window.location.origin : 'unknown';
+    console.info(`[Cockpit] Google Maps JS API 加载完成，origin=${origin}`);
+  }, [isLoaded]);
+
+  useEffect(() => {
+    if (!loadError) return;
+    const origin =
+      typeof window !== 'undefined' ? window.location.origin : 'unknown';
+    console.error(
+      `[Cockpit] Google Maps JS API 加载失败，origin=${origin}`,
+      loadError,
+    );
+  }, [loadError]);
+
+  const deviceMarkers = deviceData
+    .map((device) => {
+      const deviceWithPoint = device as DeviceWithPoint;
+      const coordinates =
+        deviceWithPoint.point?.coordinates ??
+        deviceWithPoint.points?.[0]?.coordinates ??
+        deviceWithPoint.coordinates;
+      const position = parseCoordinates(coordinates);
+      if (!position) return null;
+      return {
+        id: device.id,
+        position,
+      };
+    })
+    .filter(Boolean) as {
+    id: string;
+    position: { lat: number; lng: number };
+  }[];
 
   return (
-    <div className="relative w-full h-full bg-[#0b1210] rounded overflow-hidden group border border-[#4a5f54]/30 flex items-center justify-center">
+    <div className="relative w-full h-full bg-[#0b1210] rounded overflow-hidden group border border-[#4a5f54]/30">
       {/* Animated Grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(74,222,128,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(74,222,128,0.05)_1px,transparent_1px)] bg-[size:40px_40px] perspective-grid"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(74,222,128,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(74,222,128,0.05)_1px,transparent_1px)] bg-[size:40px_40px] perspective-grid pointer-events-none"></div>
 
-      <div
-        className="relative w-full h-full flex items-center justify-center p-4 overflow-hidden"
-        style={{ transform: `scale(${transform.k})` }}
-      >
-        <svg
-          viewBox="0 0 600 450"
-          className="w-full h-full drop-shadow-[0_0_15px_rgba(74,222,128,0.2)]"
-          role="img"
-        >
-          <title>城市全域态势图</title>
-          <defs>
-            <linearGradient id="mapGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1c2622" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#323e37" stopOpacity="0.9" />
-            </linearGradient>
-            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-          </defs>
-
-          {/* Map Outline */}
-          <g className="animate-pulse-slow">
-            <path
-              d={mapPath}
-              fill="url(#mapGradient)"
-              stroke="#4ade80"
-              strokeWidth="1.5"
-              strokeOpacity="0.6"
-            />
-            {/* River/Road Artery */}
-            <path
-              d={riverPath}
-              fill="none"
-              stroke="#2dd4bf"
-              strokeWidth="2"
-              strokeOpacity="0.3"
-              strokeDasharray="5 5"
-            />
-          </g>
-
-          {/* Scanning Radar Effect */}
-          <circle
-            cx="300"
-            cy="225"
-            r="100"
-            stroke="#4ade80"
-            strokeWidth="1"
-            fill="none"
-            opacity="0.2"
+      <div className="relative w-full h-full">
+        {isLoaded && !loadError ? (
+          <GoogleMap
+            mapContainerClassName="w-full h-full"
+            center={ABUJA_CENTER}
+            zoom={zoom}
+            onLoad={(map) => {
+              mapRef.current = map;
+            }}
+            onUnmount={() => {
+              mapRef.current = null;
+            }}
+            onZoomChanged={() => {
+              const nextZoom = mapRef.current?.getZoom?.();
+              if (typeof nextZoom === 'number') setZoom(nextZoom);
+            }}
+            options={{
+              disableDefaultUI: true,
+              clickableIcons: false,
+              gestureHandling: 'greedy',
+              backgroundColor: '#0b1210',
+              styles: GOOGLE_MAP_STYLE,
+            }}
           >
-            <animate
-              attributeName="r"
-              from="0"
-              to="300"
-              dur="4s"
-              repeatCount="indefinite"
-            />
-            <animate
-              attributeName="opacity"
-              from="0.5"
-              to="0"
-              dur="4s"
-              repeatCount="indefinite"
-            />
-          </circle>
-        </svg>
+            {deviceMarkers.map((marker) => (
+              <MarkerF key={marker.id} position={marker.position} />
+            ))}
+          </GoogleMap>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-400">
+            {loadError
+              ? '地图加载失败，请检查 API Key'
+              : normalizedGoogleMapsKey
+                ? '地图加载中...'
+                : '请在配置中设置 Google Maps API Key'}
+          </div>
+        )}
 
-        {/* Data Points */}
+        {/* Radar + Hotspots */}
         <div className="absolute inset-0 pointer-events-none">
-          {deviceData.slice(0, 30).map((device, i) => (
-            <div
-              key={device.id ?? `device-point-${i}`}
-              className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#4ade80]"
-              style={{
-                left: `${20 + device.x * 0.6}%`,
-                top: `${20 + device.y * 0.6}%`,
-                animation: `pulse ${2 + Math.random()}s infinite`,
-              }}
-            />
-          ))}
-          {/* Hotspots */}
+          <svg
+            viewBox="0 0 600 450"
+            className="w-full h-full"
+            role="img"
+            aria-label="城市全域态势图"
+          >
+            <circle
+              cx="300"
+              cy="225"
+              r="100"
+              stroke="#4ade80"
+              strokeWidth="1"
+              fill="none"
+              opacity="0.2"
+            >
+              <animate
+                attributeName="r"
+                from="0"
+                to="300"
+                dur="4s"
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="opacity"
+                from="0.5"
+                to="0"
+                dur="4s"
+                repeatCount="indefinite"
+              />
+            </circle>
+          </svg>
           <div className="absolute top-[40%] left-[45%] w-20 h-20 bg-red-500/20 blur-xl rounded-full animate-pulse"></div>
           <div className="absolute top-[60%] left-[60%] w-16 h-16 bg-amber-500/20 blur-xl rounded-full animate-pulse delay-1000"></div>
         </div>
@@ -208,18 +311,14 @@ const CentralMap = () => {
         <button
           type="button"
           className="p-1.5 bg-[#1c2622] rounded text-[#4ade80] border border-[#4a5f54]"
-          onClick={() =>
-            setTransform((p) => ({ ...p, k: Math.min(p.k + 0.5, 3) }))
-          }
+          onClick={() => setZoom((current) => Math.min(current + 1, 18))}
         >
           <ZoomIn size={14} />
         </button>
         <button
           type="button"
           className="p-1.5 bg-[#1c2622] rounded text-[#4ade80] border border-[#4a5f54]"
-          onClick={() =>
-            setTransform((p) => ({ ...p, k: Math.max(p.k - 0.5, 0.5) }))
-          }
+          onClick={() => setZoom((current) => Math.max(current - 1, 3))}
         >
           <ZoomOut size={14} />
         </button>

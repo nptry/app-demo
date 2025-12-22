@@ -7,7 +7,14 @@ import proxy from './proxy';
 
 import routes from './routes';
 
-const { REACT_APP_ENV = 'dev' } = process.env;
+const {
+  REACT_APP_ENV = 'dev',
+  GOOGLE_MAPS_API_KEY = 'AIzaSyCmlepiFW9o0w5qOR9Ze6Dbp9-3NzFpm_w',
+} = process.env;
+const normalizedGoogleMapsKey = GOOGLE_MAPS_API_KEY.replace(
+  /^(["'])(.*)\1$/,
+  '$2',
+);
 
 /**
  * @name 使用公共路径
@@ -17,6 +24,9 @@ const { REACT_APP_ENV = 'dev' } = process.env;
 const PUBLIC_PATH: string = '/';
 
 export default defineConfig({
+  define: {
+    GOOGLE_MAPS_API_KEY: JSON.stringify(normalizedGoogleMapsKey),
+  },
   /**
    * @name 开启 hash 模式
    * @description 让 build 之后的产物包含 hash 后缀。通常用于增量发布和避免浏览器加载缓存。
